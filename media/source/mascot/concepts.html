@@ -22,7 +22,7 @@ p{margin:0;color:#A9AFBA;font-size:15px;line-height:1.55}
 .pfp{width:72px;height:72px;border-radius:50%;background:radial-gradient(circle at 50% 40%,#1A2740,#0A0E14);display:grid;place-items:center;border:1px solid #33405A}.pfp svg{width:52px;height:52px}
 .lbl{font:500 11px "Geist Mono",monospace;color:#5E6878;letter-spacing:.14em}
 </style></head><body>
-<h1>Lacuna mascot: three directions</h1><p class="lead">Animated · drawn in code · ivory, navy and one brass detail</p>
+<h1>Privatus mascot: three directions</h1><p class="lead">Animated · drawn in code · ivory, navy and one brass detail</p>
 <div class="row" id="row"></div>
 <script type="module">
 import { MASCOTS } from "./mascots.js";
@@ -36,7 +36,7 @@ for (const k of ["octopus", "chameleon", "crab"]) {
   const card = document.createElement("div"); card.className = "card";
   card.innerHTML = `<span class="n">${n}</span><div class="big"></div><h2>${name}</h2><p>${text}</p><div class="sizes"><div class="nav"></div><div class="pfp"></div><div class="fav"></div><div class="fav tiny"></div><span class="lbl">NAV · PFP · 24PX · 18PX</span></div>`;
   card.querySelector(".big").append(m());
-  const nav = card.querySelector(".nav"); nav.append(m({ engraved: false })); const w = document.createElement("span"); w.textContent = "Lacuna"; nav.append(w);
+  const nav = card.querySelector(".nav"); nav.append(m({ engraved: false })); const w = document.createElement("span"); w.textContent = "Privatus"; nav.append(w);
   card.querySelector(".pfp").append(m({ engraved: false }));
   card.querySelectorAll(".fav").forEach(f => f.append(m({ engraved: false, animate: false })));
   document.getElementById("row").append(card);

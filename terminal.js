@@ -1,4 +1,4 @@
-// Lacuna terminal. Views: Pulse, Trending, token page, Tracker, Portfolio. All data comes from public
+// Privatus terminal. Views: Pulse, Trending, token page, Tracker, Portfolio. All data comes from public
 // sources in the browser (PumpPortal, Jupiter, DexScreener, your Solana RPC, NEAR Intents); every trade is
 // signed by your wallet, or locally by your instant/stealth wallets which are derived from one signature of it.
 import { RPC_URL, TREASURY, FEE_BPS, JUP_BASE, JUP_API_KEY, DEFAULT_SLIPPAGE_BPS, PRIORITY_MAX_LAMPORTS, ONECLICK_JWT, STEALTH_CONFIDENTIALITY, STEALTH_MAX_SOL, STEALTH_GAS_RESERVE, PROXY_URL } from "./config.js";
@@ -121,15 +121,15 @@ const DEFAULTS = {
   preset: 0, from: "main", finalStretch: 60, autoTp: 0, autoSl: 0,
   stealth: true // Private mode on by default for buys from the main wallet; the trade panel switch saves the choice
 };
-const settings = Object.assign(structuredClone(DEFAULTS), store.get("lacuna-settings", {}));
-const saveSettings = () => store.set("lacuna-settings", settings);
+const settings = Object.assign(structuredClone(DEFAULTS), store.get("privatus-settings", {}));
+const saveSettings = () => store.set("privatus-settings", settings);
 const preset = () => settings.presets[settings.preset] || DEFAULTS.presets[0];
 
 /* ---------- services ---------- */
-// With PROXY_URL set, RPC, Jupiter, NEAR Intents, Jito and X go through the Lacuna proxy, which holds the keys.
+// With PROXY_URL set, RPC, Jupiter, NEAR Intents, Jito and X go through the Privatus proxy, which holds the keys.
 const PROXY = (PROXY_URL || "").replace(/\/$/, "");
 setMediaProxy(PROXY);
-const rpcUrl = (() => { const v = store.get("lacuna-rpc-url", null) || (() => { try { return localStorage.getItem("lacuna-rpc"); } catch (_) { return null; } })(); return typeof v === "string" && /^https?:\/\/\S+$/.test(v.trim()) ? v.trim() : PROXY ? `${PROXY}/rpc` : RPC_URL || DEFAULT_RPC; })();
+const rpcUrl = (() => { const v = store.get("privatus-rpc-url", null) || (() => { try { return localStorage.getItem("privatus-rpc"); } catch (_) { return null; } })(); return typeof v === "string" && /^https?:\/\/\S+$/.test(v.trim()) ? v.trim() : PROXY ? `${PROXY}/rpc` : RPC_URL || DEFAULT_RPC; })();
 const connection = new web3.Connection(rpcUrl, "confirmed");
 const jup = jupiter({ base: PROXY ? `${PROXY}/jup` : JUP_BASE, apiKey: PROXY ? "" : JUP_API_KEY, minInterval: PROXY ? 300 : JUP_API_KEY ? 1050 : 2050 });
 const oc = oneclick({ base: PROXY ? `${PROXY}/1click` : undefined, jwt: PROXY ? "" : ONECLICK_JWT });
@@ -242,7 +242,7 @@ async function walletSeed() {
   const r = await S.wallet.p.signMessage(new TextEncoder().encode(STEALTH_MESSAGE), "utf8");
   const sig = r instanceof Uint8Array ? r : r.signature;
   if (!sig || sig.length !== 64) throw new StealthError("The wallet returned an unexpected signature.");
-  const fp = await seedFingerprint(sig), key = `lacuna-stealthfp-${S.wallet.pk}`, known = store.get(key, null);
+  const fp = await seedFingerprint(sig), key = `privatus-stealthfp-${S.wallet.pk}`, known = store.get(key, null);
   if (known && known !== fp) throw new StealthError("This wallet signed differently than last time, so it would open different instant and stealth wallets. Use the same wallet app as before, or export keys from the device you used.");
   store.set(key, fp);
   return (S.seed = sig);
@@ -287,7 +287,7 @@ function checkTransfer(a) {
 }
 
 /* ---------- trades ---------- */
-const TKEY = pk => `lacuna-trades-${pk}`;
+const TKEY = pk => `privatus-trades-${pk}`;
 const tradesOf = pk => store.get(TKEY(pk), []);
 function logTrade(pk, t) { const l = tradesOf(pk); l.unshift(t); store.set(TKEY(pk), l.slice(0, 500)); }
 const tradedMints = () => { const s = new Set(); for (const pk of [S.wallet?.pk, S.instant?.pk]) if (pk) tradesOf(pk).forEach(t => s.add(t.mint)); return s; };
@@ -337,11 +337,11 @@ function route() {
   S.route = name;
   VIEWS.forEach(v => { $(`v-${v}`).hidden = v !== name; });
   document.querySelectorAll(".nav a").forEach(a => a.setAttribute("aria-current", a.dataset.route === name ? "page" : "false"));
-  if (name === "pulse") { document.title = "Pulse · Lacuna"; renderPulse(true); }
-  if (name === "trending") { document.title = "Trending · Lacuna"; loadTrending(); }
+  if (name === "pulse") { document.title = "Pulse · Privatus"; renderPulse(true); }
+  if (name === "trending") { document.title = "Trending · Privatus"; loadTrending(); }
   if (name === "token") openToken(arg);
-  if (name === "tracker") { document.title = "Tracker · Lacuna"; renderTracker(); }
-  if (name === "portfolio") { document.title = "Portfolio · Lacuna"; renderPortfolio(); }
+  if (name === "tracker") { document.title = "Tracker · Privatus"; renderTracker(); }
+  if (name === "portfolio") { document.title = "Portfolio · Privatus"; renderPortfolio(); }
   window.scrollTo(0, 0);
 }
 addEventListener("hashchange", route);
@@ -389,7 +389,7 @@ function setRing(av, t, column) {
 
 /* ---------- Pulse ---------- */
 const board = createBoard({ finalStretch: settings.finalStretch });
-const filters = store.get("lacuna-pulse-filters", { new: {}, final: {}, migrated: {} });
+const filters = store.get("privatus-pulse-filters", { new: {}, final: {}, migrated: {} });
 const cardEls = new Map();
 const paused = new Set();
 let pulseDirty = true;
@@ -589,7 +589,7 @@ document.querySelectorAll(".pcol").forEach(col => {
   col.querySelectorAll("[data-f]").forEach(inp => {
     const k = inp.dataset.f;
     if (inp.type === "checkbox") inp.checked = !!f[k]; else inp.value = f[k] || "";
-    inp.addEventListener("input", () => { f[k] = inp.type === "checkbox" ? inp.checked : k === "minMcap" ? Number(inp.value) || 0 : inp.value.trim(); store.set("lacuna-pulse-filters", filters); pulseDirty = true; paused.delete(key); renderPulse(); paused.add(key); });
+    inp.addEventListener("input", () => { f[k] = inp.type === "checkbox" ? inp.checked : k === "minMcap" ? Number(inp.value) || 0 : inp.value.trim(); store.set("privatus-pulse-filters", filters); pulseDirty = true; paused.delete(key); renderPulse(); paused.add(key); });
   });
 });
 $("mobcols").addEventListener("click", e => {
@@ -653,7 +653,7 @@ async function openToken(mint) {
   $("curvebar").hidden = true;
   renderStar(); renderTrades(); renderMine(); renderTradePanel(); selectTokenTab("tt-trades"); renderOrdersPanel();
   $("audit").textContent = ""; $("audit").append(make("h3", "", "Token info"), make("span", "muted", "Loading…"));
-  document.title = `${b.symbol || short(mint)} · Lacuna`;
+  document.title = `${b.symbol || short(mint)} · Privatus`;
 
   if (!hasMeta(mint)) { metaTried.delete(mint); needMeta([mint]); }
   decimalsOf(mint).then(d => { T.decimals = d; renderTradePanel(); }).catch(e => setTradeStatus(errMsg(e), "err"));
@@ -681,7 +681,7 @@ function renderTokenHead() {
   text($("t-sym"), sym); text($("t-name"), t?.name || b.name || "");
   icon($("t-icon"), t?.icon || b.image, mint);
   setRing($("t-av"), { ...b, pump: b.pump || isPumpMint(mint, t?.launchpad), progress: T.curve ? T.curve.progress : b.progress, complete: T.curve?.complete || b.complete || !!t?.graduatedPool }, b.migratedAt || t?.graduatedPool ? "migrated" : "");
-  document.title = `${sym} · Lacuna`;
+  document.title = `${sym} · Privatus`;
   const soc = { twitter: t?.twitter || b.twitter, telegram: t?.telegram || b.telegram, website: t?.website || b.website, launchpad: t?.launchpad || b.launchpad, pump: b.pump, stonk: b.stonk };
   const links = $("t-links"), sig = JSON.stringify(soc);
   if (links.dataset.sig !== sig || !links.childElementCount) { links.dataset.sig = sig; links.textContent = ""; tokenLinks(mint, soc).forEach(l => links.append(linkBtn(l, true))); }
@@ -1065,7 +1065,7 @@ function orderRow(o, after) {
 }
 
 /* ---------- autopilot: TP / SL / trailing stop (instant wallet, while open) ---------- */
-const RKEY = "lacuna-autopilot";
+const RKEY = "privatus-autopilot";
 const rules = () => store.get(RKEY, []);
 const saveRules = l => { store.set(RKEY, l.slice(-200)); updateAutoChip(); };
 document.querySelectorAll("#op-auto [data-add]").forEach(b => b.addEventListener("click", async () => {
@@ -1132,7 +1132,7 @@ function updateAutoChip() {
 $("autochip").addEventListener("click", async () => { if (!S.instant) { try { await instantWallet(); updateAutoChip(); toast("Autopilot resumed.", "ok"); } catch (e) { toast(errMsg(e), "err"); } } else location.hash = "#/portfolio"; });
 
 /* ---------- migration sniper ---------- */
-const SKEY = "lacuna-snipes";
+const SKEY = "privatus-snipes";
 const snipes = () => store.get(SKEY, []);
 const saveSnipes = l => { store.set(SKEY, l.slice(-100)); updateAutoChip(); pulseDirty = true; };
 async function toggleSnipe(mint) {
@@ -1171,7 +1171,7 @@ async function fireSnipe(mint) {
 async function loadPosts() {
   const host = $("tp-posts"), mint = S.tokenMint, sym = symbolOf(mint);
   host.textContent = "";
-  if (!PROXY) { host.append(make("div", "tdempty", "Posts from X need the Lacuna proxy with an X API key (see worker/README.md). X charges per post read, so they only load here.")); return; }
+  if (!PROXY) { host.append(make("div", "tdempty", "Posts from X need the Privatus proxy with an X API key (see worker/README.md). X charges per post read, so they only load here.")); return; }
   host.append(make("div", "tdempty", "Loading posts…"));
   try {
     const q = /^[A-Za-z][A-Za-z0-9_]{0,15}$/.test(sym) ? `(${mint} OR $${sym})` : mint;
@@ -1196,7 +1196,7 @@ async function loadPosts() {
 
 /* ---------- Private mode ---------- */
 let solAsset = null;
-const GKEY = pk => `lacuna-stealths-${pk}`;
+const GKEY = pk => `privatus-stealths-${pk}`;
 const stealthRecords = () => S.wallet ? store.get(GKEY(S.wallet.pk), []) : [];
 function saveStealth(rec) { const list = stealthRecords().filter(g => g.index !== rec.index); list.push(rec); list.sort((a, b) => a.index - b.index); store.set(GKEY(S.wallet.pk), list); }
 const ROUTE_LABEL = { PENDING_DEPOSIT: "waiting for the deposit", KNOWN_DEPOSIT_TX: "deposit seen", INCOMPLETE_DEPOSIT: "deposit incomplete", PROCESSING: "routing privately", SUCCESS: "delivered" };
@@ -1219,7 +1219,7 @@ async function stealthBuy() {
   S.busy = true; go.disabled = true;
   let rec = null;
   try {
-    text(go, "Sign in wallet…"); setTradeStatus("Sign the Lacuna message so the terminal can open a fresh stealth wallet. It sends nothing.");
+    text(go, "Sign in wallet…"); setTradeStatus("Sign the Privatus message so the terminal can open a fresh stealth wallet. It sends nothing.");
     const seed = await walletSeed();
     text(go, "Finding a fresh stealth wallet…");
     const { index, stealth } = await nextUnusedStealth(web3, seed, { isUsed: usedOnChain, start: stealthRecords().reduce((m, g) => Math.max(m, g.index + 1), 0) });
@@ -1326,11 +1326,11 @@ $("g-unlock").addEventListener("click", async () => {
 });
 
 /* ---------- Tracker ---------- */
-const tracked = () => store.get("lacuna-tracked", []);
+const tracked = () => store.get("privatus-tracked", []);
 function addTracked(address, label) {
   if (!isAddress(address)) return toast("That isn't a Solana address.", "err");
   const l = tracked().filter(w => w.address !== address); l.push({ address, label: label || short(address) });
-  store.set("lacuna-tracked", l); renderTracker(); startTracker();
+  store.set("privatus-tracked", l); renderTracker(); startTracker();
 }
 const feed = [];
 const seenSigs = new Map();
@@ -1366,7 +1366,7 @@ function renderTracker() {
   for (const w of tracked()) {
     const li = make("li"), info = make("div"), x = make("button", "icon-btn"); x.append(svgIcon("close")); x.type = "button"; x.setAttribute("aria-label", `Stop tracking ${w.label}`);
     info.append(make("div", "lab", w.label), link(solscan("account", w.address), short(w.address)));
-    x.addEventListener("click", () => { store.set("lacuna-tracked", tracked().filter(t => t.address !== w.address)); seenSigs.delete(w.address); renderTracker(); });
+    x.addEventListener("click", () => { store.set("privatus-tracked", tracked().filter(t => t.address !== w.address)); seenSigs.delete(w.address); renderTracker(); });
     li.append(info, x); ul.append(li);
   }
   renderFeed();
@@ -1533,12 +1533,12 @@ $("x-run").addEventListener("click", async () => {
 });
 
 /* ---------- watchlist ---------- */
-const watchlist = () => store.get("lacuna-watchlist", []);
+const watchlist = () => store.get("privatus-watchlist", []);
 let watchPrices = {};
 function renderStar() { const on = watchlist().some(w => w.mint === S.tokenMint); $("t-star").setAttribute("aria-pressed", on); $("t-star").setAttribute("aria-label", on ? "Remove from watchlist" : "Add to watchlist"); }
 $("t-star").addEventListener("click", () => {
   const l = watchlist(), on = l.some(w => w.mint === S.tokenMint);
-  store.set("lacuna-watchlist", on ? l.filter(w => w.mint !== S.tokenMint) : [...l, { mint: S.tokenMint, symbol: symbolOf(S.tokenMint), icon: iconOf(S.tokenMint) }]);
+  store.set("privatus-watchlist", on ? l.filter(w => w.mint !== S.tokenMint) : [...l, { mint: S.tokenMint, symbol: symbolOf(S.tokenMint), icon: iconOf(S.tokenMint) }]);
   renderStar(); renderWatchbar(); refreshWatch();
 });
 function renderWatchbar() {
@@ -1711,7 +1711,7 @@ $("settingsbtn").addEventListener("click", () => openModal("Settings", body => {
     const f = Number(fs.value); if (f >= 10 && f <= 99) settings.finalStretch = f;
     saveSettings();
     const newRpc = rpcIn.value.trim();
-    if (newRpc !== rpcUrl && /^https?:\/\/\S+$/.test(newRpc)) { store.set("lacuna-rpc-url", newRpc); location.reload(); return; }
+    if (newRpc !== rpcUrl && /^https?:\/\/\S+$/.test(newRpc)) { store.set("privatus-rpc-url", newRpc); location.reload(); return; }
     modal.close(); pulseDirty = true; renderPulse(true); if (S.route === "token") renderTradePanel();
     toast("Settings saved.", "ok");
   });
@@ -1769,7 +1769,7 @@ document.addEventListener("visibilitychange", () => {
 });
 // reconnect silently if a wallet already trusts this site
 for (const w of providers()) { if (w.p.isConnected || w.p.publicKey) { w.p.connect?.({ onlyIfTrusted: true }).then(() => connect(w)).catch(() => {}); break; } }
-window.__lacuna = { board, settings, S, T }; // handy for debugging from the console
+window.__privatus = { board, settings, S, T }; // handy for debugging from the console
 
 /* ---------- status bar ---------- */
 // Mirrors the stream chips, times a getSlot round trip to the RPC every 15 s while the tab is visible,

@@ -1,4 +1,4 @@
-# Lacuna
+# Privatus
 
 A private execution terminal for Solana. Trade without leaving a trail.
 
@@ -30,7 +30,7 @@ Everything visual is drawn in code (`art.js`), in one style: fine-line guilloch�
 
 - **Palette:** vault navy `#0A0E14`, ivory `#EFE9DC`, steel `#5D7596` for engraving lines, and one brass accent `#D6B26E`. Gains are `#43D19E` and losses `#F06A6A`. The docs use the inverse "prospectus" scheme: ivory paper with navy figure plates.
 - **Type:** Instrument Serif for display, Geist for UI, Geist Mono for numbers and labels.
-- **Mark:** a vault dial. Two broken rings around a brass core turn a few clicks at a time, like a combination lock, and line their gaps up once per cycle. `favicon.svg` is the still version.
+- **Mascot and mark:** a chameleon. It blends into any background (the product in one animal), its tail coils like a vault dial into a brass core, and a brass stripe runs along its flank. The turret eye wanders and blinks, the skin shifts colour to hide, and in the hero its tongue snaps a brass token out of the air. `chameleon()` in `art.js` draws it in `currentColor`, so it is ivory on dark pages and navy on paper; `mark()` is the cropped logo. `favicon.svg` is the still version.
 - **Art:** `guilloche()` draws woven rosette bands. `hero()` is the landing seal: your wallet's trail runs into a NEAR Intents seal and stops, and a new wallet's line leaves through a gap cut in it. `ICONS` holds the four "record" vignettes, `schematic()` draws every diagram (node cards, rules and a travelling brass packet), and `ledger()` and `curveChart()` draw the transaction slip and the bonding curve. Line icons are 24-unit strokes with one brass detail each.
 - **Brand files:** `media/banner.png` (1200×630 link preview), `apple-touch-icon.png` and `favicon.ico` are rendered from `media/source/*.html` by `media/source/render.sh`.
 
@@ -79,7 +79,7 @@ Tests run against a fake chain (`test/mockchain.mjs`), fake Jupiter responses (`
 
 - `index.html` + `landing.js`: landing page and the Trail audit tracer
 - `docs.html` + `docs.js`: documentation, with live engraved diagrams
-- `art.js`: the shared art toolkit (guilloché bands and rosettes, banknote waves, line icons, the vault-dial mark, the hero seal, the record vignettes, `schematic`/`ledger`/`curveChart` diagram builders, terminal emblems), one animation clock that pauses off-screen and honors reduced motion
+- `art.js`: the shared art toolkit (guilloché bands and rosettes, banknote waves, line icons, the chameleon mascot and mark, the hero seal, the record vignettes, `schematic`/`ledger`/`curveChart` diagram builders, terminal emblems), one animation clock that pauses off-screen and honors reduced motion
 - `diagrams.js`: the explanatory drawings (private route and exit, wallet derivation, overview, proxy, Pulse sources, limit order, autopilot, transaction slip, bonding curve), shared by the landing page and the docs
 - `app.html`: the terminal's markup and styles; `terminal.js`: its views and logic
 - `pump.js`: pump.fun bonding-curve and trade-event decoding

@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="How Lacuna works: wallets, Jupiter routing, the 0.5% fee, Private mode on NEAR Intents, Pulse data, orders, the Trail audit and the gateway.">
+<meta name="description" content="How Privatus works: wallets, Jupiter routing, the 0.5% fee, Private mode on NEAR Intents, Pulse data, orders, the Trail audit and the gateway.">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Lacuna">
-<meta property="og:title" content="Lacuna · Documentation">
-<meta property="og:description" content="How Lacuna works: wallets, Jupiter routing, fees, Private mode on NEAR Intents, Pulse data, orders and the Trail audit.">
-<meta property="og:image" content="media/banner.png">
+<meta property="og:site_name" content="Privatus">
+<meta property="og:title" content="Privatus · Documentation">
+<meta property="og:description" content="How Privatus works: wallets, Jupiter routing, fees, Private mode on NEAR Intents, Pulse data, orders and the Trail audit.">
+<meta property="og:image" content="https://privatus.up.railway.app/media/banner.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="media/banner.png">
+<meta name="twitter:image" content="https://privatus.up.railway.app/media/banner.png">
 <meta name="theme-color" content="#F1ECE1">
-<title>Lacuna · Documentation</title>
+<title>Privatus · Documentation</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -41,7 +41,7 @@ em{font-style:italic;color:var(--brass-d)}
 .top{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--paper) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--rule)}
 .top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;height:60px}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
-.brand .mark{width:26px;height:26px;color:var(--ink)}
+.brand .mark{height:28px;width:auto;color:var(--ink)}
 .brand .word{font:400 1.5rem/1 var(--serif)}
 .brand .tag{font:500 .64rem var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--mute);border-left:1px solid var(--rule-2);padding-left:10px;margin-left:2px}
 .links{display:flex;gap:2px;align-items:center}
@@ -162,7 +162,7 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
 <body>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="./" aria-label="Lacuna home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span><span class="tag">Documentation</span></a>
+    <a class="brand" href="./" aria-label="Privatus home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span><span class="tag">Documentation</span></a>
     <nav class="links" aria-label="Site">
       <a href="./">Home</a>
       <a href="./#audit">Trail audit</a>
@@ -173,11 +173,11 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
 <div class="wrap">
   <div class="hero">
     <p class="eyebrow">Documentation</p>
-    <h1>How Lacuna <em>works.</em></h1>
+    <h1>How Privatus <em>works.</em></h1>
     <p class="kicker">Every wallet, route, fee and data source in the terminal, drawn as it runs. These are the paths your SOL actually takes.</p>
     <figure class="fig">
       <div class="art"><svg data-diagram="overview" role="img" aria-label="Your browser at the centre, connected to Solana RPC, Jupiter, NEAR 1Click, PumpPortal, Jito and DexScreener"></svg></div>
-      <figcaption><b>Your browser is the app.</b> It builds every transaction, and you sign it. Lacuna's gateway only forwards requests to the RPC, Jupiter and NEAR Intents with its API keys. No Lacuna server holds funds, wallet keys or orders.</figcaption>
+      <figcaption><b>Your browser is the app.</b> It builds every transaction, and you sign it. Privatus's gateway only forwards requests to the RPC, Jupiter and NEAR Intents with its API keys. No Privatus server holds funds, wallet keys or orders.</figcaption>
     </figure>
   </div>
 
@@ -204,9 +204,9 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
       <section id="overview">
         <p class="eyebrow"><span data-glyph="stealth"></span>Overview</p>
         <h2>A trading desk that leaves <em>fewer tracks.</em></h2>
-        <p>Lacuna is a Solana trading terminal that runs entirely in your browser. It does what fast terminals do: a live board of new pump.fun launches, one-click buys, token pages with live trades and holders, wallet tracking, limit orders and PnL. On top of that it gives you two things the others don't: <b>Private mode</b>, which buys from fresh wallets funded privately through NEAR Intents, and the <b>Trail audit</b>, which shows what wallet trackers can already link to you.</p>
+        <p>Privatus is a Solana trading terminal that runs entirely in your browser. It does what fast terminals do: a live board of new pump.fun launches, one-click buys, token pages with live trades and holders, wallet tracking, limit orders and PnL. On top of that it gives you two things the others don't: <b>Private mode</b>, which buys from fresh wallets funded privately through NEAR Intents, and the <b>Trail audit</b>, which shows what wallet trackers can already link to you.</p>
         <div class="cards">
-          <div class="card"><span data-glyph="key" class="gl"></span><h4>Non-custodial</h4><p>You sign every trade, in your wallet or in wallets derived from your own signature. Lacuna never holds funds.</p></div>
+          <div class="card"><span data-glyph="key" class="gl"></span><h4>Non-custodial</h4><p>You sign every trade, in your wallet or in wallets derived from your own signature. Privatus never holds funds.</p></div>
           <div class="card"><span data-glyph="route" class="gl"></span><h4>Best-price routing</h4><p>Every swap is routed by Jupiter across Solana's DEXs and pump.fun curves.</p></div>
           <div class="card"><span data-glyph="lock" class="gl"></span><h4>Private funding</h4><p>Stealth wallets are paid by NEAR's bridge, not by you, so nothing on-chain points back.</p></div>
           <div class="card ink"><span data-glyph="shield" class="gl"></span><h4>Static and open</h4><p>The app is plain files: HTML and JavaScript you can read, host or run locally.</p></div>
@@ -219,7 +219,7 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
         <p>You connect a normal Solana wallet (Phantom, Solflare, Backpack and others). That is your <b>main wallet</b>. When you first use the instant wallet or Private mode, the terminal asks it to sign one fixed message. The signature never leaves your browser and is never stored. From it, the terminal derives:</p>
         <figure class="fig">
           <div class="art"><svg data-diagram="walletTree" role="img" aria-label="Main wallet signs once; the signature feeds SHA-256 with a path to make the instant wallet and stealth wallets 0, 1 and 2"></svg></div>
-          <figcaption><b>Derivation.</b> Each wallet's seed is <code>SHA-256(signature ‖ path)</code>: <code>lacuna/instant/0</code> for the instant wallet, <code>lacuna/stealth/0</code>, <code>/1</code>, <code>/2</code>… for stealth wallets.</figcaption>
+          <figcaption><b>Derivation.</b> Each wallet's seed is <code>SHA-256(signature ‖ path)</code>: <code>privatus/instant/0</code> for the instant wallet, <code>privatus/stealth/0</code>, <code>/1</code>, <code>/2</code>… for stealth wallets.</figcaption>
         </figure>
         <div class="tbl"><table>
           <thead><tr><th>Wallet</th><th>Signs with</th><th>Use it for</th></tr></thead>
@@ -233,7 +233,7 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
         <p>Solana signatures are deterministic: the same wallet signing the same message always produces the same signature. Sign again on any device and you get the same instant and stealth wallets back. Nothing secret needs to be backed up beyond your main wallet.</p>
         <p>The terminal stores a short fingerprint of the signature (8 bytes of its hash, which reveals nothing). If your wallet ever signs differently, for example a different wallet app that signs messages another way, the terminal stops instead of opening a different set of wallets.</p>
         <p>Every derived wallet has an <b>Export key</b> button, so you can import it into any Solana wallet.</p>
-        <div class="note"><p><b>Only sign the Lacuna message on Lacuna.</b> Anyone holding that signature can rebuild your instant and stealth wallets; the message itself warns that it opens your private trading wallets. Some hardware-wallet setups can't sign messages; with those, instant and Private mode are unavailable and you trade from the main wallet.</p></div>
+        <div class="note"><p><b>Only sign the Privatus message on Privatus.</b> Anyone holding that signature can rebuild your instant and stealth wallets; the message itself warns that it opens your private trading wallets. Some hardware-wallet setups can't sign messages; with those, instant and Private mode are unavailable and you trade from the main wallet.</p></div>
       </section>
 
       <section id="trading">
@@ -246,7 +246,7 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
           <li><span>It sends the transaction, rebroadcasts it every 2 seconds until it lands or its blockhash expires, and reports the result.</span></li>
         </ol>
         <figure class="fig narrow">
-          <div class="art"><svg data-diagram="tradeTx" role="img" aria-label="A buy transaction printed top to bottom: compute budget, token account, Lacuna fee, Jupiter swap, cleanup, Jito tip if set"></svg></div>
+          <div class="art"><svg data-diagram="tradeTx" role="img" aria-label="A buy transaction printed top to bottom: compute budget, token account, Privatus fee, Jupiter swap, cleanup, Jito tip if set"></svg></div>
           <figcaption><b>One buy, one transaction.</b> Every layer lands together or none do: if the swap fails, the fee is not taken.</figcaption>
         </figure>
         <h3>Presets</h3>
@@ -270,7 +270,7 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
         <ul class="list">
           <li><b>Buys:</b> <span data-cfg="fee">0.5%</span> of the SOL you spend, transferred before the swap.</li>
           <li><b>Sells:</b> <span data-cfg="fee">0.5%</span> of the <i>minimum</i> SOL the route guarantees, transferred after the swap, so a fill better than the minimum is all yours.</li>
-          <li><b>Private buys:</b> the fee is paid by your main wallet when it funds the route. Stealth wallets never pay Lacuna, so no fee transfer marks them.</li>
+          <li><b>Private buys:</b> the fee is paid by your main wallet when it funds the route. Stealth wallets never pay Privatus, so no fee transfer marks them.</li>
           <li><b>Not charged:</b> stealth exits, deposits to and withdrawals from your instant wallet, and limit orders (Jupiter fills those).</li>
         </ul>
         <p>Network costs are separate and go to Solana validators: the base fee, the priority fee from your preset, and a Jito tip if set. Jupiter's routing is free.</p>
@@ -298,11 +298,11 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
           <figcaption><b>Exit.</b> The stealth wallet sells, closes its empty token accounts to recover their rent, and routes all of its SOL back through NEAR Intents.</figcaption>
         </figure>
         <h3>What it costs</h3>
-        <p>The Lacuna fee, Solana network fees, and NEAR Intents' route fee. Without a partner key, 1Click charges about 0.1–0.2% per route; with a key held by the proxy that fee goes away. Private buys are capped at <b data-cfg="stealthMax">5 SOL</b> while Private mode is in beta.</p>
+        <p>The Privatus fee, Solana network fees, and NEAR Intents' route fee. Without a partner key, 1Click charges about 0.1–0.2% per route; with a key held by the proxy that fee goes away. Private buys are capped at <b data-cfg="stealthMax">5 SOL</b> while Private mode is in beta.</p>
         <h3>If something goes wrong</h3>
         <p>A route that can't complete is refunded by NEAR Intents to the wallet that sent it. Stealth wallets can always be rebuilt by signing again, and Portfolio scans your stealth wallets on-chain and lists every one with funds, with buttons to exit or export its key, so nothing is stranded. If you've made many stealth wallets, Scan further looks deeper.</p>
         <div class="note ink">
-          <p><b>What Private mode does not do.</b> Nothing makes a wallet untraceable. An observer who sees 1.000 SOL leave your wallet and 0.998 SOL reach a fresh wallet a minute later can guess. Vary amounts, don't buy the instant the stealth wallet is funded, and don't send funds between stealth wallets and wallets you've used publicly. Private mode makes tracing expensive and uncertain; it doesn't make it impossible. Lacuna doesn't run a mixer and never touches the funds in transit.</p>
+          <p><b>What Private mode does not do.</b> Nothing makes a wallet untraceable. An observer who sees 1.000 SOL leave your wallet and 0.998 SOL reach a fresh wallet a minute later can guess. Vary amounts, don't buy the instant the stealth wallet is funded, and don't send funds between stealth wallets and wallets you've used publicly. Private mode makes tracing expensive and uncertain; it doesn't make it impossible. Privatus doesn't run a mixer and never touches the funds in transit.</p>
         </div>
         <h3>Why NEAR Intents</h3>
         <p>It settles quickly, needs no wallet or account on NEAR, pays out from bridge-owned addresses used by everyone, and offers Confidential Intents for keeping the request itself private. Monero would need a swap in and out through third-party exchanges, slower and with more counterparties.</p>
@@ -358,7 +358,7 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
       <section id="audit">
         <p class="eyebrow"><span data-glyph="clock"></span>Trail audit</p>
         <h2>What trackers <em>already know.</em></h2>
-        <p>The Trail audit reads any wallet's public history and scores how linkable it is, 0 to 100, the way commercial trackers score it. It's read-only: nothing to connect or sign. Your browser sends its queries through Lacuna's gateway to the RPC node, or straight to your own node if you set one under RPC node.</p>
+        <p>The Trail audit reads any wallet's public history and scores how linkable it is, 0 to 100, the way commercial trackers score it. It's read-only: nothing to connect or sign. Your browser sends its queries through Privatus's gateway to the RPC node, or straight to your own node if you set one under RPC node.</p>
         <div class="icons">
           <div class="icon-card"><div class="art" data-icon="funding"></div><div class="t"><b>Funding</b><span>Who sent the first SOL, and which other wallets they funded.</span></div></div>
           <div class="icon-card"><div class="art" data-icon="serial"></div><div class="t"><b>Identity</b><span>Deposits to or withdrawals from known exchange wallets.</span></div></div>
@@ -372,7 +372,7 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
       <section id="proxy">
         <p class="eyebrow"><span data-glyph="bolt"></span>Infrastructure</p>
         <h2>Keys stay <em>off the page.</em></h2>
-        <p>Anything in a static site is public, so API keys can't live in it. Instead every browser sends its requests to Lacuna's gateway, a small server that holds the keys and forwards them, so all visitors share paid capacity instead of free, rate-limited endpoints:</p>
+        <p>Anything in a static site is public, so API keys can't live in it. Instead every browser sends its requests to Privatus's gateway, a small server that holds the keys and forwards them, so all visitors share paid capacity instead of free, rate-limited endpoints:</p>
         <figure class="fig">
           <div class="art"><svg data-diagram="proxy" role="img" aria-label="The browser calls one gateway, which adds API keys and forwards to RPC, Jupiter, 1Click and X"></svg></div>
           <figcaption><b>The gateway</b> adds a private RPC URL, the Jupiter key, the NEAR Intents partner key and an X token. It also serves token images from IPFS, cached on the gateway. It only forwards: it never sees a private key, signs anything or records which wallets you look up.</figcaption>
@@ -399,7 +399,7 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
           <thead><tr><th>Thing</th><th>Where it is</th></tr></thead>
           <tbody>
             <tr><td>Main wallet keys</td><td>Your wallet app. Never seen by the terminal.</td></tr>
-            <tr><td>Lacuna signature, instant and stealth keys</td><td>This tab's memory only. Gone when you close the tab or disconnect; rebuilt by signing again.</td></tr>
+            <tr><td>Privatus signature, instant and stealth keys</td><td>This tab's memory only. Gone when you close the tab or disconnect; rebuilt by signing again.</td></tr>
             <tr><td>Settings, watchlist, tracked wallets, trade log, rules</td><td>This browser's local storage. Never uploaded.</td></tr>
             <tr><td>Stealth wallet list (addresses, route status)</td><td>This browser's local storage, under your main wallet's address. It links the two, so clear site data on a shared computer. The terminal can rebuild it from the chain.</td></tr>
             <tr><td>Limit orders</td><td>On-chain, in Jupiter's Trigger program, under your wallet.</td></tr>
@@ -407,9 +407,9 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
           </tbody>
         </table></div>
         <ul class="list">
-          <li>Check the transaction preview in your wallet. A Lacuna buy shows the swap, one fee transfer to the Lacuna treasury, and a Jito tip if your preset sets one. Nothing else.</li>
+          <li>Check the transaction preview in your wallet. A Privatus buy shows the swap, one fee transfer to the Privatus treasury, and a Jito tip if your preset sets one. Nothing else.</li>
           <li>Keep the instant wallet to trading money. Its key sits in an open browser tab.</li>
-          <li>Bookmark the site. Never sign the Lacuna message anywhere else.</li>
+          <li>Bookmark the site. Never sign the Privatus message anywhere else.</li>
         </ul>
       </section>
 
@@ -431,7 +431,7 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
       <section id="faq">
         <p class="eyebrow"><span data-glyph="file"></span>FAQ</p>
         <h2>Questions.</h2>
-        <details class="faq"><summary>Can Lacuna take my funds?</summary><div><p>No. It has no server holding funds or wallet keys, and its gateway only forwards requests: it never signs anything. Every transaction is built in your browser and signed by you or by a key derived from your own signature. Private funds in transit are held by NEAR Intents and refunded to you if a route fails.</p></div></details>
+        <details class="faq"><summary>Can Privatus take my funds?</summary><div><p>No. It has no server holding funds or wallet keys, and its gateway only forwards requests: it never signs anything. Every transaction is built in your browser and signed by you or by a key derived from your own signature. Private funds in transit are held by NEAR Intents and refunded to you if a route fails.</p></div></details>
         <details class="faq"><summary>Why did my trade fail?</summary><div><p>Usually the price moved past your slippage, or the transaction didn't land before it expired. Nothing but the network fee is spent when a swap fails. Try a faster preset or more slippage.</p></div></details>
         <details class="faq"><summary>Is Private mode anonymous?</summary><div><p>No tool makes you anonymous. Private mode removes the direct on-chain link between your wallet and the wallet that buys. Timing and amounts can still be matched by someone watching closely, so vary them.</p></div></details>
         <details class="faq"><summary>Where are my instant and stealth wallets if I clear my browser?</summary><div><p>Their keys were never stored, so nothing is lost. Connect the same main wallet, sign the same message, and they come back with their balances. Clearing the browser also deletes the local list linking your stealth wallets to your main wallet; the terminal finds them again on-chain.</p></div></details>
@@ -443,7 +443,7 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
 
   <footer>
     <p class="big">A wallet should only show <em>what you choose to sign.</em></p>
-    <a class="brand" href="./" aria-label="Lacuna home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
+    <a class="brand" href="./" aria-label="Privatus home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
   </footer>
 </div>
 </body>

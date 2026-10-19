@@ -9,7 +9,7 @@
 
 export const ONECLICK_BASE = "https://1click.chaindefuser.com";
 export const SOL_ASSET = "nep141:sol.omft.near"; // native SOL inside NEAR Intents
-export const STEALTH_MESSAGE = "Lacuna stealth wallets v1\n\nSigning this creates your private trading wallets. It sends no transaction and costs nothing. Only sign it on Lacuna: anyone with this signature can open your stealth wallets.";
+export const STEALTH_MESSAGE = "Privatus stealth wallets v1\n\nSigning this creates your private trading wallets. It sends no transaction and costs nothing. Only sign it on Privatus: anyone with this signature can open your stealth wallets.";
 export const BASE_FEE = 5000n; // lamports per signature
 
 export class StealthError extends Error {}
@@ -23,7 +23,7 @@ export async function seedFingerprint(signature) {
   return Array.from((await sha256(signature)).slice(0, 8), b => b.toString(16).padStart(2, "0")).join("");
 }
 export async function deriveStealth(web3, signature, index) {
-  const tag = enc.encode(`lacuna/stealth/${index}`);
+  const tag = enc.encode(`privatus/stealth/${index}`);
   const seed = await sha256(new Uint8Array([...signature, ...tag]));
   return web3.Keypair.fromSeed(seed);
 }
@@ -50,7 +50,7 @@ export async function scanStealths(web3, signature, { isUsed, known = -1, gap = 
 
 // The instant trading wallet: same signature, its own derivation path, so it never collides with stealths.
 export async function deriveInstant(web3, signature) {
-  const seed = await sha256(new Uint8Array([...signature, ...enc.encode("lacuna/instant/0")]));
+  const seed = await sha256(new Uint8Array([...signature, ...enc.encode("privatus/instant/0")]));
   return web3.Keypair.fromSeed(seed);
 }
 
@@ -91,7 +91,7 @@ export async function routeQuote({ oc, asset = SOL_ASSET, amount, from, to, slip
     recipient: to, recipientType: "DESTINATION_CHAIN",
     deadline: new Date(now + 30 * 60 * 1000).toISOString(),
     ...(level !== "public" ? { confidentiality: level } : {}),
-    referral: "lacuna"
+    referral: "privatus"
   });
   let res, confidential = confidentiality !== "public";
   try { res = await oc.quote(request(confidentiality)); }

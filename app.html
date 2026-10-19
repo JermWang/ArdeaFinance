@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Lacuna terminal: live pump.fun Pulse, one-click trading through Jupiter, wallet tracking, orders, and Private mode over NEAR Intents.">
+<meta name="description" content="Privatus terminal: live pump.fun Pulse, one-click trading through Jupiter, wallet tracking, orders, and Private mode over NEAR Intents.">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Lacuna">
-<meta property="og:title" content="Lacuna Terminal">
+<meta property="og:site_name" content="Privatus">
+<meta property="og:title" content="Privatus Terminal">
 <meta property="og:description" content="Live launches, one-click Jupiter trading, wallet tracking, limit orders and Private mode over NEAR Intents.">
-<meta property="og:image" content="media/banner.png">
+<meta property="og:image" content="https://privatus.up.railway.app/media/banner.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="media/banner.png">
+<meta name="twitter:image" content="https://privatus.up.railway.app/media/banner.png">
 <meta name="theme-color" content="#080B10">
-<title>Lacuna Terminal</title>
+<title>Privatus Terminal</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -59,7 +59,7 @@ button,input,select{font:inherit;color:inherit}
 /* top bar */
 .bar{position:sticky;top:0;z-index:30;display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:8px 14px;background:color-mix(in srgb,var(--ink-0) 92%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .brand{display:flex;align-items:center;gap:9px;text-decoration:none}
-.brand .mark{width:24px;height:24px;display:block;color:var(--paper)}
+.brand .mark{height:26px;width:auto;display:block;color:var(--paper)}
 .brand .word{font:400 1.35rem/1 var(--serif);letter-spacing:.01em}
 .nav{display:flex;gap:2px}
 .nav a{font:500 .74rem var(--font-mono);letter-spacing:.06em;text-transform:uppercase;text-decoration:none;padding:7px 10px;border-radius:8px;color:var(--mute-ink);white-space:nowrap}
@@ -393,7 +393,7 @@ td.pnl .pb{display:block;height:3px;border-radius:2px;margin:4px 0 0 auto;opacit
 .pb.pos{background:var(--up)}.pb.neg{background:var(--down)}
 @media (prefers-reduced-motion:reduce){.pcard,.lk,.mbar i{transition:none}.pcard:hover{transform:none}}
 
-/* Lacuna desk finish: hairline rules, brass for the selected state, an engraved backdrop behind the views */
+/* Privatus desk finish: hairline rules, brass for the selected state, an engraved backdrop behind the views */
 body{background:var(--ink-0) radial-gradient(1200px 500px at 70% -10%,color-mix(in srgb,var(--accent) 5%,transparent),transparent 70%) no-repeat}
 .bar{background:color-mix(in srgb,var(--ink-0) 90%,transparent)}
 .nav a[aria-current="page"]{background:none;color:var(--paper);box-shadow:inset 0 -2px 0 var(--accent);border-radius:0}
@@ -518,7 +518,7 @@ a.txl{display:inline-flex;color:var(--mute-ink);padding:2px}a.txl:hover{color:va
 </head>
 <body>
 <header class="bar">
-  <a class="brand" href="./" aria-label="Lacuna home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
+  <a class="brand" href="./" aria-label="Privatus home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
   <nav class="nav" aria-label="Terminal">
     <a href="#/" data-route="pulse">Pulse</a>
     <a href="#/trending" data-route="trending">Trending</a>
@@ -706,7 +706,7 @@ a.txl{display:inline-flex;color:var(--mute-ink);padding:2px}a.txl:hover{color:va
 
 <dialog id="modal" aria-labelledby="m-title"><div class="mhead"><h2 id="m-title"></h2><button class="btn small" id="m-close" type="button">Close</button></div><div class="mbody" id="m-body"></div></dialog>
 <footer class="statusbar" id="statusbar" aria-label="Status">
-  <span class="sb brandmini">LACUNA</span>
+  <span class="sb brandmini">PRIVATUS</span>
   <span class="sb" id="sb-stream"><span class="dot"></span>Stream</span>
   <span class="sb hide-sm" id="sb-curves"><span class="dot"></span>Curves</span>
   <span class="sb lat" id="sb-rpc" title="Round trip to the Solana RPC through the gateway">RPC <b>—</b></span>

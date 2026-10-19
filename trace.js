@@ -1,4 +1,4 @@
-// Lacuna "Trace me": read-only exposure analysis for a Solana wallet.
+// Privatus "Trace me": read-only exposure analysis for a Solana wallet.
 // Everything here runs in the visitor's browser against a Solana RPC node they choose.
 // collect() reads public history, analyze() turns it into the links a wallet tracker would draw.
 

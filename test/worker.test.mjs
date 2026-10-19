@@ -77,7 +77,7 @@ test("ipfs: races gateways, serves images to <img> requests from allowed pages, 
   const CID = "QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG";
   const f = withFetch(url => url.startsWith("https://dweb.link/") ? new Response("PNG", { status: 200, headers: { "content-type": "image/png" } }) : new Response("", { status: 504 }));
   try {
-    const img = await worker.fetch(new Request(`https://p.test/ipfs/${CID}`, { headers: { referer: "https://jermwang.github.io/lacuna/app.html" } }), env, ctx);
+    const img = await worker.fetch(new Request(`https://p.test/ipfs/${CID}`, { headers: { referer: "https://jermwang.github.io/privatus/app.html" } }), env, ctx);
     assert.equal(img.status, 200);
     assert.equal(img.headers.get("content-type"), "image/png");
     assert.match(img.headers.get("content-security-policy"), /sandbox/);

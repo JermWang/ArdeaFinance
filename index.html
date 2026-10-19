@@ -3,16 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Lacuna is a private execution terminal for Solana: live launches, one-click Jupiter trades, wallet tracking, and Private mode buys funded through NEAR Intents.">
+<meta name="description" content="Privatus is a private execution terminal for Solana: live launches, one-click Jupiter trades, wallet tracking, and Private mode buys funded through NEAR Intents.">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Lacuna">
-<meta property="og:title" content="Lacuna · Trade without leaving a trail">
+<meta property="og:url" content="https://privatus.up.railway.app/">
+<meta property="og:site_name" content="Privatus">
+<meta property="og:title" content="Privatus · Trade without leaving a trail">
 <meta property="og:description" content="Private execution terminal for Solana. Private mode buys from fresh stealth wallets, funded confidentially through NEAR Intents.">
-<meta property="og:image" content="media/banner.png">
+<meta property="og:image" content="https://privatus.up.railway.app/media/banner.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="media/banner.png">
+<meta name="twitter:image" content="https://privatus.up.railway.app/media/banner.png">
 <meta name="theme-color" content="#0A0E14">
-<title>Lacuna</title>
+<title>Privatus</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -45,7 +46,7 @@ em{font-style:italic;color:var(--brass)}
 .top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 82%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
 .top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-.brand .mark{width:28px;height:28px;color:var(--ivory)}
+.brand .mark{height:30px;width:auto;color:var(--ivory)}
 .brand .word{font:400 1.6rem/1 var(--serif);letter-spacing:.01em}
 .links{display:flex;align-items:center;gap:2px}
 .links a{font:500 .84rem var(--sans);text-decoration:none;color:var(--mute);padding:8px 12px;border-radius:4px;white-space:nowrap}
@@ -234,7 +235,7 @@ footer nav{display:flex;gap:18px;flex-wrap:wrap;justify-content:flex-end;font:.7
 footer nav a{text-decoration:none;color:var(--mute)}
 footer nav a:hover{color:var(--ivory)}
 footer .fine{grid-column:1/-1;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:20px;font:.72rem var(--mono);color:var(--mute-2)}
-footer .fine .brand .mark{width:20px;height:20px}
+footer .fine .brand .mark{height:22px;width:auto}
 footer .fine .brand .word{font-size:1.2rem;color:var(--ivory)}
 @media (max-width:760px){footer .wrap{grid-template-columns:minmax(0,1fr)}footer nav{justify-content:flex-start}}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn{transition:none}}
@@ -244,7 +245,7 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
 <body>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="#top" aria-label="Lacuna home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
+    <a class="brand" href="#top" aria-label="Privatus home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
     <nav class="links" aria-label="Sections">
       <a class="sec" href="#record">The record</a>
       <a class="sec" href="#private">Private mode</a>
@@ -263,7 +264,7 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
       <div>
         <p class="eyebrow">Private execution for Solana</p>
         <h1>Trade without leaving <em>a trail.</em></h1>
-        <p class="lede">Lacuna is a full trading terminal: live launches, one-click buys, wallet tracking and orders. With <b>Private mode</b>, each buy is made by a fresh wallet that NEAR Intents funds for you, so nothing on-chain runs from your wallet to your position.</p>
+        <p class="lede">Privatus is a full trading terminal: live launches, one-click buys, wallet tracking and orders. With <b>Private mode</b>, each buy is made by a fresh wallet that NEAR Intents funds for you, so nothing on-chain runs from your wallet to your position.</p>
         <div class="ctas">
           <a class="btn brass" href="./app.html">Open terminal <span class="arr">→</span></a>
           <a class="btn" href="./docs.html">How it works</a>
@@ -305,15 +306,15 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
       <p class="sub">A private buy never comes from your wallet. Your wallet pays a one-time deposit address, NEAR Intents pays a brand-new stealth wallet from its own liquidity, and that stealth wallet makes the trade.</p>
       <div class="cols">
         <div class="col"><span data-glyph="stealth"></span><h3>A new wallet each buy</h3><p>Every private buy runs from a stealth wallet with no history, so trackers see a stranger every time.</p></div>
-        <div class="col"><span data-glyph="lock"></span><h3>Confidential routing</h3><p>Funds reach the stealth wallet through NEAR's Confidential Intents and are paid out by NEAR's bridge. Lacuna doesn't run a mixer.</p></div>
+        <div class="col"><span data-glyph="lock"></span><h3>Confidential routing</h3><p>Funds reach the stealth wallet through NEAR's Confidential Intents and are paid out by NEAR's bridge. Privatus doesn't run a mixer.</p></div>
         <div class="col"><span data-glyph="key"></span><h3>Recoverable anywhere</h3><p>Stealth wallets come from one signature of your wallet. Sign again on any device to restore them. Nothing secret is stored.</p></div>
-        <div class="col"><span data-glyph="fuel"></span><h3>No fee trail</h3><p>The fee is paid from your main wallet when you fund. Stealth wallets never pay Lacuna, so nothing on-chain marks them as ours.</p></div>
+        <div class="col"><span data-glyph="fuel"></span><h3>No fee trail</h3><p>The fee is paid from your main wallet when you fund. Stealth wallets never pay Privatus, so nothing on-chain marks them as ours.</p></div>
       </div>
       <div class="how">
         <h3>How Private mode uses NEAR Intents</h3>
         <ol>
           <li><b>Ask for a route.</b> The terminal asks NEAR Intents' 1Click API to deliver SOL to a new stealth wallet, and gets back a one-time deposit address.</li>
-          <li><b>Fund it once.</b> You sign one transfer from your wallet to that address. Lacuna's <span data-cfg="fee">0.5%</span> fee rides in the same transaction.</li>
+          <li><b>Fund it once.</b> You sign one transfer from your wallet to that address. Privatus's <span data-cfg="fee">0.5%</span> fee rides in the same transaction.</li>
           <li><b>Solvers pay the stealth wallet.</b> NEAR Intents fills the intent from its own liquidity. With Confidential Intents, the route stays off the public record.</li>
           <li><b>The stealth wallet buys.</b> Once the SOL lands, it swaps through Jupiter. Exits run the same route in reverse, back to your wallet.</li>
         </ol>
@@ -417,7 +418,7 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
     <p class="big">A wallet should only show <em>what you choose to sign.</em></p>
     <nav aria-label="Footer"><a href="./app.html">Terminal</a><a href="./docs.html">Docs</a><a href="#audit">Trail audit</a><a href="#private">Private mode</a></nav>
     <div class="fine">
-      <a class="brand" href="#top" aria-label="Lacuna home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
+      <a class="brand" href="#top" aria-label="Privatus home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
       <span>Non-custodial software. Privacy on a public chain is never perfect; read the limits in the docs.</span>
     </div>
   </div>

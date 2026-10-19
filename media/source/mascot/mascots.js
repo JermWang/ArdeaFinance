@@ -1,4 +1,4 @@
-// Three mascot concepts for Lacuna, drawn on a 64-unit grid in the house style: bold ivory forms,
+// Three mascot concepts for Privatus, drawn on a 64-unit grid in the house style: bold ivory forms,
 // navy cut-outs, one brass detail, a little guilloché engraving on the body. Each returns an <svg> and
 // animates itself while it's on the page.
 const NS = "http://www.w3.org/2000/svg";

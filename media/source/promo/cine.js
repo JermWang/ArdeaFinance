@@ -1,4 +1,4 @@
-// Cinematic scene kit for Lacuna's promo images. Same engraving language as art.js (guilloché bands,
+// Cinematic scene kit for Privatus's promo images. Same engraving language as art.js (guilloché bands,
 // banknote waves, the vault dial), lit like a film still: light pools and beams, perspective floors,
 // depth-of-field blur, bokeh, an anamorphic flare, grain and a vignette. Self-contained on purpose so
 // the renders don't shift when the site's art.js changes.
@@ -39,7 +39,7 @@ function glowFilter(defs, std = 5, strength = 1.6) {
   return `url(#${id})`;
 }
 
-// The seal: woven bands, a ticked bezel and a brass core, with an optional lacuna (wedge) cut out.
+// The seal: woven bands, a ticked bezel and a brass core, with an optional gap (wedge) cut out.
 // Draws in a -320..320 box. Returns the <svg>.
 export function seal({ gap = true, gapA = -0.9, gapW = .34, label = true, glow = true, dense = 1, brassOnly = false, core = true } = {}) {
   const svg = el("svg", { viewBox: "-320 -320 640 640" }), defs = el("defs", {}, svg);

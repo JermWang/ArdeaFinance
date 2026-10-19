@@ -1,4 +1,4 @@
-// Lacuna terminal: Jupiter-routed swaps against SOL, with the platform fee added as a
+// Privatus terminal: Jupiter-routed swaps against SOL, with the platform fee added as a
 // plain SOL transfer to the treasury inside the same transaction the user signs.
 // The Solana web3.js library is passed in, so this module runs in the browser and in Node tests.
 

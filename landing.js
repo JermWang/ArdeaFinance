@@ -180,7 +180,7 @@ function ready() {
   copyBtn.disabled = true;
 }
 
-const RPC_KEY = "lacuna-rpc";
+const RPC_KEY = "privatus-rpc";
 try { rpcIn.value = localStorage.getItem(RPC_KEY) || DEFAULT_RPC; } catch (_) { rpcIn.value = DEFAULT_RPC; }
 rpcIn.addEventListener("change", () => { try { localStorage.setItem(RPC_KEY, rpcIn.value.trim()); } catch (_) {} });
 const rpcUrl = () => /^https?:\/\/\S+$/.test(rpcIn.value.trim()) ? rpcIn.value.trim() : DEFAULT_RPC;
@@ -223,7 +223,7 @@ copyBtn.addEventListener("click", async () => {
   const r = G.result;
   if (!r || !r.findings) return;
   const mask = s => s.replace(/[1-9A-HJ-NP-Za-km-z]{4,8}…[1-9A-HJ-NP-Za-km-z]{4}/g, "••••");
-  const text = [`My Solana wallet exposure (Lacuna trail audit): ${r.score}/100 (${r.grade})`, ...r.findings.map(f => `· ${f.k}: ${mask(f.v)}`), location.href.split("#")[0]].join("\n");
+  const text = [`My Solana wallet exposure (Privatus trail audit): ${r.score}/100 (${r.grade})`, ...r.findings.map(f => `· ${f.k}: ${mask(f.v)}`), location.href.split("#")[0]].join("\n");
   try { await navigator.clipboard.writeText(text); setMeta(["Copied. Wallet addresses are masked."]); }
   catch (_) { setMeta(["Couldn't reach the clipboard in this view."]); }
 });

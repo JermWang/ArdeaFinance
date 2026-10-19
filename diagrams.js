@@ -143,7 +143,7 @@ export function tradeTx(svg) {
     rows: [
       { label: "COMPUTE BUDGET", note: "limit + priority" },
       { label: "TOKEN ACCOUNT", note: "opened if needed" },
-      { label: "LACUNA FEE", note: "0.5% → treasury", accent: true },
+      { label: "PRIVATUS FEE", note: "0.5% → treasury", accent: true },
       { label: "JUPITER SWAP", note: "best route" },
       { label: "CLEANUP", note: "unwrap SOL" },
       { label: "JITO TIP", note: "if the preset sets one" }

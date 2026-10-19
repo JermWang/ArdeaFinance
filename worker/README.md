@@ -1,6 +1,6 @@
-# Lacuna proxy
+# Privatus proxy
 
-A Cloudflare Worker that holds Lacuna's API keys so the static site never ships them, and gives every visitor shared paid capacity instead of each browser's free-tier limit.
+A Cloudflare Worker that holds Privatus's API keys so the static site never ships them, and gives every visitor shared paid capacity instead of each browser's free-tier limit.
 
 | Path | Upstream | Notes |
 |---|---|---|
@@ -24,6 +24,6 @@ npx wrangler secret put X_BEARER       # optional
 npx wrangler deploy
 ```
 
-Then set `PROXY_URL` in `../config.js` to the worker's URL (for example `https://lacuna-proxy.<you>.workers.dev`) and push. The site then routes RPC, Jupiter, NEAR Intents, Jito and X through the proxy automatically.
+Then set `PROXY_URL` in `../config.js` to the worker's URL (for example `https://privatus-proxy.<you>.workers.dev`) and push. The site then routes RPC, Jupiter, NEAR Intents, Jito and X through the proxy automatically.
 
 Edit `ALLOWED_ORIGINS` in `wrangler.toml` if the site moves to another domain (it allows only localhost:5179 until the site has a domain).
