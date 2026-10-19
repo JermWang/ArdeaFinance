@@ -65,14 +65,17 @@ function passes(t, f) {
 
 // PumpPortal messages → board records.
 export function fromPumpPortal(m, solUsd) {
+  // the stream also carries other launchpads (letsbonk and friends); only pump.fun's own curve numbers are
+  // comparable, so for the rest market cap and SOL raised wait for Jupiter
+  const curve = !m.pool || m.pool === "pump";
   return {
     mint: m.mint, name: m.name, symbol: m.symbol, uri: m.uri, creator: m.traderPublicKey, image: typeof m.image === "string" ? m.image : undefined,
-    createdAt: Date.now(), pump: true, pool: m.pool, mcapSol: m.marketCapSol,
-    mcapUsd: solUsd && m.marketCapSol ? m.marketCapSol * solUsd : undefined,
+    createdAt: Date.now(), pump: curve, pool: m.pool, mcapSol: curve ? m.marketCapSol : undefined,
+    mcapUsd: curve && solUsd && m.marketCapSol ? m.marketCapSol * solUsd : undefined,
     progress: 0, devBuySol: m.solAmount, source: "pumpportal",
     // the creator's buy in the launch transaction, as a share of the 1B supply
     devBuyPct: typeof m.initialBuy === "number" && m.initialBuy > 0 ? m.initialBuy / 1e7 : undefined,
-    raisedSol: typeof m.vSolInBondingCurve === "number" ? Math.max(0, m.vSolInBondingCurve - 30) : undefined
+    raisedSol: curve && typeof m.vSolInBondingCurve === "number" ? Math.max(0, m.vSolInBondingCurve - 30) : undefined
   };
 }
 

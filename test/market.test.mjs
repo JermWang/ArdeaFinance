@@ -109,6 +109,8 @@ test("pulse numbers: dev buy share, curve samples, one-minute momentum, Jupiter 
   const t = fromPumpPortal({ mint: "Abcpump", name: "A", symbol: "A", traderPublicKey: "dev", marketCapSol: 28, solAmount: 1.5, initialBuy: 51_000_000, vSolInBondingCurve: 31.5 }, 100);
   assert.equal(t.devBuyPct, 5.1);
   assert.equal(t.raisedSol, 1.5);
+  const bonk = fromPumpPortal({ mint: "Bbonk", pool: "bonk", marketCapSol: 684, vSolInBondingCurve: 30 }, 100);
+  assert.equal(bonk.mcapUsd, undefined); assert.equal(bonk.raisedSol, undefined); assert.equal(bonk.pump, false);
   const t0 = 1_000_000;
   pushSample(t, { at: t0, mc: 4000, sol: 1.5 });
   pushSample(t, { at: t0 + 500, mc: 4100 });                     // merged into the previous sample
