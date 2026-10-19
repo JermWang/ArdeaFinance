@@ -59,7 +59,7 @@ button,input,select{font:inherit;color:inherit}
 /* top bar */
 .bar{position:sticky;top:0;z-index:30;display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:8px 14px;background:color-mix(in srgb,var(--ink-0) 92%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .brand{display:flex;align-items:center;gap:9px;text-decoration:none}
-.brand .mark{height:26px;width:auto;display:block;color:var(--paper)}
+.brand .mark{height:26px;width:36px;flex:none;display:block;color:var(--paper)}
 .brand .word{font:400 1.35rem/1 var(--serif);letter-spacing:.01em}
 .nav{display:flex;gap:2px}
 .nav a{font:500 .74rem var(--font-mono);letter-spacing:.06em;text-transform:uppercase;text-decoration:none;padding:7px 10px;border-radius:8px;color:var(--mute-ink);white-space:nowrap}
@@ -514,6 +514,45 @@ a.txl{display:inline-flex;color:var(--mute-ink);padding:2px}a.txl:hover{color:va
 @media (max-width:1100px){.plist{max-height:none}}
 @media (max-width:760px){.statusbar .hide-sm{display:none}.statusbar{gap:12px}}
 @media (prefers-reduced-motion:reduce){.skel i{animation:none}.pcard.fresh{animation:none}.pcard::before,.star,.qb,.go{transition:none}}
+
+/* Pulse cards v2: ticker-row density. Identity line, market cap with volume, sparkline and the move, then a
+   labelled grid of numbers coloured by risk, and buy/sell pressure along the bottom edge. */
+.pcard{grid-template-columns:48px minmax(0,1fr) auto;align-items:start;gap:11px;padding:8px 10px 10px;position:relative}
+.pcard .av{width:48px;height:48px;margin-top:2px}
+.pc-top{display:flex;align-items:center;gap:7px;min-width:0;height:22px}
+.pc-top b{font:600 .92rem var(--font-display);letter-spacing:-.01em;white-space:nowrap}
+.pc-top .nm{font-size:.74rem;color:var(--mute-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1 1 auto}
+.pc-top .age{flex:none;margin:0;font:500 .62rem var(--font-mono);padding:2px 6px;border-radius:3px;background:var(--ink-2);color:var(--mute-ink)}
+.pc-top .age.new{color:var(--up);background:color-mix(in srgb,var(--up) 12%,var(--ink-2))}
+.pc-top .pc-links{display:flex;gap:3px;margin:0 0 0 auto;flex:none}
+.pc-top .pc-links .lk{height:20px;min-width:20px;padding:0 4px}
+.pc-top .pc-links .lk .ico{width:11px;height:11px}
+.pc-row{display:flex;align-items:center;gap:10px;margin-top:3px;min-width:0}
+.pc-row i{font:500 .58rem var(--font-mono);font-style:normal;letter-spacing:.1em;color:var(--mute);margin-right:4px}
+.pc-row .mc b{font:600 1.04rem var(--font-mono);font-variant-numeric:tabular-nums;color:var(--paper);letter-spacing:-.02em}
+.pc-row .vol b{font:500 .78rem var(--font-mono);font-variant-numeric:tabular-nums;color:#C9CDD4}
+.pc-row .spark{width:64px;height:18px;flex:none;overflow:visible}
+.pc-row .spark .line{fill:none;stroke:var(--mute-ink);stroke-width:1.3;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.pc-row .spark .area{fill:var(--mute-ink);opacity:.08}
+.pc-row .spark[data-dir="up"] .line{stroke:var(--up)}.pc-row .spark[data-dir="up"] .area{fill:var(--up);opacity:.12}
+.pc-row .spark[data-dir="down"] .line{stroke:var(--down)}.pc-row .spark[data-dir="down"] .area{fill:var(--down);opacity:.1}
+.pc-row .chg{font:600 .7rem var(--font-mono);font-variant-numeric:tabular-nums;color:var(--mute-ink)}
+.pc-row .chg.up{color:var(--up)}.pc-row .chg.down{color:var(--down)}
+.pc-row .cv{margin-left:auto;font:600 .64rem var(--font-mono);color:var(--up);border:1px solid color-mix(in srgb,var(--up) 35%,var(--line));border-radius:3px;padding:1px 5px}
+.pc-row .cv:empty{display:none}
+.pc-row .cv.hot{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.pc-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px 8px;margin-top:6px;padding-top:6px;border-top:1px solid var(--line)}
+.pc-grid .cell{display:flex;flex-direction:column;gap:0;min-width:0;line-height:1.25}
+.pc-grid .cell i{font:500 .54rem var(--font-mono);font-style:normal;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-grid .cell b{font:600 .74rem var(--font-mono);font-variant-numeric:tabular-nums;color:var(--paper);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-grid .cell.na b{color:var(--ink-3)}
+.pc-grid .cell.good b{color:var(--up)}.pc-grid .cell.warn b{color:var(--warn)}.pc-grid .cell.bad b{color:var(--down)}
+.pc-bs{position:absolute;left:0;right:0;bottom:0;height:2px;display:flex;opacity:.85}
+.pc-bs i{display:block;min-width:0}.pc-bs i.b{background:var(--up)}.pc-bs i.s{background:var(--down)}
+.pc-bs[hidden]{display:none}
+.pcard .pc-acts{align-self:stretch;justify-content:flex-start;padding-top:22px;gap:5px}
+@media (max-width:560px){#solprice{display:none!important}}
+@media (max-width:520px){.pcard{grid-template-columns:44px minmax(0,1fr)}.pcard .av{width:44px;height:44px}.pcard .pc-acts{padding-top:0}.pc-row .spark{width:48px}.pc-top .pc-links{display:none}}
 </style>
 </head>
 <body>

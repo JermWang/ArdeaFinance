@@ -69,8 +69,36 @@ export function fromPumpPortal(m, solUsd) {
     mint: m.mint, name: m.name, symbol: m.symbol, uri: m.uri, creator: m.traderPublicKey, image: typeof m.image === "string" ? m.image : undefined,
     createdAt: Date.now(), pump: true, pool: m.pool, mcapSol: m.marketCapSol,
     mcapUsd: solUsd && m.marketCapSol ? m.marketCapSol * solUsd : undefined,
-    progress: 0, devBuySol: m.solAmount, source: "pumpportal"
+    progress: 0, devBuySol: m.solAmount, source: "pumpportal",
+    // the creator's buy in the launch transaction, as a share of the 1B supply
+    devBuyPct: typeof m.initialBuy === "number" && m.initialBuy > 0 ? m.initialBuy / 1e7 : undefined,
+    raisedSol: typeof m.vSolInBondingCurve === "number" ? Math.max(0, m.vSolInBondingCurve - 30) : undefined
   };
+}
+
+/* ---------- live samples ---------- */
+// Market cap (USD) and SOL in the bonding curve, sampled each time the curve or Jupiter is read, kept for
+// about six minutes on the token record. The cards draw the sparkline and the one-minute numbers from it.
+export function pushSample(t, { at = Date.now(), mc, sol } = {}) {
+  if (!t || (mc == null && sol == null)) return t;
+  const s = t.series || (t.series = []), last = s[s.length - 1];
+  if (last && at - last.at < 1500) { if (mc != null) last.mc = mc; if (sol != null) last.sol = sol; }
+  else s.push({ at, mc, sol });
+  while (s.length > 90 || (s.length > 2 && at - s[0].at > 6 * 60_000)) s.shift();
+  if (mc != null) t.athMc = Math.max(t.athMc || 0, mc);
+  return t;
+}
+// The last `win` ms of samples: net SOL into the curve and the market-cap change in %.
+export function momentum(t, now = Date.now(), win = 60_000) {
+  const s = t?.series || [];
+  if (s.length < 2) return {};
+  const end = s[s.length - 1];
+  let start = s.find(p => now - p.at <= win) || s[0];
+  if (start === end) start = s[s.length - 2];
+  const out = { span: end.at - start.at };
+  if (end.sol != null && start.sol != null) out.flowSol = end.sol - start.sol;
+  if (end.mc && start.mc) out.change = (end.mc / start.mc - 1) * 100;
+  return out;
 }
 // Jupiter token objects → board records (fields Jupiter doesn't send stay undefined).
 // stonk.fun launches (Raydium LaunchLab, paired with stocks, memes and other tokens) from its public API.
@@ -90,6 +118,13 @@ export function fromStonk(t) {
   };
 }
 
+// Jupiter's per-window trading stats (volume, buys, sells, traders, net buyers, price and holder change).
+function windowStats(w, k) {
+  if (!w) return {};
+  const vol = w.buyVolume != null || w.sellVolume != null ? (w.buyVolume || 0) + (w.sellVolume || 0) : undefined;
+  return { [`vol${k}`]: vol, [`buys${k}`]: w.numBuys, [`sells${k}`]: w.numSells, [`traders${k}`]: w.numTraders,
+    [`netBuyers${k}`]: w.numNetBuyers, [`change${k}`]: w.priceChange, [`holderChange${k}`]: w.holderChange };
+}
 export function fromJupiter(t) {
   const created = Date.parse(t.firstPool?.createdAt || t.createdAt || "") || undefined;
   return {
@@ -102,7 +137,8 @@ export function fromJupiter(t) {
     progress: typeof t.bondingCurve === "number" ? t.bondingCurve : undefined,
     topHoldersPct: t.audit?.topHoldersPercentage, devPct: t.audit?.devBalancePercentage,
     mintAuthorityDisabled: t.audit?.mintAuthorityDisabled, freezeAuthorityDisabled: t.audit?.freezeAuthorityDisabled,
-    organicScore: t.organicScore, verified: t.isVerified, source: "jupiter"
+    organicScore: t.organicScore, organicLabel: t.organicScoreLabel, verified: t.isVerified, devMints: t.audit?.devMints,
+    ...windowStats(t.stats5m, "5m"), ...windowStats(t.stats1h, "1h"), source: "jupiter"
   };
 }
 

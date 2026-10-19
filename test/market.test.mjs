@@ -103,3 +103,29 @@ test("stonk.fun tokens land in the right Pulse column with their market data", (
   assert.equal(t.website, undefined, "stonk.fun's own site isn't the token's website"); assert.equal(t.twitter, "https://x.com/stonky");
   assert.deepEqual(b.curveTargets(), [], "stonk.fun tokens aren't pump.fun curves");
 });
+
+test("pulse numbers: dev buy share, curve samples, one-minute momentum, Jupiter window stats", async () => {
+  const { fromPumpPortal, pushSample, momentum, fromJupiter } = await import("../market.js");
+  const t = fromPumpPortal({ mint: "Abcpump", name: "A", symbol: "A", traderPublicKey: "dev", marketCapSol: 28, solAmount: 1.5, initialBuy: 51_000_000, vSolInBondingCurve: 31.5 }, 100);
+  assert.equal(t.devBuyPct, 5.1);
+  assert.equal(t.raisedSol, 1.5);
+  const t0 = 1_000_000;
+  pushSample(t, { at: t0, mc: 4000, sol: 1.5 });
+  pushSample(t, { at: t0 + 500, mc: 4100 });                     // merged into the previous sample
+  assert.equal(t.series.length, 1);
+  pushSample(t, { at: t0 + 30_000, mc: 5000, sol: 4 });
+  pushSample(t, { at: t0 + 60_000, mc: 6150, sol: 6.5 });
+  const m = momentum(t, t0 + 60_000);
+  assert.equal(m.span, 60_000);
+  assert.ok(Math.abs(m.flowSol - 5) < 1e-9);
+  assert.ok(Math.abs(m.change - 50) < 1e-9);
+  assert.equal(t.athMc, 6150);
+  // samples older than six minutes fall off
+  pushSample(t, { at: t0 + 7 * 60_000, mc: 3000, sol: 2 });
+  assert.deepEqual(t.series.map(p => p.at), [t0 + 60_000, t0 + 7 * 60_000]);
+  assert.deepEqual(momentum({ series: [] }), {});
+  const j = fromJupiter({ id: "Xpump", stats5m: { buyVolume: 300, sellVolume: 200, numBuys: 40, numSells: 12, numTraders: 33, numNetBuyers: 9, priceChange: 12.5 }, audit: { devMints: 4 } });
+  assert.equal(j.vol5m, 500); assert.equal(j.buys5m, 40); assert.equal(j.sells5m, 12); assert.equal(j.traders5m, 33);
+  assert.equal(j.netBuyers5m, 9); assert.equal(j.change5m, 12.5); assert.equal(j.devMints, 4);
+  assert.equal(fromJupiter({ id: "Y" }).vol5m, undefined);
+});

@@ -6,7 +6,7 @@ import { jupiter, prepareSwap, sendAndConfirm, preflight, confirmSent, toRaw, fr
 import { triggerApi, limitAmounts, signAndExecute, describeOrder, evaluateRule, newRule, ruleTarget } from "./orders.js";
 import { STEALTH_MESSAGE, StealthError, deriveStealth, deriveInstant, nextUnusedStealth, scanStealths, seedFingerprint, oneclick, solAssetId, routeQuote, fundingTx, exitTx, exitAmount, waitForRoute } from "./stealth.js";
 import { trace, DEFAULT_RPC, short, isAddress, base58Encode } from "./trace.js";
-import { createBoard, fromPumpPortal, fromJupiter, fromStonk, STONK, pnl, isPumpMint, mergeHistory } from "./market.js";
+import { createBoard, fromPumpPortal, fromJupiter, fromStonk, STONK, pnl, isPumpMint, mergeHistory, pushSample, momentum } from "./market.js";
 import { pumpPortal, stonkFun, tokenTrades, readCurves, metadata, holders, recentSwaps, walletHistory, onchainMeta, imageSources, identicon, setMediaProxy } from "./feeds.js";
 import { renderGlyphs, emblem, glyphSVG } from "./art.js";
 
@@ -463,23 +463,25 @@ async function statsLoop() {
   try {
     if (S.route === "pulse") {
       const c = board.columns(), now = Date.now();
-      const due = [...c.new, ...c.final, ...c.migrated].filter(t => now - (statsAt.get(t.mint) || 0) > (t.holders == null || t.topHoldersPct == null ? 20_000 : 60_000)).map(t => t.mint).slice(0, 50);
+      const every = t => t.holders == null ? 10_000 : board.column(t) === "migrated" ? 30_000 : 12_000;
+      const due = [...c.new, ...c.final, ...c.migrated].filter(t => now - (statsAt.get(t.mint) || 0) > every(t)).map(t => t.mint).slice(0, 100);
       if (due.length) {
         due.forEach(m => statsAt.set(m, now));
-        const list = await jup.search(due.join(","));
+        const list = (await Promise.all([due.slice(0, 50), due.slice(50)].filter(b => b.length).map(b => jup.search(b.join(",")).catch(() => [])))).flat();
         for (const j of Array.isArray(list) ? list : []) {
           const cur = board.tokens.get(j.id);
           if (!cur) continue;
           tokenInfo.set(j.id, j);
-          const f = fromJupiter(j);
-          board.upsert({ mint: j.id, holders: f.holders, topHoldersPct: f.topHoldersPct, devPct: f.devPct, organicScore: f.organicScore,
-            ...(cur.mcapUsd == null ? { mcapUsd: f.mcapUsd } : {}), ...(cur.volume24h == null ? { volume24h: f.volume24h } : {}), ...(cur.liquidityUsd == null ? { liquidityUsd: f.liquidityUsd } : {}) });
+          const f = fromJupiter(j), { mint: _m, name: _n, symbol: _s, image: _i, createdAt: _c, mcapUsd, volume24h, liquidityUsd, progress: _p, graduatedAt: _g, source: _src, ...stats } = f;
+          const t = board.upsert({ mint: j.id, ...stats, ...(cur.mcapUsd == null || !cur.pump || cur.complete ? { mcapUsd } : {}), ...(cur.volume24h == null ? { volume24h } : {}), ...(liquidityUsd != null ? { liquidityUsd } : {}) });
+          // tokens with no curve to read still get a sparkline, from Jupiter's market cap
+          if (t && (!t.pump || t.complete || t.migratedAt)) pushSample(t, { mc: t.mcapUsd });
         }
         pulseDirty = true;
       }
     }
   } catch (_) {}
-  setTimeout(statsLoop, 8000);
+  setTimeout(statsLoop, 5000);
 }
 
 function setStatusChip(el, s, label) {
@@ -496,8 +498,12 @@ async function curveLoop() {
       const curves = await readCurves({ connection, web3, mints: targets });
       for (const [mint, c] of curves) if (c.complete && armed.includes(mint)) fireSnipe(mint);
       // a completed curve has handed its reserves to the AMM, so it no longer prices the token: keep the last real price
-      for (const [mint, c] of curves) board.upsert(c.complete ? { mint, progress: 100, complete: true }
-        : { mint, progress: c.progress, mcapSol: c.mcapSol, mcapUsd: S.solUsd ? c.mcapSol * S.solUsd : undefined, priceUsd: S.solUsd ? c.priceSol * S.solUsd : undefined });
+      for (const [mint, c] of curves) {
+        if (c.complete) { board.upsert({ mint, progress: 100, complete: true }); continue; }
+        const raisedSol = Number(c.realSolReserves) / 1e9, mcapUsd = S.solUsd ? c.mcapSol * S.solUsd : undefined;
+        const t = board.upsert({ mint, progress: c.progress, mcapSol: c.mcapSol, mcapUsd, raisedSol, priceUsd: S.solUsd ? c.priceSol * S.solUsd : undefined });
+        pushSample(t, { mc: mcapUsd, sol: raisedSol });
+      }
       setStatusChip($("curve-status"), "live", `curves · ${curves.size}`);
       pulseDirty = true;
     } catch (_) { setStatusChip($("curve-status"), "rate limited", "curves"); }
@@ -520,7 +526,8 @@ function renderPulse(force) {
     const key = col.dataset.col;
     if (paused.has(key) && !force) continue;
     const list = board.columns(filters[key] || {})[key];
-    text(col.querySelector(".count"), String(list.length));
+    const perMin = key === "new" ? [...board.tokens.values()].filter(t => t.source === "pumpportal" && Date.now() - (t.createdAt || 0) < 60_000).length : null;
+    text(col.querySelector(".count"), perMin != null ? `${list.length} · ${perMin}/min` : String(list.length));
     const host = col.querySelector(".plist");
     if (!list.length) {
       const msg = key === "new" ? "Waiting for new pump.fun launches…" : key === "final" ? `Tokens past ${settings.finalStretch}% of their bonding curve show here.` : "Graduated tokens show here.";
@@ -537,39 +544,93 @@ function renderPulse(force) {
 }
 function tickAges() { document.querySelectorAll("#v-pulse .pcard").forEach(el => { const t = board.tokens.get(el.dataset.mint); if (t) text(el.querySelector(".age"), ago(Date.now() - (t.createdAt || t.firstSeen))); }); }
 
+// A Pulse card reads like a ticker row: identity and age on top, market cap with volume, a sparkline and the
+// one-minute move under it, then a grid of labelled numbers coloured by risk, and a buy/sell pressure line
+// along the bottom edge. Numbers come from the curve reads (from the first second) and from Jupiter (once it
+// has indexed the token); a cell with nothing yet shows a dim dash so the grid never jumps.
+const CELLS = ["holders", "top10", "dev", "bs", "traders", "flow", "raised", "launches"];
+const CELL_LABEL = { holders: "Holders", top10: "Top 10", dev: "Dev", bs: "B / S 5m", traders: "Traders", flow: "Net 1m", raised: "Raised", launches: "Dev coins" };
 function buildCard(t) {
   const a = make("a", "pcard"); a.href = `#/token/${t.mint}`; a.dataset.mint = t.mint;
   const av = avatar(); icon(av.querySelector("img"), t.image, t.mint);
-  const main = make("div", "pc-main"), top = make("div", "pc-top"), stats = make("div", "pc-stats"), links = make("div", "pc-links");
-  top.append(make("b"), make("span", "nm"), make("span", "age"));
-  main.append(top, stats, links);
+  const main = make("div", "pc-main"), top = make("div", "pc-top"), row = make("div", "pc-row"), grid = make("div", "pc-grid"), links = make("div", "pc-links");
+  top.append(make("b"), make("span", "nm"), make("span", "age"), links);
+  const spark = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  spark.setAttribute("viewBox", "0 0 64 18"); spark.setAttribute("class", "spark"); spark.setAttribute("aria-hidden", "true");
+  for (const c of ["area", "line"]) { const p = document.createElementNS("http://www.w3.org/2000/svg", "path"); p.setAttribute("class", c); spark.append(p); }
+  const mc = make("span", "mc"); mc.append(make("i", "", "MC"), make("b"));
+  const vol = make("span", "vol"); vol.append(make("i", "", "V"), make("b"));
+  row.append(mc, vol, spark, make("span", "chg"), make("span", "cv"));
+  for (const k of CELLS) { const c = make("span", "cell"); c.dataset.k = k; c.append(make("i", "", CELL_LABEL[k]), make("b", "", "—")); grid.append(c); }
+  main.append(top, row, grid);
   const qb = make("button", "qb"); qb.type = "button";
   qb.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); quickBuy(t.mint, qb); });
   const sn = make("button", "snipe"); sn.append(svgIcon("target")); sn.type = "button";
   sn.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); toggleSnipe(t.mint); });
   const acts = make("div", "pc-acts"); acts.append(qb, sn);
-  a.append(av, main, acts);
+  const bs = make("div", "pc-bs"); bs.append(make("i", "b"), make("i", "s"));
+  a.append(av, main, acts, bs);
   if (t.fresh && !REDUCE) a.classList.add("fresh");
   return a;
 }
-const stat = (ico, v, title, cl) => { const s = make("span", `st${cl ? " " + cl : ""}`); s.title = title; s.append(svgIcon(ico), make("b", "", v)); return s; };
+const solShort = n => `${n > 0 ? "+" : ""}${Math.abs(n) >= 100 ? n.toFixed(0) : Math.abs(n) >= 10 ? n.toFixed(1) : n.toFixed(2)}`;
+function setCell(el, k, v, title, tone) {
+  const c = el.querySelector(`.cell[data-k="${k}"]`), b = c.lastChild;
+  if (b.textContent !== v) b.textContent = v;
+  c.className = `cell${v === "—" ? " na" : ""}${tone ? " " + tone : ""}`;
+  c.title = title;
+}
+function drawSpark(svg, series) {
+  const pts = (series || []).filter(p => p.mc);
+  const [area, line] = svg.children;
+  if (pts.length < 2) { line.setAttribute("d", "M0 9H64"); area.setAttribute("d", ""); svg.dataset.dir = "flat"; return; }
+  const lo = Math.min(...pts.map(p => p.mc)), hi = Math.max(...pts.map(p => p.mc)), t0 = pts[0].at, span = Math.max(1, pts[pts.length - 1].at - t0);
+  const xy = pts.map(p => [(p.at - t0) / span * 64, hi === lo ? 9 : 16 - (p.mc - lo) / (hi - lo) * 14]);
+  const d = xy.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join("");
+  line.setAttribute("d", d); area.setAttribute("d", `${d}L64 18L0 18Z`);
+  svg.dataset.dir = pts[pts.length - 1].mc >= pts[0].mc ? "up" : "down";
+}
 function updateCard(el, t) {
-  const img = el.querySelector("img"), column = board.column(t);
+  const img = el.querySelector("img"), column = board.column(t), now = Date.now();
   if (t.image && img.dataset.src !== t.image) { img.dataset.src = t.image; icon(img, t.image, t.mint); }
   setRing(el.querySelector(".av"), t, column);
   text(el.querySelector(".pc-top b"), t.symbol || short(t.mint));
   text(el.querySelector(".nm"), t.name || "");
-  const age = Date.now() - (t.createdAt || t.firstSeen), ageEl = el.querySelector(".age");
+  const age = now - (t.createdAt || t.firstSeen), ageEl = el.querySelector(".age");
   text(ageEl, ago(age)); ageEl.classList.toggle("new", age < 60_000);
-  const stats = el.querySelector(".pc-stats"); stats.textContent = "";
+  const m = momentum(t, now), curveLive = (t.pump || t.stonk) && t.progress != null && column !== "migrated";
+  // market cap, volume, sparkline, the move
   const mc = t.mcapUsd ?? (t.mcapSol && S.solUsd ? t.mcapSol * S.solUsd : null);
-  stats.append(make("span", "mc", mc != null ? usd(mc) : "—"));
-  if (t.volume24h) stats.append(stat("bars", usd(t.volume24h), "Volume 24h"));
-  else if (t.liquidityUsd) stats.append(stat("drop", usd(t.liquidityUsd), "Liquidity"));
-  if (t.holders) stats.append(stat("users", count(t.holders), "Holders"));
-  if (t.topHoldersPct != null) stats.append(stat("crown", `${t.topHoldersPct.toFixed(0)}%`, "Top 10 holders", t.topHoldersPct > 30 ? "warn" : ""));
-  if (t.devPct != null) stats.append(stat("dev", `${t.devPct.toFixed(1)}%`, "Dev holds", t.devPct > 5 ? "warn" : ""));
-  else if ((t.pump || t.stonk) && t.progress != null && column !== "migrated") stats.append(make("span", `curve${t.progress >= 80 ? " hot" : ""}`, `${t.progress.toFixed(0)}%`));
+  text(el.querySelector(".mc b"), mc != null ? usd(mc) : "—");
+  el.querySelector(".mc").title = t.athMc ? `Market cap · high ${usd(t.athMc)} while on this board` : "Market cap";
+  const vol = t.vol5m ?? t.vol1h ?? t.volume24h, volK = t.vol5m != null ? "5m" : t.vol1h != null ? "1h" : "24h";
+  text(el.querySelector(".vol b"), vol != null ? usd(vol) : "—");
+  el.querySelector(".vol").title = vol != null ? `Volume ${volK}` : "Volume: waiting for Jupiter to index this token";
+  drawSpark(el.querySelector(".spark"), t.series);
+  const chg = m.change != null && m.span > 10_000 ? m.change : t.change5m, chgEl = el.querySelector(".chg");
+  text(chgEl, chg != null ? pct(chg) : ""); chgEl.className = `chg${chg > 0 ? " up" : chg < 0 ? " down" : ""}`;
+  chgEl.title = m.change != null && m.span > 10_000 ? "Market cap change, last minute" : "Price change, 5 minutes";
+  const cv = el.querySelector(".cv");
+  text(cv, curveLive ? `${t.progress.toFixed(0)}%` : ""); cv.className = `cv${curveLive && t.progress >= 80 ? " hot" : ""}`; cv.title = curveLive ? "Bonding curve progress" : "";
+  // the grid
+  setCell(el, "holders", t.holders != null ? count(t.holders) : "—", t.holderChange5m != null ? `Holders · ${t.holderChange5m > 0 ? "+" : ""}${t.holderChange5m.toFixed(1)}% in 5m` : "Holders", t.holderChange5m > 5 ? "good" : "");
+  setCell(el, "top10", t.topHoldersPct != null ? `${t.topHoldersPct.toFixed(0)}%` : "—", "Share held by the top 10 holders", t.topHoldersPct > 50 ? "bad" : t.topHoldersPct > 30 ? "warn" : t.topHoldersPct != null ? "good" : "");
+  const dev = t.devPct ?? t.devBuyPct;
+  setCell(el, "dev", dev != null ? `${dev.toFixed(dev < 10 ? 1 : 0)}%` : "—", t.devPct != null ? "Share the dev wallet holds now" : t.devBuyPct != null ? `Dev bought ${dev.toFixed(1)}% of supply at launch${t.devBuySol ? ` for ${solFmt(t.devBuySol)} SOL` : ""}` : "Dev holdings", dev > 15 ? "bad" : dev > 5 ? "warn" : dev != null ? "good" : "");
+  const b = t.buys5m, s = t.sells5m;
+  setCell(el, "bs", b != null || s != null ? `${count(b || 0)}/${count(s || 0)}` : "—", "Buys / sells in the last 5 minutes", b > s ? "good" : s > b ? "bad" : "");
+  setCell(el, "traders", t.traders5m != null ? count(t.traders5m) : "—", t.netBuyers5m != null ? `Unique traders, 5m · ${t.netBuyers5m} net buyers` : "Unique traders, 5m", "");
+  if (curveLive || !t.organicScore) setCell(el, "flow", m.flowSol != null && m.span > 10_000 ? solShort(m.flowSol) : "—", "Net SOL into the bonding curve over the last minute", m.flowSol > .05 ? "good" : m.flowSol < -.05 ? "bad" : "");
+  else setCell(el, "flow", t.organicScore.toFixed(0), `Jupiter organic score${t.organicLabel ? ` · ${t.organicLabel}` : ""}: how much of the activity looks like real traders`, t.organicScore >= 60 ? "good" : t.organicScore < 25 ? "bad" : "");
+  el.querySelector('.cell[data-k="flow"] i').textContent = curveLive || !t.organicScore ? "Net 1m" : "Organic";
+  if (curveLive && t.raisedSol != null) setCell(el, "raised", `${t.raisedSol >= 10 ? t.raisedSol.toFixed(1) : t.raisedSol.toFixed(2)}`, "SOL raised in the bonding curve (85 to graduate)", "");
+  else setCell(el, "raised", t.liquidityUsd != null ? usd(t.liquidityUsd) : "—", "Liquidity", "");
+  el.querySelector('.cell[data-k="raised"] i').textContent = curveLive ? "Raised" : "Liq";
+  setCell(el, "launches", t.devMints != null ? count(t.devMints) : "—", "Tokens this dev wallet has created", t.devMints > 5 ? "bad" : t.devMints > 1 ? "warn" : t.devMints != null ? "good" : "");
+  // buy/sell pressure along the bottom edge
+  const bsEl = el.querySelector(".pc-bs"), tot = (b || 0) + (s || 0);
+  bsEl.hidden = !tot;
+  if (tot) { bsEl.firstChild.style.flex = String(b || 0); bsEl.lastChild.style.flex = String(s || 0); }
   const links = el.querySelector(".pc-links"), sig = [t.twitter, t.telegram, t.website, t.pump, t.stonk].join("|");
   if (links.dataset.sig !== sig) {
     links.dataset.sig = sig; links.textContent = "";
