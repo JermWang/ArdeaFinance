@@ -133,7 +133,9 @@ export function fromJupiter(t) {
   return {
     mint: t.id, name: t.name, symbol: t.symbol, image: t.icon, createdAt: created,
     pump: isPumpMint(t.id, t.launchpad), launchpad: t.launchpad,
-    mcapUsd: t.mcap ?? t.fdv, liquidityUsd: t.liquidity, holders: t.holderCount, priceUsd: t.usdPrice,
+    // on a bonding curve the market cap that matters is price × total supply (fdv); Jupiter's mcap counts
+    // only circulating supply, which is tiny while the curve still holds most of it
+    mcapUsd: t.graduatedPool ? t.mcap ?? t.fdv : t.fdv ?? t.mcap, liquidityUsd: t.liquidity, holders: t.holderCount, priceUsd: t.usdPrice,
     volume24h: t.stats24h ? (t.stats24h.buyVolume || 0) + (t.stats24h.sellVolume || 0) : undefined,
     change1h: t.stats1h?.priceChange, twitter: socialUrl("twitter", t.twitter), telegram: socialUrl("telegram", t.telegram), website: socialUrl("website", t.website), creator: t.dev,
     graduatedAt: t.graduatedPool ? (Date.parse(t.graduatedAt || "") || created || Date.now()) : undefined,

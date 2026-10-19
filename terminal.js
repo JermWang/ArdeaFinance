@@ -473,7 +473,7 @@ async function statsLoop() {
           if (!cur) continue;
           tokenInfo.set(j.id, j);
           const f = fromJupiter(j), { mint: _m, name: _n, symbol: _s, image: _i, createdAt: _c, mcapUsd, volume24h, liquidityUsd, progress: _p, graduatedAt: _g, source: _src, ...stats } = f;
-          const t = board.upsert({ mint: j.id, ...stats, ...(cur.mcapUsd == null || !cur.pump || cur.complete ? { mcapUsd } : {}), ...(cur.volume24h == null ? { volume24h } : {}), ...(liquidityUsd != null ? { liquidityUsd } : {}) });
+          const t = board.upsert({ mint: j.id, ...stats, ...(cur.mcapUsd == null || !cur.curveAt || now - cur.curveAt > 30_000 || cur.complete ? { mcapUsd } : {}), ...(cur.volume24h == null ? { volume24h } : {}), ...(liquidityUsd != null ? { liquidityUsd } : {}) });
           // tokens with no curve to read still get a sparkline, from Jupiter's market cap
           if (t && (!t.pump || t.complete || t.migratedAt)) pushSample(t, { mc: t.mcapUsd });
         }
@@ -501,7 +501,7 @@ async function curveLoop() {
       for (const [mint, c] of curves) {
         if (c.complete) { board.upsert({ mint, progress: 100, complete: true }); continue; }
         const raisedSol = Number(c.realSolReserves) / 1e9, mcapUsd = S.solUsd ? c.mcapSol * S.solUsd : undefined;
-        const t = board.upsert({ mint, progress: c.progress, mcapSol: c.mcapSol, mcapUsd, raisedSol, priceUsd: S.solUsd ? c.priceSol * S.solUsd : undefined });
+        const t = board.upsert({ mint, progress: c.progress, mcapSol: c.mcapSol, mcapUsd, raisedSol, curveAt: Date.now(), priceUsd: S.solUsd ? c.priceSol * S.solUsd : undefined });
         pushSample(t, { mc: mcapUsd, sol: raisedSol });
       }
       setStatusChip($("curve-status"), "live", `curves · ${curves.size}`);
@@ -553,6 +553,9 @@ const CELL_LABEL = { holders: "Holders", top10: "Top 10", dev: "Dev", bs: "B / S
 function buildCard(t) {
   const a = make("a", "pcard"); a.href = `#/token/${t.mint}`; a.dataset.mint = t.mint;
   const av = avatar(); icon(av.querySelector("img"), t.image, t.mint);
+  // square PFP with the bonding curve as its own labelled bar underneath
+  const pfp = make("div", "pc-pfp"), curve = make("div", "pc-curve"), bar = make("span", "cbar");
+  bar.append(make("i")); curve.append(bar, make("b")); pfp.append(av, curve);
   const main = make("div", "pc-main"), top = make("div", "pc-top"), row = make("div", "pc-row"), grid = make("div", "pc-grid"), links = make("div", "pc-links");
   top.append(make("b"), make("span", "nm"), make("span", "age"), links);
   const spark = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -560,7 +563,7 @@ function buildCard(t) {
   for (const c of ["area", "line"]) { const p = document.createElementNS("http://www.w3.org/2000/svg", "path"); p.setAttribute("class", c); spark.append(p); }
   const mc = make("span", "mc"); mc.append(make("i", "", "MC"), make("b"));
   const vol = make("span", "vol"); vol.append(make("i", "", "V"), make("b"));
-  row.append(mc, vol, spark, make("span", "chg"), make("span", "cv"));
+  row.append(mc, vol, spark, make("span", "chg"));
   for (const k of CELLS) { const c = make("span", "cell"); c.dataset.k = k; c.append(make("i", "", CELL_LABEL[k]), make("b", "", "—")); grid.append(c); }
   main.append(top, row, grid);
   const qb = make("button", "qb"); qb.type = "button";
@@ -569,7 +572,7 @@ function buildCard(t) {
   sn.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); toggleSnipe(t.mint); });
   const acts = make("div", "pc-acts"); acts.append(qb, sn);
   const bs = make("div", "pc-bs"); bs.append(make("i", "b"), make("i", "s"));
-  a.append(av, main, acts, bs);
+  a.append(pfp, main, acts, bs);
   if (t.fresh && !REDUCE) a.classList.add("fresh");
   return a;
 }
@@ -610,8 +613,15 @@ function updateCard(el, t) {
   const chg = m.change != null && m.span > 10_000 ? m.change : t.change5m, chgEl = el.querySelector(".chg");
   text(chgEl, chg != null ? pct(chg) : ""); chgEl.className = `chg${chg > 0 ? " up" : chg < 0 ? " down" : ""}`;
   chgEl.title = m.change != null && m.span > 10_000 ? "Market cap change, last minute" : "Price change, 5 minutes";
-  const cv = el.querySelector(".cv");
-  text(cv, curveLive ? `${t.progress.toFixed(0)}%` : ""); cv.className = `cv${curveLive && t.progress >= 80 ? " hot" : ""}`; cv.title = curveLive ? "Bonding curve progress" : "";
+  const migrated = column === "migrated" || t.complete || t.graduatedAt || t.migratedAt, cEl = el.querySelector(".pc-curve");
+  const cp = migrated ? 100 : curveLive ? Math.max(0, Math.min(100, t.progress)) : null;
+  cEl.hidden = cp == null;
+  if (cp != null) {
+    cEl.className = `pc-curve${migrated ? " done" : cp >= 80 ? " hot" : ""}`;
+    cEl.querySelector("i").style.width = `${cp}%`;
+    text(cEl.querySelector("b"), migrated ? "MIGRATED" : `${cp < 10 ? cp.toFixed(1) : cp.toFixed(0)}%`);
+    cEl.title = migrated ? "Graduated to an AMM pool" : `Bonding curve ${cp.toFixed(1)}%`;
+  }
   // the grid
   setCell(el, "holders", t.holders != null ? count(t.holders) : "—", t.holderChange5m != null ? `Holders · ${t.holderChange5m > 0 ? "+" : ""}${t.holderChange5m.toFixed(1)}% in 5m` : "Holders", t.holderChange5m > 5 ? "good" : "");
   setCell(el, "top10", t.topHoldersPct != null ? `${t.topHoldersPct.toFixed(0)}%` : "—", "Share held by the top 10 holders", t.topHoldersPct > 50 ? "bad" : t.topHoldersPct > 30 ? "warn" : t.topHoldersPct != null ? "good" : "");
