@@ -1,0 +1,35 @@
+<!doctype html>
+<!-- The coil mark: review sheet. ?still freezes it. -->
+<html lang="en"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@500&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;background:#05080D;color:#EFE9DC;font-family:"Geist Mono",monospace}
+body{width:1800px;height:1000px;display:grid;grid-template-columns:1fr 1fr;gap:22px;padding:44px 52px;box-sizing:border-box}
+.hero{border:1px solid #1C2533;border-radius:20px;background:radial-gradient(circle at 50% 45%,#141F33,#070A10 66%);display:grid;place-items:center;position:relative}
+.hero svg{width:640px;height:640px}
+.cap{position:absolute;left:28px;top:24px;font-size:12px;letter-spacing:.22em;color:#8B93A1}.cap b{color:#D6B26E;font-weight:500}
+.side{display:grid;grid-template-rows:1fr auto auto;gap:22px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.tile{border:1px solid #1C2533;border-radius:20px;background:#0A0E14;display:grid;place-items:center}.tile svg{width:300px;height:300px}
+.tile.paper{background:#F1ECE1;border-color:#DED5C2}
+.panel{border:1px solid #1C2533;border-radius:20px;background:#0A0E14;padding:22px 28px;display:flex;align-items:center;gap:26px}
+.lock{display:flex;align-items:center;gap:16px}.lock svg{width:90px;height:90px}.lock span{font:400 80px/1 "Instrument Serif",serif}
+.s{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:11px;letter-spacing:.14em;color:#5E6878}
+.fav{border-radius:8px;background:#0A0E14;border:1px solid #263142;display:grid;place-items:center}.f48{width:56px;height:56px}.f48 svg{width:48px;height:48px}.f32{width:40px;height:40px}.f32 svg{width:32px;height:32px}.f16{width:24px;height:24px}.f16 svg{width:18px;height:18px}
+</style></head><body>
+<div class="hero"><span class="cap">PRIVATUS · <b>THE COIL</b></span></div>
+<div class="side">
+  <div class="pair"><div class="tile" id="ivory"></div><div class="tile paper" id="ink"></div></div>
+  <div class="panel lock" id="lock"><span>Privatus</span></div>
+  <div class="panel"><div class="s"><div class="fav f48" id="f48"></div>48</div><div class="s"><div class="fav f32" id="f32"></div>32</div><div class="s"><div class="fav f16" id="f16"></div>16</div></div>
+</div>
+<script type="module">
+import { coilMark } from "../../../crest.js";
+const still = new URLSearchParams(location.search).has("still");
+const add = (host, o) => { const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); host.prepend(s); coilMark(s, { animate: !still, ...o }); };
+add(document.querySelector(".hero"), {});
+add(document.getElementById("ivory"), { tone: "ivory" });
+add(document.getElementById("ink"), { tone: "ink" });
+add(document.getElementById("lock"), {});
+for (const id of ["f48", "f32", "f16"]) add(document.getElementById(id), { animate: false, sheen: false });
+</script></body></html>
