@@ -3,6 +3,7 @@
 // one brass accent, and a deliberate gap cut into the pattern wherever a trail should end.
 // One shared animation clock drives it all; it pauses off-screen and respects prefers-reduced-motion.
 
+import { coilMark } from "./crest.js";
 export const NS = "http://www.w3.org/2000/svg";
 export const REDUCE = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 export const C = {
@@ -178,12 +179,12 @@ export function chameleon(parent, { host, fg = "currentColor", line = C.BG, engr
   }, host || svg, 1);
   return g;
 }
-// The logo: the chameleon on its own, cropped to its silhouette.
-export function mark(cls, opts = {}) {
-  const svg = svgEl("2 12 61 44");
-  svg.setAttribute("overflow", "visible");
+// The logo: the coiled gold chameleon (crest.js), cropped tight to sit beside the wordmark. On paper pages pass
+// { tone: "goldPaper" } for the deeper gold.
+export function mark(cls, { tone = "gold", animate = true } = {}) {
+  const svg = svgEl("0 0 10 10");
   if (cls) svg.setAttribute("class", cls);
-  chameleon(svg, { host: svg, ...opts });
+  coilMark(svg, { tone, animate: animate && !REDUCE, crop: "tight" });
   return svg;
 }
 
@@ -234,7 +235,7 @@ export function renderGlyphs(root = document) {
   root.querySelectorAll("[data-glyph]").forEach(host => {
     const kind = host.dataset.glyph, cls = host.getAttribute("class");
     if (kind === "word") { host.removeAttribute("data-glyph"); host.textContent = "Privatus"; return; }
-    host.replaceWith(kind === "mark" ? mark(cls) : glyphSVG(kind, cls));
+    host.replaceWith(kind === "mark" ? mark(cls, { tone: host.dataset.tone || "gold" }) : glyphSVG(kind, cls));
   });
 }
 
@@ -297,8 +298,8 @@ export function hero(svg) {
   };
   node(56, 452, C.IVORY, "YOUR WALLET", "public history", "start");
   // the new wallet is the chameleon: it blends in, with no history behind it
-  const fresh = el("g", { transform: "translate(470 30) scale(1.5)" }, svg);
-  chameleon(fresh, { host: svg, fg: C.IVORY, branch: true, tongue: true, camo: true });
+  const fresh = el("svg", { x: 482, y: 30, width: 84, height: 84, overflow: "visible" }, svg);
+  coilMark(fresh, { animate: !REDUCE });
   text(svg, 520, 132, "NEW WALLET", { "font-size": 10, "font-weight": 600, fill: C.IVORY, "letter-spacing": ".12em", "text-anchor": "middle" });
   text(svg, 520, 146, "no history", { "font-size": 9, fill: C.MUTE, "letter-spacing": ".06em", "text-anchor": "middle" });
   // a small ledger readout under the seal
@@ -542,7 +543,7 @@ export function curveChart(svg) {
 }
 
 /* ---------- emblems for empty states in the terminal ---------- */
-// The chameleon blending in (or, for "chart", a line that keeps drawing itself).
+// The gold chameleon mark (or, for "chart", a line that keeps drawing itself).
 export function emblem(kind = "stream") {
   const svg = svgEl("0 0 200 120");
   waves(svg, { x0: 0, y0: 10, x1: 200, y1: 112, gap: 9, amp: 3, period: 60, opacity: .14, host: svg, speed: 5 });
@@ -555,7 +556,7 @@ export function emblem(kind = "stream") {
     return svg;
   }
   // the chameleon, blending into the page while there is nothing to show
-  const g = el("g", { transform: "translate(62 18) scale(1.2)" }, svg);
-  chameleon(g, { host: svg, fg: C.IVORY, branch: true, camo: true, tongue: kind === "stream" });
+  const m = el("svg", { x: 70, y: 16, width: 60, height: 88, overflow: "visible" }, svg);
+  coilMark(m, { animate: !REDUCE, crop: "tight" });
   return svg;
 }

@@ -74,7 +74,7 @@ export function chameleonMark(svg, { tone = "dark", branch = true, animate = tru
     const t0 = performance.now(), looks = [[1, -.3], [.2, -.9], [1.1, .4], [-.5, -.2]];
     const step = now => {
       if (!svg.isConnected && now - t0 > 2000) return;
-      const t = (now - t0) / 1000;
+      const t = Math.max(0, now - t0) / 1000;
       if (band) { const c = (t % 7) / 7, x = -60 + Math.min(1, c / .45) * 190; band.setAttribute("transform", `translate(${f2(x)} 0)`); band.setAttribute("opacity", c < .45 ? 1 : 0); }
       const [dx, dy] = looks[Math.floor(t / 2.6) % looks.length].map(v => v * .75), blink = (t % 5.2) < .12;
       pupil.setAttribute("cx", f2(eye[0] + dx)); pupil.setAttribute("cy", f2(eye[1] + dy)); pupil.setAttribute("r", blink ? .3 : 1.5);
@@ -121,11 +121,13 @@ export function crest(svg, { animate = true, top = "PRIVATUS", bottom = "PRIVATE
 // along a spiral that tightens by φ every half turn, tapering to a fine tail. Cut through it: pinstripes that follow the coil, the vault-dial eye
 // (two broken rings and a core), the mouth and the casque line. One colour, so it prints anywhere.
 // opts: tone "gold" | "ivory" | "ink", animate (the dial in the eye turns a click at a time; a sheen crosses the gold)
-export function coilMark(svg, { tone = "gold", animate = true, sheen = true } = {}) {
+// crop: "square" frames the mark with breathing room; "tight" hugs it (for logos beside a wordmark)
+export function coilMark(svg, { tone = "gold", animate = true, sheen = true, crop = "square" } = {}) {
   const id = "co" + uid++, defs = el("defs", {}, svg);
-  svg.setAttribute("viewBox", "0 0 200 200");
+  svg.setAttribute("viewBox", crop === "tight" ? "20 -9 135 195" : "-14 -13 203 203");
+  const gold = tone === "gold" || tone === "goldPaper";
   let fill = tone === "ivory" ? "#EFE9DC" : tone === "ink" ? "#0E1520" : `url(#${id}-gold)`;
-  if (tone === "gold") { const g = el("linearGradient", { id: `${id}-gold`, x1: 0, y1: 0, x2: 1, y2: 1 }, defs); for (const [o, c] of GOLD.dark) el("stop", { offset: o, "stop-color": c }, g); }
+  if (gold) { const g = el("linearGradient", { id: `${id}-gold`, x1: 0, y1: 0, x2: 1, y2: 1 }, defs); for (const [o, c] of GOLD[tone === "goldPaper" ? "paper" : "dark"]) el("stop", { offset: o, "stop-color": c }, g); }
   // the spine: a golden spiral from the neck, counter-clockwise round the outside and in to the centre
   const C = [104, 120], R0 = 70, A0 = -Math.PI / 2 - .12, TURNS = 1.72, N = 420;
   // radius shrinks by φ every half turn
@@ -139,8 +141,8 @@ export function coilMark(svg, { tone = "gold", animate = true, sheen = true } = 
   // the head, drawn facing +x in its own frame and turned to follow the spiral at the neck
   const n0 = spine[0], n1 = spine[3], ang = Math.atan2(n0[1] - n1[1], n0[0] - n1[0]) * 180 / Math.PI;
   const HEAD = "M-14 -15.5C-8 -17 -4.4 -21 -3.2 -26C-2.4 -30.4 -1 -34.8 1.8 -36.6C4.6 -38.2 8 -36.8 10.2 -33.6C16.6 -24 27 -14 35 -6C38 -3.2 40.6 -.4 41.4 2.6C42 5.6 40.4 8 37.6 8.8C30 11 20 14.4 12 16.6C3 18.6 -7 16.4 -16 12.6Z";
-  const mask = el("mask", { id: `${id}-cut`, maskUnits: "userSpaceOnUse", x: 0, y: 0, width: 200, height: 200 }, defs);
-  el("rect", { x: 0, y: 0, width: 200, height: 200, fill: "#fff" }, mask);
+  const mask = el("mask", { id: `${id}-cut`, maskUnits: "userSpaceOnUse", x: -40, y: -40, width: 280, height: 280 }, defs);
+  el("rect", { x: -40, y: -40, width: 280, height: 280, fill: "#fff" }, mask);
   const cuts = el("g", { fill: "none", stroke: "#000", "stroke-linecap": "round" }, mask);
   // pinstripes along the coil, each fading out at a different point so the body reads as motion
   [[.46, .02, .72, 2.2], [0, .04, .84, 2.4], [-.46, .02, .64, 2.2]].forEach(([k, u0, u1, w]) => el("path", { d: line(offset(k, u0, u1)), "stroke-width": w }, cuts));
@@ -165,7 +167,7 @@ export function coilMark(svg, { tone = "gold", animate = true, sheen = true } = 
   const outer = ring(7.6, 64, 2.3), inner = ring(4, 100, 2.1);
   el("circle", { r: 1.6, fill }, eyeG);
   let band = null;
-  if (sheen && tone === "gold") {
+  if (sheen && gold) {
     const sg = el("linearGradient", { id: `${id}-sheen`, gradientUnits: "userSpaceOnUse", x1: 0, y1: 0, x2: 60, y2: 30 }, defs);
     [[0, 0], [.42, 0], [.5, .5], [.58, 0], [1, 0]].forEach(([o, a]) => el("stop", { offset: o, "stop-color": "#FFF6DF", "stop-opacity": a }, sg));
     const clip = el("clipPath", { id: `${id}-clip` }, defs);
@@ -177,7 +179,7 @@ export function coilMark(svg, { tone = "gold", animate = true, sheen = true } = 
     const t0 = performance.now(), turns = [[0, 0], [90, -120], [180, -240], [270, -240], [360, -360]], ease = p => p < .5 ? 4 * p ** 3 : 1 - (-2 * p + 2) ** 3 / 2;
     const step = now => {
       if (!svg.isConnected && now - t0 > 2000) return;
-      const t = (now - t0) / 1000, c = (t / 1.8) % 4, k = Math.floor(c), p = ease(Math.min(1, (c - k) / .5));
+      const t = Math.max(0, now - t0) / 1000, c = (t / 1.8) % 4, k = Math.floor(c), p = ease(Math.min(1, (c - k) / .5));
       outer.setAttribute("transform", `rotate(${f2(turns[k][0] + (turns[k + 1][0] - turns[k][0]) * p)})`);
       inner.setAttribute("transform", `rotate(${f2(turns[k][1] + (turns[k + 1][1] - turns[k][1]) * p)})`);
       if (band) { const s = (t % 7) / 7; band.setAttribute("transform", `translate(${f2(-200 + Math.min(1, s / .45) * 400)} 0)`); }

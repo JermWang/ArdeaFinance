@@ -1,0 +1,16 @@
+<!doctype html>
+<!-- Writes favicon.svg's markup: the coil mark on a navy tile, still. Render with --dump-dom and keep #out. -->
+<html><head><meta charset="utf-8"></head><body>
+<pre id="out"></pre>
+<script type="module">
+import { coilMark } from "../../crest.js";
+const NS = "http://www.w3.org/2000/svg";
+const svg = document.createElementNS(NS, "svg"); document.body.appendChild(svg);
+coilMark(svg, { animate: false, sheen: false });
+// a navy rounded tile behind the mark
+const bg = document.createElementNS(NS, "rect");
+Object.entries({ x: -14, y: -13, width: 203, height: 203, rx: 44, fill: "#0A0E14" }).forEach(([k, v]) => bg.setAttribute(k, v));
+svg.insertBefore(bg, svg.children[1]);
+svg.setAttribute("xmlns", NS);
+document.getElementById("out").textContent = svg.outerHTML;
+</script></body></html>

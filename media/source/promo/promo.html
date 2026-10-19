@@ -22,7 +22,8 @@ h1 em{color:#D6B26E;text-shadow:0 0 30px rgba(214,178,110,.35)}
 .tag b{color:#D6B26E;font-weight:500}
 </style></head><body>
 <script type="module">
-import { chameleon } from "../mascot/mascots.js";
+import { coilMark } from "../../../crest.js";
+const coil = (o = {}) => { const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); coilMark(s, { animate: false, sheen: false, ...o }); return s; };
 import { C, el, div, seal, wavesSheet, finish, lightPool, beam, flare, bokeh, dust, rng, hexA, arc } from "./cine.js";
 
 const scene = new URLSearchParams(location.search).get("s") || "hero";
@@ -41,7 +42,7 @@ const floor = (horizon, tilt = 76, glow = .5) => {
   div("fx", stage, `top:${horizon - 120}px;bottom:auto;height:240px;background:radial-gradient(ellipse 60% 50% at 50% 50%,${hexA(C.BRASS, glow * .5)},transparent 70%);mix-blend-mode:screen`);
   div("fx", stage, `top:${horizon - 1}px;bottom:auto;height:2px;background:linear-gradient(90deg,transparent,${hexA(C.BRASS2, glow)},transparent);filter:blur(1px)`);
 };
-const brand = (parent, size = 40) => { const b = document.createElement("div"); b.className = "brand"; const m = chameleon({ engraved: false, tongue: false, branch: false, animate: false }); m.setAttribute("viewBox", "2 12 61 44"); m.style.height = size * 1.05 + "px"; m.style.width = "auto"; const t = document.createElement("span"); t.textContent = "Privatus"; t.style.fontSize = size + "px"; b.append(m, t); parent.appendChild(b); return b; };
+const brand = (parent, size = 40) => { const b = document.createElement("div"); b.className = "brand"; const m = coil({ crop: "tight" }); m.style.height = size * 1.25 + "px"; m.style.width = size * 1.25 * .69 + "px"; const t = document.createElement("span"); t.textContent = "Privatus"; t.style.fontSize = size + "px"; b.append(m, t); parent.appendChild(b); return b; };
 const copy = (x, y, html, w = 760) => { const d = div("copy", stage, `left:${x}px;top:${y}px;width:${w}px`); d.innerHTML = html; return d; };
 
 const S = {
@@ -52,7 +53,7 @@ const S = {
     place(seal({ gapA: -0.8, gapW: .36, label: false, core: false }), 960, 430, 1180, "opacity:.32;filter:blur(1.5px)");
     lightPool(960, 420, 520, C.BRASS, .16, stage);
     beam(960 + 230, 430 - 220, -44, 1100, 380, C.BRASS2, .55, stage);
-    place(chameleon({ engraved: true, tongue: false, branch: true, animate: false }), 960, 360, 420, "filter:drop-shadow(0 0 30px rgba(214,178,110,.2))");
+    place(coil(), 960, 350, 440, "filter:drop-shadow(0 0 34px rgba(214,178,110,.26))");
     bokeh(20, { x0: 0, y0: 0, x1: 1920, y1: 1080, rMin: 10, rMax: 60, seed: 51, parent: stage });
     dust(80, { x0: 1100, y0: 0, x1: 1920, y1: 500, seed: 6, parent: stage });
     copy(0, 600, `<div style="text-align:center"><div style="font:400 150px/1 'Instrument Serif',serif;letter-spacing:-.01em">Privatus</div>
@@ -67,7 +68,7 @@ const S = {
     beam(500 + Math.cos(-Math.PI / 4) * 120, 500 + Math.sin(-Math.PI / 4) * 120, -45, 760, 230, C.BRASS2, .8, stage);
     div("layer", stage, `left:${500 - 255}px;top:${500 - 255}px;width:510px;height:510px;border-radius:50%;background:radial-gradient(circle,#0A0E14 0,#0A0E14 64%,rgba(10,14,20,.0) 72%)`);
     div("layer", stage, `left:${500 - 236}px;top:${500 - 236}px;width:472px;height:472px;border-radius:50%;border:1.5px solid ${hexA(C.BRASS, .55)};box-shadow:0 0 30px ${hexA(C.BRASS, .25)},inset 0 0 40px ${hexA(C.BRASS, .12)}`);
-    place(chameleon({ engraved: true, tongue: false, branch: true, animate: false }), 500, 492, 470, "filter:drop-shadow(0 0 22px rgba(214,178,110,.22))");
+    place(coil(), 500, 500, 470, "filter:drop-shadow(0 0 26px rgba(214,178,110,.28))");
     flare(500 + Math.cos(-Math.PI / 4) * 330, 500 + Math.sin(-Math.PI / 4) * 330, 620, C.BRASS2, stage);
     dust(70, { x0: 520, y0: 60, x1: 960, y1: 480, seed: 4, parent: stage });
     finish({ grain: .12, vignette: .7 });
