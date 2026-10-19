@@ -36,4 +36,4 @@ export const RPC_URL = "";
 // the custom domain and the Railway domain each work on their own. Anywhere else (local preview, another
 // static host) it's the Railway deployment.
 const OWN_HOSTS = ["privatusterminal.xyz", "www.privatusterminal.xyz", "privatus.up.railway.app"];
-export const PROXY_URL = typeof location !== "undefined" && OWN_HOSTS.includes(location.hostname) ? location.origin : "https://privatus.up.railway.app";
+export const PROXY_URL = typeof location !== "undefined" && OWN_HOSTS.includes(location.hostname) ? location.origin : "https://privatusterminal.xyz";

@@ -4,7 +4,7 @@ compatibility_date = "2026-09-01"
 
 [vars]
 # Sites allowed to use this proxy (comma-separated). Empty means any origin.
-ALLOWED_ORIGINS = "https://privatusterminal.xyz,https://www.privatusterminal.xyz,https://privatus.up.railway.app,http://localhost:5179"
+ALLOWED_ORIGINS = "https://privatusterminal.xyz,https://www.privatusterminal.xyz,http://localhost:5179"
 
 # Secrets (set with `npx wrangler secret put NAME`, never committed):
 #   RPC_URL       e.g. https://mainnet.helius-rpc.com/?api-key=...
