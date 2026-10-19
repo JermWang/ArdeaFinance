@@ -24,7 +24,7 @@
    Every figure is a live engraving from diagrams.js, printed on a navy plate. */
 :root{
   --paper:#F1ECE1;--paper-2:#E9E2D3;--paper-3:#DED5C2;--ink:#0E1520;--ink-2:#353D4B;--mute:#687080;
-  --rule:rgba(14,21,32,.14);--rule-2:rgba(14,21,32,.26);--brass:#D6B26E;--brass-d:#8A6A2E;--plate:#0A0E14;--plate-line:#263142;--ivory:#EFE9DC;--plate-mute:#8B93A1;
+  --rule:rgba(14,21,32,.14);--rule-2:rgba(14,21,32,.26);--brass:#DEB471;--brass-d:#93692D;--plate:#0A0E14;--plate-line:#263142;--ivory:#EFE9DC;--plate-mute:#8B93A1;
   --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
   --sans:"Geist","Segoe UI",system-ui,sans-serif;
   --mono:"Geist Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
@@ -41,7 +41,7 @@ em{font-style:italic;color:var(--brass-d)}
 .top{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--paper) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--rule)}
 .top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;height:60px}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
-.brand .mark{height:34px;width:24px;flex:none}
+.brand .mark{height:34px;width:32px;flex:none}
 .brand .word{font:400 1.5rem/1 var(--serif)}
 .brand .tag{font:500 .64rem var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--mute);border-left:1px solid var(--rule-2);padding-left:10px;margin-left:2px}
 .links{display:flex;gap:2px;align-items:center}
@@ -156,6 +156,9 @@ footer{border-top:1px solid var(--rule);margin-top:40px;padding-block:40px;displ
 footer .big{font:400 clamp(1.6rem,3vw,2.3rem)/1.1 var(--serif);margin:0;max-width:22ch}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;margin:0 .1em}
+
+/* headline accents in the logo's deep gold for paper */
+h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%,#A57B3A);-webkit-background-clip:text;background-clip:text;color:transparent}
 </style>
 <script type="module" src="./docs.js"></script>
 </head>

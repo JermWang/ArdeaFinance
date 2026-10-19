@@ -11,19 +11,19 @@ html,body{margin:0;overflow:hidden;background:#05080D;color:#EFE9DC;font-family:
 .persp{position:absolute;inset:0;perspective:900px;overflow:hidden}
 .copy{position:absolute;z-index:5}
 .kick{font:500 15px "Geist Mono",monospace;letter-spacing:.24em;text-transform:uppercase;color:#8B93A1;display:flex;align-items:center;gap:14px}
-.kick::before{content:"";width:26px;height:1px;background:#D6B26E}
+.kick::before{content:"";width:26px;height:1px;background:#DEB471}
 h1{font:400 112px/.96 "Instrument Serif",serif;margin:22px 0 0;letter-spacing:-.012em;text-shadow:0 0 40px rgba(0,0,0,.6)}
-h1 em{color:#D6B26E;text-shadow:0 0 30px rgba(214,178,110,.35)}
+h1 em{color:#DEB471;text-shadow:0 0 30px rgba(214,178,110,.35)}
 .sub{font:400 21px/1.5 Geist,sans-serif;color:#A9AFBA;margin:26px 0 0;max-width:30ch}
 .brand{display:flex;align-items:center;gap:14px}
 .brand svg{width:40px;height:40px}
 .brand span{font:400 40px/1 "Instrument Serif",serif;color:#EFE9DC}
 .tag{font:500 13px "Geist Mono",monospace;letter-spacing:.22em;text-transform:uppercase;color:#8B93A1}
-.tag b{color:#D6B26E;font-weight:500}
+.tag b{color:#DEB471;font-weight:500}
 </style></head><body>
 <script type="module">
-import { coilMark } from "../../../crest.js";
-const coil = (o = {}) => { const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); coilMark(s, { animate: false, sheen: false, ...o }); return s; };
+import { logoMark } from "../../../logo.js";
+const coil = (o = {}) => { const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); logoMark(s, { animate: false, sheen: false, ...o }); return s; };
 import { C, el, div, seal, wavesSheet, finish, lightPool, beam, flare, bokeh, dust, rng, hexA, arc } from "./cine.js";
 
 const scene = new URLSearchParams(location.search).get("s") || "hero";
@@ -42,7 +42,7 @@ const floor = (horizon, tilt = 76, glow = .5) => {
   div("fx", stage, `top:${horizon - 120}px;bottom:auto;height:240px;background:radial-gradient(ellipse 60% 50% at 50% 50%,${hexA(C.BRASS, glow * .5)},transparent 70%);mix-blend-mode:screen`);
   div("fx", stage, `top:${horizon - 1}px;bottom:auto;height:2px;background:linear-gradient(90deg,transparent,${hexA(C.BRASS2, glow)},transparent);filter:blur(1px)`);
 };
-const brand = (parent, size = 40) => { const b = document.createElement("div"); b.className = "brand"; const m = coil({ crop: "tight" }); m.style.height = size * 1.25 + "px"; m.style.width = size * 1.25 * .69 + "px"; const t = document.createElement("span"); t.textContent = "Privatus"; t.style.fontSize = size + "px"; b.append(m, t); parent.appendChild(b); return b; };
+const brand = (parent, size = 40) => { const b = document.createElement("div"); b.className = "brand"; const m = coil(); m.style.height = size * 1.2 + "px"; m.style.width = size * 1.2 * .93 + "px"; const t = document.createElement("span"); t.textContent = "Privatus"; t.style.fontSize = size + "px"; b.append(m, t); parent.appendChild(b); return b; };
 const copy = (x, y, html, w = 760) => { const d = div("copy", stage, `left:${x}px;top:${y}px;width:${w}px`); d.innerHTML = html; return d; };
 
 const S = {

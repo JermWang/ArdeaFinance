@@ -2,7 +2,7 @@
 // banknote waves, the vault dial), lit like a film still: light pools and beams, perspective floors,
 // depth-of-field blur, bokeh, an anamorphic flare, grain and a vignette. Self-contained on purpose so
 // the renders don't shift when the site's art.js changes.
-export const C = { BG: "#05080D", NAVY: "#0A0E14", NAVY2: "#101722", LINE: "#263142", IVORY: "#EFE9DC", MUTE: "#8B93A1", STEEL: "#5D7596", STEEL2: "#8FA9CC", BRASS: "#D6B26E", BRASS2: "#F3D79A", DOWN: "#F06A6A" };
+export const C = { BG: "#05080D", NAVY: "#0A0E14", NAVY2: "#101722", LINE: "#263142", IVORY: "#EFE9DC", MUTE: "#8B93A1", STEEL: "#5D7596", STEEL2: "#8FA9CC", BRASS: "#DEB471", BRASS2: "#F6D292", DOWN: "#F06A6A" };
 const NS = "http://www.w3.org/2000/svg", TAU = Math.PI * 2, f2 = n => n.toFixed(2);
 let uid = 0;
 export function el(tag, attrs = {}, parent) {

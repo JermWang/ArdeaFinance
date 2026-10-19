@@ -89,7 +89,7 @@ export function decodeToken2022Meta(bytes) {
 
 // A small rosette avatar derived from the mint, as an SVG data URI. Shown at once while the real
 // image loads, and kept if none does, so no token is ever a blank square.
-const AVATAR = ["#D6B26E", "#43D19E", "#8FA9CC", "#E8A35A", "#B9A3E3", "#EFE9DC"];
+const AVATAR = ["#DEB471", "#43D19E", "#8FA9CC", "#E8A35A", "#B9A3E3", "#EFE9DC"];
 export function identicon(seed = "") {
   // a small guilloché rosette: lobe count, phase and colour all come from a hash of the mint
   let h = 2166136261;

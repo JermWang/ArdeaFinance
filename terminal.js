@@ -1462,7 +1462,7 @@ $("tk-form").addEventListener("submit", e => { e.preventDefault(); addTracked($(
 let pfWallet = "main";
 let pfRun = 0;
 // Allocation colours: the art palette, so the dashboard matches the drawings.
-const ALLOC = ["#8B93A1", "#D6B26E", "#43D19E", "#5D7596", "#E8A35A", "#B9A3E3", "#EFE9DC", "#3A4659"];
+const ALLOC = ["#8B93A1", "#DEB471", "#43D19E", "#5D7596", "#E8A35A", "#B9A3E3", "#EFE9DC", "#3A4659"];
 // A PnL value with a small bar under it, scaled to the biggest win or loss in the table.
 function pnlCell(v, max) {
   const td = make("td", "num pnl");
