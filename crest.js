@@ -119,7 +119,7 @@ export function crest(svg, { animate = true, top = "PRIVATUS", bottom = "PRIVATE
 /* ---------- the coil: the chameleon as one golden spiral ---------- */
 // A bold emblem: the head sits at the top facing right and the body sweeps round the outside and coils into the centre
 // along a spiral that tightens by φ every half turn, tapering to a fine tail. Cut through it: pinstripes that follow the coil, the vault-dial eye
-// (two broken rings and a core), the mouth, and a foot gripping the inner turn. One colour, so it prints anywhere.
+// (two broken rings and a core), the mouth and the casque line. One colour, so it prints anywhere.
 // opts: tone "gold" | "ivory" | "ink", animate (the dial in the eye turns a click at a time; a sheen crosses the gold)
 export function coilMark(svg, { tone = "gold", animate = true, sheen = true } = {}) {
   const id = "co" + uid++, defs = el("defs", {}, svg);
@@ -127,7 +127,7 @@ export function coilMark(svg, { tone = "gold", animate = true, sheen = true } = 
   let fill = tone === "ivory" ? "#EFE9DC" : tone === "ink" ? "#0E1520" : `url(#${id}-gold)`;
   if (tone === "gold") { const g = el("linearGradient", { id: `${id}-gold`, x1: 0, y1: 0, x2: 1, y2: 1 }, defs); for (const [o, c] of GOLD.dark) el("stop", { offset: o, "stop-color": c }, g); }
   // the spine: a golden spiral from the neck, counter-clockwise round the outside and in to the centre
-  const C = [104, 114], R0 = 71, A0 = -Math.PI / 2 - .12, TURNS = 1.72, N = 420;
+  const C = [104, 120], R0 = 70, A0 = -Math.PI / 2 - .12, TURNS = 1.72, N = 420;
   // radius shrinks by φ every half turn
   const at = u => { const a = A0 - u * TURNS * 2 * Math.PI, r = R0 * PHI ** (-(A0 - a) / Math.PI); return [C[0] + Math.cos(a) * r, C[1] + Math.sin(a) * r]; };
   const spine = Array.from({ length: N + 1 }, (_, i) => at(i / N));
@@ -138,17 +138,17 @@ export function coilMark(svg, { tone = "gold", animate = true, sheen = true } = 
   const bodyD = ribbon(spine, width);
   // the head, drawn facing +x in its own frame and turned to follow the spiral at the neck
   const n0 = spine[0], n1 = spine[3], ang = Math.atan2(n0[1] - n1[1], n0[0] - n1[0]) * 180 / Math.PI;
-  const HEAD = "M-14 -15.5C-6 -18 -2 -26 6 -29C10 -30.4 15 -30 18 -28.6C28 -24 36 -13 41 -1C42.6 3.6 40 7.6 35.4 8.4L12 16.6C2 19 -8 18.4 -16 17Z";
+  const HEAD = "M-14 -15.5C-8 -17 -4.4 -21 -3.2 -26C-2.4 -30.4 -1 -34.8 1.8 -36.6C4.6 -38.2 8 -36.8 10.2 -33.6C16.6 -24 27 -14 35 -6C38 -3.2 40.6 -.4 41.4 2.6C42 5.6 40.4 8 37.6 8.8C30 11 20 14.4 12 16.6C3 18.6 -7 16.4 -16 12.6Z";
   const mask = el("mask", { id: `${id}-cut`, maskUnits: "userSpaceOnUse", x: 0, y: 0, width: 200, height: 200 }, defs);
   el("rect", { x: 0, y: 0, width: 200, height: 200, fill: "#fff" }, mask);
   const cuts = el("g", { fill: "none", stroke: "#000", "stroke-linecap": "round" }, mask);
   // pinstripes along the coil, each fading out at a different point so the body reads as motion
-  [[.42, .03, .7, 1.5], [0, .05, .82, 1.6], [-.42, .03, .62, 1.5]].forEach(([k, u0, u1, w]) => el("path", { d: line(offset(k, u0, u1)), "stroke-width": w }, cuts));
+  [[.46, .02, .72, 2.2], [0, .04, .84, 2.4], [-.46, .02, .64, 2.2]].forEach(([k, u0, u1, w]) => el("path", { d: line(offset(k, u0, u1)), "stroke-width": w }, cuts));
   const head = el("g", { transform: `translate(${f2(n0[0])} ${f2(n0[1])}) rotate(${f2(ang)}) scale(1.18)` }, cuts);
-  el("path", { d: "M36.5 4.6C30 7.6 21 10.6 13 12.4", "stroke-width": 1.8 }, head);   // mouth
-  el("path", { d: "M-1 -14C3 -21 9 -24.6 14 -24.2", "stroke-width": 1.3 }, head);    // casque line
+  el("path", { d: "M38.4 4.8C31 8.8 22 11.8 13.4 13.4", "stroke-width": 1.8 }, head);   // mouth
+  el("path", { d: "M-4.4 -16C-2.4 -23 .4 -29.6 3.8 -33", "stroke-width": 1.3 }, head);    // casque line
   // the vault-dial eye: a cut disc with two broken rings and a core left standing in it
-  const eyeLocal = [17, -7];
+  const eyeLocal = [17.4, -8.6];
   el("circle", { cx: eyeLocal[0], cy: eyeLocal[1], r: 10.6, fill: "#000", stroke: "none" }, head);
   const art = el("g", { mask: `url(#${id}-cut)` }, svg);
   el("path", { d: bodyD, fill }, art);
@@ -158,12 +158,6 @@ export function coilMark(svg, { tone = "gold", animate = true, sheen = true } = 
     const i = Math.round(u * N), p = spine[i], q = spine[i + 2], tx = q[0] - p[0], ty = q[1] - p[1], tl = Math.hypot(tx, ty), ox = (p[0] - C[0]), oy = (p[1] - C[1]), ol = Math.hypot(ox, oy), w = width(u) / 2 - .6;
     const b = [p[0] + ox / ol * w, p[1] + oy / ol * w], s = 4.4 - u * 9;
     el("path", { d: `M${f2(b[0] - tx / tl * 2.4)} ${f2(b[1] - ty / tl * 2.4)}L${f2(b[0] + ox / ol * s - tx / tl * 2.2)} ${f2(b[1] + oy / ol * s - ty / tl * 2.2)}L${f2(b[0] + tx / tl * 2.4)} ${f2(b[1] + ty / tl * 2.4)}Z`, fill }, art);
-  }
-  // a front leg on the inner edge, reaching in to grip the next turn of the coil
-  for (const u of [.075]) {
-    const fi = Math.round(u * N), fp = spine[fi], ix = C[0] - fp[0], iy = C[1] - fp[1], il = Math.hypot(ix, iy), ux = ix / il, uy = iy / il, w = width(u) / 2 - 2;
-    const leg = el("g", { transform: `translate(${f2(fp[0] + ux * w)} ${f2(fp[1] + uy * w)}) rotate(${f2(Math.atan2(uy, ux) * 180 / Math.PI - 90)}) scale(1.45)` }, art);
-    el("path", { d: "M-4.2 -1L4.2 -1L3 8.6C3 10.4 4.4 11.8 7.4 12.6C5 13.8 2.4 13.6 .6 12.2C-1 14 -3.8 14.6 -6.6 13.6C-3.8 12.4 -2.8 10.6 -3 8.6Z", fill }, leg);
   }
   // the dial standing in the eye
   const eyeG = el("g", { transform: `translate(${f2(n0[0])} ${f2(n0[1])}) rotate(${f2(ang)}) scale(1.18) translate(${eyeLocal[0]} ${eyeLocal[1]})` }, svg);
