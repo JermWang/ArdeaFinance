@@ -1,0 +1,31 @@
+<!doctype html>
+<!-- Clean brand graphics: the mark alone on flat navy, nothing else. ?s=pfp | outro | xbanner -->
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;background:#0A0E14;overflow:hidden}
+.stage{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100vw;height:100vh;gap:0}
+.word{font:400 1px/1 "Instrument Serif",serif;color:#EFE9DC;letter-spacing:-.005em}
+.url{font:500 1px "Geist Mono",monospace;letter-spacing:.28em;color:#DEB471}
+.row{display:flex;align-items:center}
+</style></head><body><div class="stage" id="st"></div>
+<script type="module">
+import { logoMark } from "../../../logo.js";
+const s = new URLSearchParams(location.search).get("s") || "pfp", st = document.getElementById("st");
+const mark = h => { const v = document.createElementNS("http://www.w3.org/2000/svg", "svg"); logoMark(v, { animate: false, sheen: false }); v.style.height = h + "px"; v.style.width = h * .926 + "px"; return v; };
+if (s === "pfp") st.append(mark(560));
+if (s === "outro") {
+  st.append(mark(380));
+  const w = document.createElement("div"); w.className = "word"; w.textContent = "Privatus"; w.style.fontSize = "132px"; w.style.marginTop = "44px"; st.append(w);
+  const u = document.createElement("div"); u.className = "url"; u.textContent = "PRIVATUSTERMINAL.XYZ"; u.style.fontSize = "20px"; u.style.marginTop = "26px"; st.append(u);
+}
+if (s === "og") {
+  st.append(mark(250));
+  const w = document.createElement("div"); w.className = "word"; w.textContent = "Privatus"; w.style.fontSize = "96px"; w.style.marginTop = "30px"; st.append(w);
+  const u = document.createElement("div"); u.className = "url"; u.textContent = "TRADE WITHOUT LEAVING A TRAIL"; u.style.fontSize = "17px"; u.style.marginTop = "20px"; u.style.color = "#8B93A1"; st.append(u);
+}
+if (s === "xbanner") {
+  const r = document.createElement("div"); r.className = "row"; r.style.gap = "34px"; r.style.marginLeft = "260px";
+  r.append(mark(190)); const w = document.createElement("div"); w.className = "word"; w.textContent = "Privatus"; w.style.fontSize = "120px"; r.append(w); st.append(r);
+}
+</script></body></html>

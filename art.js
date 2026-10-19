@@ -183,7 +183,7 @@ export function chameleon(parent, { host, fg = "currentColor", line = C.BG, engr
 export function mark(cls, { tone = "gold", animate = true } = {}) {
   const svg = svgEl("0 0 10 10");
   if (cls) svg.setAttribute("class", cls);
-  logoMark(svg, { tone, animate: animate && !REDUCE });
+  logoMark(svg, { tone, sheen: false });
   return svg;
 }
 
@@ -284,7 +284,7 @@ export function hero(svg) {
   const entryA = Math.PI * .86, ex = cx + Math.cos(entryA) * (R + 16), ey = cy + Math.sin(entryA) * (R + 16);
   const gx = cx + Math.cos(gapA) * (R + 18), gy = cy + Math.sin(gapA) * (R + 18);
   const inPath = el("path", { d: `M70 452C112 452 112 ${f2(ey + 40)} ${f2(ex)} ${f2(ey)}`, fill: "none", stroke: C.IVORY, "stroke-width": 1.1, "stroke-dasharray": "1 6", "stroke-linecap": "round", opacity: .8 }, svg);
-  const outPath = el("path", { d: `M${f2(gx)} ${f2(gy)}C${f2(gx + 40)} ${f2(gy - 50)} 452 128 476 112`, fill: "none", stroke: C.BRASS, "stroke-width": 1.4 }, svg);
+  const outPath = el("path", { d: `M${f2(gx)} ${f2(gy)}C${f2(gx + 40)} ${f2(gy - 50)} 470 104 528 98`, fill: "none", stroke: C.BRASS, "stroke-width": 1.4 }, svg);
   const node = (x, y, col, lab, sub, anchor) => {
     const g = el("g", { transform: `translate(${x} ${y})` }, svg);
     el("circle", { r: 15, fill: C.BG, stroke: col, "stroke-width": 1.4 }, g);
@@ -296,11 +296,7 @@ export function hero(svg) {
     return g;
   };
   node(56, 452, C.IVORY, "YOUR WALLET", "public history", "start");
-  // the new wallet is the chameleon: it blends in, with no history behind it
-  const fresh = el("svg", { x: 486, y: 34, width: 76, height: 76, overflow: "visible" }, svg);
-  logoMark(fresh, { animate: !REDUCE });
-  text(svg, 520, 132, "NEW WALLET", { "font-size": 10, "font-weight": 600, fill: C.IVORY, "letter-spacing": ".12em", "text-anchor": "middle" });
-  text(svg, 520, 146, "no history", { "font-size": 9, fill: C.MUTE, "letter-spacing": ".06em", "text-anchor": "middle" });
+  const fresh = node(540, 98, C.BRASS, "NEW WALLET", "no history", "end");
   // a small ledger readout under the seal
   const ro = el("g", { transform: "translate(300 488)" }, svg);
   el("rect", { x: -104, y: -14, width: 208, height: 26, rx: 13, fill: C.BG1, stroke: C.LINE }, ro);
@@ -556,6 +552,6 @@ export function emblem(kind = "stream") {
   }
   // the chameleon, blending into the page while there is nothing to show
   const m = el("svg", { x: 62, y: 14, width: 76, height: 84, overflow: "visible" }, svg);
-  logoMark(m, { animate: !REDUCE });
+  logoMark(m, { sheen: false });
   return svg;
 }
