@@ -252,6 +252,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 
 .eyebrow::before{background:linear-gradient(90deg,#F6D292,#C39653)}
 .ca-row{display:flex;gap:12px;align-items:stretch}.ca-row .ca{flex:1;min-width:0}.ca-trade{flex:none;border-radius:12px;padding:0 24px}
 @media (max-width:760px){.ca-row{flex-direction:column}.ca-trade{padding:14px 20px}}
+.limits{margin-top:22px;padding:14px 18px;border-left:2px solid #93692D;background:color-mix(in srgb,var(--ink) 5%,transparent);font-size:.9rem;color:#4A5160;max-width:78ch}.limits b{color:var(--ink)}.limits a{color:#93692D}
 </style>
 </head>
 <body>
@@ -277,7 +278,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 
       <div>
         <p class="eyebrow">Private execution for Solana</p>
         <h1>Trade without leaving <em>a trail.</em></h1>
-        <p class="lede">Privatus is a full trading terminal: live launches, one-click buys, wallet tracking and orders. With <b>Private mode</b>, each buy is made by a fresh wallet that NEAR Intents funds for you, so nothing on-chain runs from your wallet to your position.</p>
+        <p class="lede">Privatus is a full trading terminal: live launches, one-click buys, wallet tracking and orders. With <b>Private mode</b>, each buy is made by a fresh wallet that NEAR Intents funds for you, so no transfer ever runs from your wallet to the wallet that buys.</p>
         <div class="ctas">
           <a class="btn brass" href="./app.html">Open terminal <span class="arr">→</span></a>
           <a class="btn" href="./docs.html">How it works</a>
@@ -321,25 +322,27 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 
         <div class="col"><span data-glyph="stealth"></span><h3>A new wallet each buy</h3><p>Every private buy runs from a stealth wallet with no history, so trackers see a stranger every time.</p></div>
         <div class="col"><span data-glyph="lock"></span><h3>Confidential routing</h3><p>Funds reach the stealth wallet through NEAR's Confidential Intents and are paid out by NEAR's bridge. Privatus doesn't run a mixer.</p></div>
         <div class="col"><span data-glyph="key"></span><h3>Recoverable anywhere</h3><p>Stealth wallets come from one signature of your wallet. Sign again on any device to restore them. Nothing secret is stored.</p></div>
-        <div class="col"><span data-glyph="fuel"></span><h3>No fee trail</h3><p>The fee is paid from your main wallet when you fund. Stealth wallets never pay Privatus, so nothing on-chain marks them as ours.</p></div>
+        <div class="col"><span data-glyph="fuel"></span><h3>No fee trail</h3><p>The fee is taken inside the NEAR route, not paid from your wallet. Your funding is one plain transfer to a one-time address, with nothing on it that points at Privatus.</p></div>
       </div>
       <div class="how">
         <h3>How Private mode uses NEAR Intents</h3>
         <ol>
           <li><b>Ask for a route.</b> The terminal asks NEAR Intents' 1Click API to deliver SOL to a new stealth wallet, and gets back a one-time deposit address.</li>
-          <li><b>Fund it once.</b> You sign one transfer from your wallet to that address. Privatus's <span data-cfg="fee">0.5%</span> fee rides in the same transaction.</li>
-          <li><b>Solvers pay the stealth wallet.</b> NEAR Intents fills the intent from its own liquidity. With Confidential Intents, the route stays off the public record.</li>
-          <li><b>The stealth wallet buys.</b> Once the SOL lands, it swaps through Jupiter. Exits run the same route in reverse, back to your wallet.</li>
+          <li><b>Fund it.</b> You approve plain transfers from your wallet to those one-time addresses. In Strong mode the amount is split into up to three uneven routes sent at random intervals. Privatus's <span data-cfg="fee">0.5%</span> fee is taken inside the route.</li>
+          <li><b>Solvers pay the stealth wallet.</b> NEAR Intents fills the intent from its own liquidity, using Confidential Intents (advanced first, then basic). If neither is available, nothing is sent unless you choose a public route.</li>
+          <li><b>The stealth wallet buys.</b> After a random pause, it swaps through Jupiter. Exits run the same route in reverse, back to your wallet.</li>
         </ol>
       </div>
       <figure class="route">
-        <div class="art"><svg data-diagram="stealthRoute" role="img" aria-label="Your wallet pays a one-time deposit address and the fee to the treasury; NEAR Intents routes it confidentially; the bridge pays a fresh stealth wallet, which swaps on Jupiter"></svg></div>
+        <div class="art"><svg data-diagram="stealthRoute" role="img" aria-label="Your wallet pays a one-time deposit address; NEAR Intents takes the fee inside the route and routes it confidentially; the bridge pays a fresh stealth wallet, which swaps on Jupiter"></svg></div>
         <figcaption><b>A private buy.</b> Your wallet pays a one-time deposit address. NEAR's bridge pays the stealth wallet. No on-chain transfer runs from you to it.</figcaption>
       </figure>
       <div class="acts">
         <a class="btn dark" href="./app.html">Try Private mode <span class="arr">→</span></a>
         <a class="btn" href="./docs.html#private">Read the details</a>
         <p class="note">On by default in the terminal. Switch it off when you need raw speed.</p>
+      </div>
+      <div class="limits"><b>What it doesn't hide.</b> NEAR's service sees both ends of each route, and a determined observer can still try to match amounts and timing. Strong mode splits amounts and randomizes timing to make that harder; it can't make it impossible. <a href="./docs.html#proof">See the proof</a>.
       </div>
     </section>
 

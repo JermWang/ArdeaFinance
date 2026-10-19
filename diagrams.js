@@ -4,23 +4,22 @@ import { schematic, ledger, curveChart, fit } from "./art.js";
 
 const n = (id, x, y, label, sub, o = {}) => ({ id, x, y, label, sub, ...o });
 
-// Main wallet → 1Click deposit → NEAR Intents → stealth wallet → Jupiter, with the fee split off at the start.
+// Main wallet → 1Click deposit → NEAR Intents (fee taken inside the route) → stealth wallet → Jupiter.
 export function stealthRoute(svg, narrow = false) {
   const at = narrow
-    ? { main: [0, 0], fee: [0, -96], dep: [0, 110], near: [0, 220], stealth: [0, 330], jup: [0, 440] }
-    : { main: [0, 0], fee: [0, 104], dep: [220, 0], near: [440, 0], stealth: [660, 0], jup: [660, 104] };
+    ? { main: [0, 0], dep: [0, 110], near: [0, 220], stealth: [0, 330], jup: [0, 440] }
+    : { main: [0, 0], dep: [220, 0], near: [440, 0], stealth: [660, 0], jup: [660, 104] };
   schematic(svg, {
     nodes: [
-      n("main", ...at.main, "Your wallet", "signs once", { glyph: "key" }),
-      n("fee", ...at.fee, "Fee", "0.5% to treasury", { glyph: "fuel" }),
+      n("main", ...at.main, "Your wallet", "plain transfers", { glyph: "key" }),
       n("dep", ...at.dep, "Deposit", "one-time address", { glyph: "file" }),
-      n("near", ...at.near, "NEAR Intents", "confidential", { glyph: "lock", tone: "core" }),
+      n("near", ...at.near, "NEAR Intents", "confidential · fee in route", { glyph: "lock", tone: "core" }),
       n("stealth", ...at.stealth, "Stealth", "fresh wallet", { glyph: "stealth", tone: "brass" }),
       n("jup", ...at.jup, "Jupiter", "swap", { glyph: "route" })
     ],
-    links: [{ from: "main", to: "dep" }, { from: "main", to: "fee" }, { from: "dep", to: "near" }, { from: "near", to: "stealth" }, { from: "stealth", to: "jup" }],
-    sequence: [[0, 1], [2], [3], [4]],
-    tags: [{ link: 0, text: "SOL" }, { link: 3, text: "BRIDGE PAYS", accent: true }]
+    links: [{ from: "main", to: "dep" }, { from: "dep", to: "near" }, { from: "near", to: "stealth" }, { from: "stealth", to: "jup" }],
+    sequence: [[0], [1], [2], [3]],
+    tags: [{ link: 0, text: "SOL" }, { link: 2, text: "BRIDGE PAYS", accent: true }]
   });
   return fit(svg);
 }

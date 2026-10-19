@@ -1,10 +1,10 @@
 // Privatus terminal. Views: Pulse, Trending, token page, Tracker, Portfolio. All data comes from public
 // sources in the browser (PumpPortal, Jupiter, DexScreener, your Solana RPC, NEAR Intents); every trade is
 // signed by your wallet, or locally by your instant/stealth wallets which are derived from one signature of it.
-import { RPC_URL, TREASURY, FEE_BPS, JUP_BASE, JUP_API_KEY, DEFAULT_SLIPPAGE_BPS, PRIORITY_MAX_LAMPORTS, ONECLICK_JWT, STEALTH_CONFIDENTIALITY, STEALTH_MAX_SOL, STEALTH_GAS_RESERVE, PROXY_URL } from "./config.js";
+import { RPC_URL, TREASURY, FEE_BPS, JUP_BASE, JUP_API_KEY, DEFAULT_SLIPPAGE_BPS, PRIORITY_MAX_LAMPORTS, ONECLICK_JWT, STEALTH_CONFIDENTIALITY, STEALTH_MAX_SOL, STEALTH_GAS_RESERVE, PROXY_URL, FEE_INTENTS_ACCOUNT } from "./config.js";
 import { jupiter, prepareSwap, sendAndConfirm, preflight, confirmSent, toRaw, fromRaw, SOL_MINT, SwapError, JITO_URL, JITO_MIN_TIP } from "./swap.js";
 import { triggerApi, limitAmounts, signAndExecute, describeOrder, evaluateRule, newRule, ruleTarget } from "./orders.js";
-import { STEALTH_MESSAGE, StealthError, deriveStealth, deriveInstant, nextUnusedStealth, scanStealths, seedFingerprint, oneclick, solAssetId, routeQuote, fundingTx, exitTx, exitAmount, waitForRoute } from "./stealth.js";
+import { STEALTH_MESSAGE, StealthError, ConfidentialUnavailable, deriveStealth, deriveInstant, nextUnusedStealth, scanStealths, seedFingerprint, oneclick, solAssetId, routeQuote, fundingTx, exitTx, exitAmount, waitForRoute, splitAmount, jitter, intentsAccount } from "./stealth.js";
 import { trace, DEFAULT_RPC, short, isAddress, base58Encode } from "./trace.js";
 import { createBoard, fromPumpPortal, fromJupiter, fromStonk, STONK, pnl, isPumpMint, mergeHistory, pushSample, momentum } from "./market.js";
 import { pumpPortal, stonkFun, tokenTrades, readCurves, metadata, holders, recentSwaps, walletHistory, onchainMeta, imageSources, identicon, setMediaProxy } from "./feeds.js";
@@ -119,11 +119,17 @@ const DEFAULTS = {
     { slippageBps: 2000, priority: "veryHigh", maxSol: 0.01, tipSol: 0.001, mev: true }
   ],
   preset: 0, from: "main", finalStretch: 60, autoTp: 0, autoSl: 0,
-  stealth: true // Private mode on by default for buys from the main wallet; the trade panel switch saves the choice
+  stealth: true, // Private mode on by default for buys from the main wallet; the trade panel switch saves the choice
+  privacy: "strong" // "strong": split routes, random timing; "fast": one route, no waits
 };
 const settings = Object.assign(structuredClone(DEFAULTS), store.get("privatus-settings", {}));
 const saveSettings = () => store.set("privatus-settings", settings);
 const preset = () => settings.presets[settings.preset] || DEFAULTS.presets[0];
+// Private mode plan: how many routes a buy is split into, and the random gaps (ms) between transfers and before the buy.
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const PRIVACY = { strong: { routes: 3, gap: [4000, 16000], settle: [8000, 28000] }, fast: { routes: 1, gap: [0, 0], settle: [0, 0] } };
+const privacyPlan = raw => { const p = PRIVACY[settings.privacy] || PRIVACY.strong; return { ...p, routes: Math.max(1, Math.min(p.routes, Number(raw / 50_000_000n))) }; };
+const feeAccount = () => FEE_INTENTS_ACCOUNT || intentsAccount(TREASURY);
 
 /* ---------- services ---------- */
 // With PROXY_URL set, RPC, Jupiter, NEAR Intents, Jito and X go through the Privatus proxy, which holds the keys.
@@ -998,7 +1004,7 @@ function updateGo() {
   go.className = `btn go ${needConnect || !p ? (T.side === "buy" ? "buy" : "primary") : ""}`;
   const pr = preset();
   text($("fine"), stealthOn()
-    ? `Private mode: ${FEE_BPS / 100}% fee from your wallet plus the NEAR Intents routing fee, then a fresh stealth wallet buys. Funding and exit amounts and timing can still be matched, so vary them.`
+    ? `Private mode: your wallet sends ${(PRIVACY[settings.privacy] || PRIVACY.strong).routes > 1 ? "up to 3 plain transfers" : "one plain transfer"} to one-time NEAR Intents addresses; the ${FEE_BPS / 100}% fee and NEAR's routing fee come out inside the route; a fresh stealth wallet buys. NEAR's service sees both ends, and a close observer can still try to match amounts and timing.`
     : `${FEE_BPS / 100}% fee in SOL · P${settings.preset + 1}: ${pr.slippageBps / 100}% slippage, ${pr.priority} priority up to ${pr.maxSol} SOL${pr.tipSol ? ` · Jito tip ${pr.tipSol} SOL${pr.mev ? " (MEV-protected)" : ""}` : ""} · ${inst ? "signed instantly by your instant wallet" : "you approve every trade in your wallet"}`);
 }
 function scheduleQuote() {
@@ -1022,7 +1028,7 @@ function renderQuote(qt, fee) {
   const buy = T.side === "buy", outDec = buy ? T.decimals : 9, outSym = buy ? symbolOf(S.tokenMint) : "SOL";
   const route = [...new Set((qt.routePlan || []).map(r => r.swapInfo?.label).filter(Boolean))].slice(0, 3).join(" → ");
   const rows = [["You get ≈", `${fromRaw(qt.outAmount, outDec, 4)} ${outSym}`], ["Minimum", `${fromRaw(qt.otherAmountThreshold, outDec, 4)} ${outSym}`], ["Price impact", `${(Number(qt.priceImpactPct || 0) * 100).toFixed(2)}%`], ["Route", route || "—"], [`Fee ${FEE_BPS / 100}%`, `${fromRaw(fee, 9, 6)} SOL`]];
-  if (stealthOn()) rows.push(["Private route", "NEAR Intents → fresh wallet, 0.01 SOL kept for gas"]);
+  if (stealthOn()) { const pl = privacyPlan(amountRaw() || 0n); rows.push(["Private route", `${pl.routes > 1 ? `${pl.routes} confidential routes, random timing` : "1 confidential route"} → fresh wallet`], ["Fee", "taken inside the NEAR route, not from your wallet"]); }
   const box = $("quote"); box.textContent = "";
   for (const [k, v] of rows) { const r = make("div", "row"); r.append(make("span", "k", k), make("span", "", v)); box.append(r); }
   box.hidden = false;
@@ -1285,6 +1291,18 @@ async function waitForSol(pk, min, ms = 90000) {
     await new Promise(r => setTimeout(r, 2500));
   }
 }
+// Private buy. With "strong" privacy (the default) the amount is split into up to three routes of uneven, non-round
+// sizes, all signed in one wallet approval and sent at random intervals; once NEAR Intents has paid them all into the
+// fresh stealth wallet, it waits a random beat before buying. The fee rides inside each route (appFees), so every
+// funding transaction is one plain transfer to a one-time deposit address.
+async function privateRoute(args) {
+  try { return await routeQuote(args); }
+  catch (e) {
+    if (!(e instanceof ConfidentialUnavailable)) throw e;
+    if (!confirm(`${e.message}\n\nRoute this one publicly through NEAR Intents instead? A public route still avoids a direct transfer, but its details are on NEAR's public record.`)) throw e;
+    return routeQuote({ ...args, allowPublic: true });
+  }
+}
 async function stealthBuy() {
   const raw = amountRaw(), mint = S.tokenMint, sym = symbolOf(mint), main = S.wallet.pk, go = $("go");
   S.busy = true; go.disabled = true;
@@ -1294,31 +1312,45 @@ async function stealthBuy() {
     const seed = await walletSeed();
     text(go, "Finding a fresh stealth wallet…");
     const { index, stealth } = await nextUnusedStealth(web3, seed, { isUsed: usedOnChain, start: stealthRecords().reduce((m, g) => Math.max(m, g.index + 1), 0) });
-    const gpk = stealth.publicKey.toBase58();
-    const fee = raw * BigInt(FEE_BPS) / 10000n, routeAmount = raw - fee;
-    gsteps(0); text(go, "Routing…"); setTradeStatus("Getting a private route from NEAR Intents…");
-    const { quote, confidential } = await routeQuote({ oc, asset: await routeAsset(), amount: routeAmount, from: main, to: gpk, confidentiality: STEALTH_CONFIDENTIALITY });
-    rec = { index, address: gpk, mint, symbol: sym, state: "funding", depositAddress: quote.depositAddress, confidential, createdAt: Date.now() };
+    const gpk = stealth.publicKey.toBase58(), plan = privacyPlan(raw), parts = splitAmount(raw, plan.routes), asset = await routeAsset();
+    gsteps(0); text(go, "Routing…");
+    setTradeStatus(`Getting ${parts.length > 1 ? `${parts.length} confidential routes` : "a confidential route"} from NEAR Intents…`);
+    const routes = [];
+    for (const part of parts) routes.push(await privateRoute({ oc, asset, amount: part, from: main, to: gpk, confidentiality: STEALTH_CONFIDENTIALITY, appFee: { recipient: feeAccount(), bps: FEE_BPS } }));
+    const confidential = routes.every(r => r.confidential);
+    rec = { index, address: gpk, mint, symbol: sym, state: "funding", depositAddress: routes[0].quote.depositAddress, depositAddresses: routes.map(r => r.quote.depositAddress), confidential, createdAt: Date.now() };
     saveStealth(rec);
-    text(go, "Approve in wallet…"); setTradeStatus(`Approve sending ${fromRaw(raw, 9, 4)} SOL into ${confidential ? "a Confidential Intents" : "a NEAR Intents"} route.`);
+    // one approval for every funding transfer
+    text(go, "Approve in wallet…");
+    setTradeStatus(`Approve ${parts.length > 1 ? `${parts.length} transfers` : "one transfer"} (${fromRaw(raw, 9, 4)} SOL in total) into ${confidential ? "Confidential Intents" : "NEAR Intents"} routes. Each is a plain transfer to a one-time address.`);
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
-    const fsig = await signSend(fundingTx(web3, { from: main, depositAddress: quote.depositAddress, amount: routeAmount, fee, treasury: TREASURY, blockhash }), { local: null }, lastValidBlockHeight);
-    oc.submitDeposit(fsig, quote.depositAddress).catch(() => {});
-    saveStealth({ ...rec, state: "routing", fundingSig: fsig });
+    const txs = routes.map((r, i) => fundingTx(web3, { from: main, depositAddress: r.quote.depositAddress, amount: parts[i], blockhash }));
+    for (const tx of txs) await preflight(connection, tx);
+    const p = S.wallet.p, signed = p.signAllTransactions ? await p.signAllTransactions(txs) : [];
+    if (!p.signAllTransactions) for (const tx of txs) signed.push(await p.signTransaction(tx));
+    const sigs = [];
+    for (let i = 0; i < signed.length; i++) {
+      if (i) { const ms = jitter(...plan.gap); text(go, "Sending at random intervals…"); setTradeStatus(`Sent ${i} of ${signed.length}. Next transfer in ${Math.round(ms / 1000)}s, so they don't line up in time.`); await sleep(ms); }
+      const sig = await sendAndConfirm(connection, signed[i], lastValidBlockHeight, {});
+      sigs.push(sig); oc.submitDeposit(sig, routes[i].quote.depositAddress).catch(() => {});
+    }
+    saveStealth({ ...rec, state: "routing", fundingSig: sigs[0], fundingSigs: sigs });
     gsteps(1); text(go, "Routing privately…");
-    await waitForRoute(oc, quote.depositAddress, { onStatus: s => setTradeStatus(`NEAR Intents: ${ROUTE_LABEL[s] || s.toLowerCase()}${confidential ? " (confidential)" : ""}…`) });
+    await Promise.all(routes.map(r => waitForRoute(oc, r.quote.depositAddress, { onStatus: s => setTradeStatus(`NEAR Intents: ${ROUTE_LABEL[s] || s.toLowerCase()}${confidential ? " (confidential)" : ""}…`) })));
     const bal = await waitForSol(gpk, STEALTH_GAS_RESERVE + 1n);
     saveStealth({ ...rec, state: "funded" });
-    gsteps(2); text(go, "Private buy…"); setTradeStatus(`Stealth wallet #${index} received ${fromRaw(bal, 9, 4)} SOL. Buying ${sym}…`);
-    const p = preset();
-    const prep = await prepareSwap({ web3, jup, connection, side: "buy", mint, amountRaw: bal - STEALTH_GAS_RESERVE, user: gpk, treasury: TREASURY, feeBps: 0, slippageBps: p.slippageBps, priorityMaxLamports: Math.round(p.maxSol * 1e9), priorityLevel: p.priority });
+    const settle = jitter(...plan.settle);
+    if (settle) { text(go, "Waiting…"); setTradeStatus(`Stealth wallet #${index} received ${fromRaw(bal, 9, 4)} SOL. Waiting a random ${Math.round(settle / 1000)}s before buying, so the buy doesn't line up with the funding.`); await sleep(settle); }
+    gsteps(2); text(go, "Private buy…"); setTradeStatus(`Buying ${sym} from stealth wallet #${index}…`);
+    const pr = preset();
+    const prep = await prepareSwap({ web3, jup, connection, side: "buy", mint, amountRaw: (await connection.getBalance(stealth.publicKey).then(BigInt)) - STEALTH_GAS_RESERVE, user: gpk, treasury: TREASURY, feeBps: 0, slippageBps: pr.slippageBps, priorityMaxLamports: Math.round(pr.maxSol * 1e9), priorityLevel: pr.priority });
     const bsig = await signSend(prep.tx, { local: stealth }, prep.lastValidBlockHeight);
     saveStealth({ ...rec, state: "holding", buySig: bsig });
     gsteps(3);
     const dec = T.decimals ?? await decimalsOf(mint);
     const out = Number(prep.quote.outAmount) / 10 ** dec;
     logTrade(main, { sig: bsig, time: Date.now(), side: "buy", mint, symbol: sym, sol: Number(raw) / 1e9, tokens: out, from: `stealth #${index}` });
-    setTradeStatus(`Stealth wallet #${index} bought ≈${num(out)} ${sym}. Nothing on-chain links it to your wallet.`, "ok", bsig);
+    setTradeStatus(`Stealth wallet #${index} bought ≈${num(out)} ${sym}. No transfer runs from your wallet to it.`, "ok", bsig);
     amt.value = ""; $("quote").hidden = true;
     refreshBalances(); renderMine();
   } catch (e) {
@@ -1342,7 +1374,7 @@ async function stealthExit(index, row) {
     const amount = exitAmount(await connection.getBalance(owner), close);
     if (amount <= 0n) throw new StealthError(`Stealth #${index} has nothing left to send.`);
     say(`Stealth #${index}: getting a private route home…`);
-    const { quote, confidential } = await routeQuote({ oc, asset: await routeAsset(), amount, from: gpk, to: S.wallet.pk, confidentiality: STEALTH_CONFIDENTIALITY });
+    const { quote, confidential } = await privateRoute({ oc, asset: await routeAsset(), amount, from: gpk, to: S.wallet.pk, confidentiality: STEALTH_CONFIDENTIALITY });
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
     const sig = await sendAndConfirm(connection, exitTx(web3, { stealth, depositAddress: quote.depositAddress, amount, closeAccounts: close, blockhash }), lastValidBlockHeight);
     oc.submitDeposit(sig, quote.depositAddress).catch(() => {});
@@ -1721,7 +1753,7 @@ function openWalletModal() {
       }, dDirect));
       dPrivate.addEventListener("click", () => busy(async say => {
         const a = amount(); checkTransfer(a); say("Getting a private route from NEAR Intents…");
-        const { quote, confidential } = await routeQuote({ oc, asset: await routeAsset(), amount: a, from: S.wallet.pk, to: S.instant.pk, confidentiality: STEALTH_CONFIDENTIALITY });
+        const { quote, confidential } = await privateRoute({ oc, asset: await routeAsset(), amount: a, from: S.wallet.pk, to: S.instant.pk, confidentiality: STEALTH_CONFIDENTIALITY });
         say("Approve the deposit in your wallet…");
         const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
         const sig = await signSend(fundingTx(web3, { from: S.wallet.pk, depositAddress: quote.depositAddress, amount: a, blockhash }), { local: null }, lastValidBlockHeight);
@@ -1733,7 +1765,7 @@ function openWalletModal() {
         const bal = BigInt(await connection.getBalance(S.instant.kp.publicKey)), a = exitAmount(bal);
         if (a <= 0n) throw new SwapError("Nothing to withdraw.");
         let to = S.wallet.pk, route = null;
-        if (priv) { say("Getting a private route home…"); route = await routeQuote({ oc, asset: await routeAsset(), amount: a, from: S.instant.pk, to: S.wallet.pk, confidentiality: STEALTH_CONFIDENTIALITY }); to = route.quote.depositAddress; }
+        if (priv) { say("Getting a private route home…"); route = await privateRoute({ oc, asset: await routeAsset(), amount: a, from: S.instant.pk, to: S.wallet.pk, confidentiality: STEALTH_CONFIDENTIALITY }); to = route.quote.depositAddress; }
         const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
         const sig = await sendAndConfirm(connection, exitTx(web3, { stealth: S.instant.kp, depositAddress: to, amount: a, blockhash }), lastValidBlockHeight);
         if (route) { oc.submitDeposit(sig, to).catch(() => {}); await waitForRoute(oc, to, { onStatus: s => say(`NEAR Intents: ${ROUTE_LABEL[s] || s.toLowerCase()}…`) }); }
@@ -1770,6 +1802,8 @@ $("settingsbtn").addEventListener("click", () => openModal("Settings", body => {
   const [lat, autoTpIn] = field("After a snipe: take profit at +% (sells half, 0 = off)", settings.autoTp || 0, { inputMode: "decimal" });
   const [las, autoSlIn] = field("After a snipe: stop loss at −% (0 = off)", settings.autoSl || 0, { inputMode: "decimal" });
   ag.append(lat, las); pulse.append(ag);
+  const pv = make("div", "box"); pv.append(make("h3", "", "Private mode"), make("p", "", "Strong splits each private buy into up to three confidential routes of uneven sizes, sent at random intervals, and waits a random beat before buying. Fast uses one route and no waits."));
+  const lpv = make("label", "", "Privacy strength"), pvSel = make("select", "inp"); [["strong", "Strong (split routes, random timing)"], ["fast", "Fast (one route)"]].forEach(([v, t]) => { const o = make("option", "", t); o.value = v; o.selected = (settings.privacy || "strong") === v; pvSel.append(o); }); lpv.append(pvSel); pv.append(lpv);
   const net = make("div", "box"); net.append(make("h3", "", "Network"), make("p", "", "The public Solana RPC is rate limited. A Helius, Triton or QuickNode URL makes Pulse, trades and the tracker much faster. Reloads the page."));
   const [lrpc, rpcIn] = field("RPC URL", rpcUrl, { spellcheck: false }); net.append(lrpc);
   const save = make("button", "btn primary", "Save"); save.type = "button";
@@ -1780,13 +1814,14 @@ $("settingsbtn").addEventListener("click", () => openModal("Settings", body => {
     const tp = Number(autoTpIn.value), sl = Number(autoSlIn.value);
     settings.autoTp = tp > 0 ? Math.min(10000, tp) : 0; settings.autoSl = sl > 0 && sl < 100 ? sl : 0;
     const f = Number(fs.value); if (f >= 10 && f <= 99) settings.finalStretch = f;
+    settings.privacy = pvSel.value;
     saveSettings();
     const newRpc = rpcIn.value.trim();
     if (newRpc !== rpcUrl && /^https?:\/\/\S+$/.test(newRpc)) { store.set("privatus-rpc-url", newRpc); location.reload(); return; }
     modal.close(); pulseDirty = true; renderPulse(true); if (S.route === "token") renderTradePanel();
     toast("Settings saved.", "ok");
   });
-  body.append(qb, pr, pulse, net, save);
+  body.append(qb, pr, pv, pulse, net, save);
 }));
 
 /* ---------- quick-buy amount + hotkeys ---------- */

@@ -22,7 +22,7 @@ A private execution terminal for Solana. Trade without leaving a trail.
     - A watchlist bar, settings (quick amounts, presets, Jito, autopilot defaults, Final Stretch threshold, RPC), hotkeys (`/` search, `b`/`s` buy/sell, `1`–`3` presets, `p` Pulse) and migration alerts.
   - Every trade routes through Jupiter. A 0.5% SOL fee goes to the treasury inside the same transaction, from Main or Instant. Stealth wallets never pay it; private buys pay at funding.
 - **Trail audit** (on the landing page, and as a panel in the terminal): paste any wallet and see what trackers can link to it: funding source, sibling wallets, exchange links, wallets you move funds between, address-poisoning attempts, the hours you're awake, and what you hold. Read-only.
-- **Private mode** (beta, in the terminal): buy from a fresh stealth wallet with no on-chain link to yours. Funds go in and out through **NEAR Intents** (1Click API, Confidential Intents): you pay into a one-time deposit address, and NEAR's bridge pays the stealth wallet from its own wallets. Stealth wallets are derived from one signature of your wallet, so signing again on any device rebuilds them. Portfolio lists them and can sell, exit back to your wallet, or export a key.
+- **Private mode** (beta, in the terminal): buy from a fresh stealth wallet with no direct transfer from yours. Funds go in and out through **NEAR Intents** (1Click API, Confidential Intents): you pay into a one-time deposit address, and NEAR's bridge pays the stealth wallet from its own wallets. Stealth wallets are derived from one signature of your wallet, so signing again on any device rebuilds them. Portfolio lists them and can sell, exit back to your wallet, or export a key.
 
 ## Design
 

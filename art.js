@@ -300,7 +300,7 @@ export function hero(svg) {
   // a small ledger readout under the seal
   const ro = el("g", { transform: "translate(300 488)" }, svg);
   el("rect", { x: -104, y: -14, width: 208, height: 26, rx: 13, fill: C.BG1, stroke: C.LINE }, ro);
-  text(ro, -88, 3.5, "ON-CHAIN LINK", { "font-size": 9, fill: C.MUTE, "letter-spacing": ".14em" });
+  text(ro, -88, 3.5, "DIRECT TRANSFER", { "font-size": 9, fill: C.MUTE, "letter-spacing": ".14em" });
   const roV = text(ro, 88, 3.5, "NONE", { "font-size": 9.5, "font-weight": 600, fill: C.BRASS, "letter-spacing": ".14em", "text-anchor": "end" });
 
   const pk = el("g", { "data-anim": "" }, svg); diamond(pk, 5);

@@ -81,9 +81,22 @@ export function solAssetId(tokens) {
   return t ? t.assetId : SOL_ASSET;
 }
 
-// Quote a SOL→SOL route on Solana from one wallet to another. Asks for Confidential Intents first;
-// if 1Click won't route this pair confidentially it falls back to standard intents and says so.
-export async function routeQuote({ oc, asset = SOL_ASSET, amount, from, to, slippageBps = 100, confidentiality = "basic", now = Date.now() }) {
+// The NEAR Intents account a Solana key controls: the hex of its ed25519 public key (an implicit account).
+export function intentsAccount(base58) {
+  const A = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  let n = 0n;
+  for (const c of base58) { const v = A.indexOf(c); if (v < 0) throw new StealthError("Not a Solana address."); n = n * 58n + BigInt(v); }
+  return n.toString(16).padStart(64, "0");
+}
+
+export class ConfidentialUnavailable extends StealthError {}
+
+// Quote a SOL→SOL route on Solana from one wallet to another. It asks for Confidential Intents at the strongest level
+// first ("advanced", then "basic"). If neither will route it, it stops with ConfidentialUnavailable rather than quietly
+// going public; the caller decides, with the user's say-so, whether to retry with allowPublic.
+// appFee { recipient, bps }: the platform fee is taken inside NEAR Intents from the routed amount, so the user's
+// funding transaction is a single plain transfer to the deposit address, with nothing pointing at Privatus.
+export async function routeQuote({ oc, asset = SOL_ASSET, amount, from, to, slippageBps = 100, confidentiality = "advanced", appFee = null, allowPublic = false, now = Date.now() }) {
   const request = level => ({
     dry: false, swapType: "EXACT_INPUT", slippageTolerance: slippageBps,
     originAsset: asset, depositType: "ORIGIN_CHAIN", destinationAsset: asset,
@@ -91,18 +104,38 @@ export async function routeQuote({ oc, asset = SOL_ASSET, amount, from, to, slip
     recipient: to, recipientType: "DESTINATION_CHAIN",
     deadline: new Date(now + 30 * 60 * 1000).toISOString(),
     ...(level !== "public" ? { confidentiality: level } : {}),
+    ...(appFee && appFee.bps > 0 ? { appFees: [{ recipient: appFee.recipient, fee: appFee.bps }] } : {}),
     referral: "privatus"
   });
-  let res, confidential = confidentiality !== "public";
-  try { res = await oc.quote(request(confidentiality)); }
-  catch (e) {
-    if (!confidential || !(e.status >= 400 && e.status < 500) || !/confiden|private|not supported|unsupported/i.test(e.message)) throw e;
-    confidential = false;
-    res = await oc.quote(request("public"));
+  const levels = confidentiality === "public" ? ["public"] : confidentiality === "advanced" ? ["advanced", "basic"] : ["basic"];
+  let res = null, level = null, lastErr = null;
+  for (const lv of levels) {
+    try { res = await oc.quote(request(lv)); level = lv; break; }
+    catch (e) {
+      lastErr = e;
+      if (lv === "public" || !(e.status >= 400 && e.status < 500) || !/confiden|private|not supported|unsupported/i.test(e.message)) throw e;
+    }
+  }
+  if (!res) {
+    if (!allowPublic) throw new ConfidentialUnavailable("NEAR Intents can't route this confidentially right now, so nothing was sent. You can try again shortly, or choose a standard (public) route.");
+    res = await oc.quote(request("public")); level = "public";
   }
   checkQuote(res, { asset, amount, from, to });
-  return { res, quote: res.quote, confidential };
+  return { res, quote: res.quote, confidential: level !== "public", level };
 }
+
+// Split an amount into n parts that don't look like a split: each part varies by up to ±spread around an even share,
+// none is a round number, and they add up exactly. Used to fund a private buy through several separate routes.
+export function splitAmount(total, n, { spread = .18, rand = Math.random } = {}) {
+  total = BigInt(total);
+  if (n <= 1) return [total];
+  const w = Array.from({ length: n }, () => 1 + (rand() * 2 - 1) * spread), sum = w.reduce((a, b) => a + b, 0);
+  const parts = w.map(x => BigInt(Math.floor(Number(total) * x / sum)));
+  parts[n - 1] += total - parts.reduce((a, b) => a + b, 0n);
+  return parts;
+}
+// A random wait in [min, max] ms, so funding and buying don't line up in time.
+export const jitter = (min, max, rand = Math.random) => Math.round(min + rand() * (max - min));
 
 // Never send funds on a quote that doesn't say exactly what we asked for.
 export function checkQuote(res, { asset, amount, from, to }) {
@@ -119,7 +152,8 @@ export function checkQuote(res, { asset, amount, from, to }) {
 }
 
 /* ---------- transactions ---------- */
-// Main wallet → deposit address (+ fee to the treasury), one transaction signed in the user's wallet.
+// Main wallet → deposit address, one transaction signed in the user's wallet. The platform fee rides in the route
+// (appFees), so `fee` stays 0 for private buys; it's kept for routes that charge it on-chain.
 export function fundingTx(web3, { from, depositAddress, amount, fee = 0n, treasury, blockhash }) {
   const payer = new web3.PublicKey(from);
   const ixs = [web3.SystemProgram.transfer({ fromPubkey: payer, toPubkey: new web3.PublicKey(depositAddress), lamports: BigInt(amount) })];

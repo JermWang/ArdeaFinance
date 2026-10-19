@@ -21,7 +21,10 @@ export const PRIORITY_MAX_LAMPORTS = 1_000_000;     // cap on the priority fee (
 // per route; a JWT from the NEAR Intents partner dashboard removes it. Like the Jupiter key, a JWT
 // here is public, so it belongs behind the same server proxy.
 export const ONECLICK_JWT = "";
-export const STEALTH_CONFIDENTIALITY = "basic";       // "basic" or "advanced" Confidential Intents; "public" to opt out
+export const STEALTH_CONFIDENTIALITY = "advanced";    // tries "advanced" Confidential Intents, then "basic"; never goes public without asking
+// Where private-mode fees go: an account inside NEAR Intents, taken from each route by 1Click's appFees. Empty means
+// the NEAR implicit account of TREASURY's key (the hex of its public key), which the treasury key can withdraw from.
+export const FEE_INTENTS_ACCOUNT = "";
 export const STEALTH_MAX_SOL = 5;                     // per stealth buy while Private mode is in beta
 export const STEALTH_GAS_RESERVE = 10_000_000n;       // 0.01 SOL kept in each stealth wallet for fees and token account rent
 
@@ -40,3 +43,9 @@ export const PROXY_URL = typeof location !== "undefined" && OWN_HOSTS.includes(l
 
 // The Privatus token's mint. Shown on the landing page (copy bar and a Trade button) from launch.
 export const TOKEN_CA = "FepxP15gLqWBW3pHV9Mmcb625UtPst7dFk1v2Ffhpump";
+
+// Public proof of Private mode working: real transaction signatures shown in the docs' Proof section, each linked to
+// Solscan. Add them after a real private buy and exit, e.g. { step: "Funding", note: "...", sig: "5abc…" }.
+export const PROOF_TXS = [];
+// The public source repository, linked from the docs' Proof section once it exists ("" hides the link).
+export const SOURCE_REPO = "";

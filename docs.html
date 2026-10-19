@@ -164,6 +164,8 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
 h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%,#A57B3A);-webkit-background-clip:text;background-clip:text;color:transparent}
 .links a.x{display:inline-flex;padding:8px 10px}.links a.x svg{width:14px;height:14px}
 @media (max-width:600px){.links a.x{display:inline-flex}}
+.proof-btn{font:600 .9rem var(--sans);background:var(--ink);color:var(--paper);border:0;border-radius:6px;padding:11px 18px;cursor:pointer}.proof-btn:disabled{opacity:.6;cursor:wait}
+.proof-out{background:var(--plate);color:#D9DEE6;border-radius:10px;padding:16px;font:.76rem/1.6 var(--mono);white-space:pre-wrap;overflow-x:auto;max-width:76ch}.proof-out b{color:#F2CF8E;font-weight:500}
 </style>
 <script type="module" src="./docs.js"></script>
 </head>
@@ -198,6 +200,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%
       <a href="#trading">Trading</a>
       <a href="#fees">Fees</a>
       <a href="#private">Private mode</a>
+      <a href="#proof">Proof</a>
       <a href="#pulse">Pulse data</a>
       <a href="#orders">Orders</a>
       <a href="#tracker">Tracker &amp; PnL</a>
@@ -217,7 +220,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%
         <div class="cards">
           <div class="card"><span data-glyph="key" class="gl"></span><h4>Non-custodial</h4><p>You sign every trade, in your wallet or in wallets derived from your own signature. Privatus never holds funds.</p></div>
           <div class="card"><span data-glyph="route" class="gl"></span><h4>Best-price routing</h4><p>Every swap is routed by Jupiter across Solana's DEXs and pump.fun curves.</p></div>
-          <div class="card"><span data-glyph="lock" class="gl"></span><h4>Private funding</h4><p>Stealth wallets are paid by NEAR's bridge, not by you, so nothing on-chain points back.</p></div>
+          <div class="card"><span data-glyph="lock" class="gl"></span><h4>Private funding</h4><p>Stealth wallets are paid by NEAR's bridge, not by you, so no transfer runs from you to them.</p></div>
           <div class="card ink"><span data-glyph="shield" class="gl"></span><h4>Static and open</h4><p>The app is plain files: HTML and JavaScript you can read, host or run locally.</p></div>
         </div>
       </section>
@@ -235,7 +238,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%
           <tbody>
             <tr><td><b>Main</b></td><td>Your wallet app, with a popup per trade</td><td>Holding funds, funding the others, careful trades</td></tr>
             <tr><td><b>Instant</b></td><td>A key in this tab's memory, no popups</td><td><span data-glyph="bolt" class="inl" aria-hidden="true"></span> quick buys and presets when you trade from it, plus autopilot and snipes. Fund it directly or privately.</td></tr>
-            <tr><td><b>Stealth</b></td><td>A fresh key per private buy</td><td>Buys with no on-chain link to your main wallet</td></tr>
+            <tr><td><b>Stealth</b></td><td>A fresh key per private buy</td><td>Buys with no direct transfer from your main wallet</td></tr>
           </tbody>
         </table></div>
         <h3>Recovery</h3>
@@ -279,7 +282,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%
         <ul class="list">
           <li><b>Buys:</b> <span data-cfg="fee">0.5%</span> of the SOL you spend, transferred before the swap.</li>
           <li><b>Sells:</b> <span data-cfg="fee">0.5%</span> of the <i>minimum</i> SOL the route guarantees, transferred after the swap, so a fill better than the minimum is all yours.</li>
-          <li><b>Private buys:</b> the fee is paid by your main wallet when it funds the route. Stealth wallets never pay Privatus, so no fee transfer marks them.</li>
+          <li><b>Private buys:</b> the fee is taken inside the NEAR route (1Click <code>appFees</code>), not paid from your wallet, so your funding is one plain transfer per route and nothing on it points at Privatus.</li>
           <li><b>Not charged:</b> stealth exits, deposits to and withdrawals from your instant wallet, and limit orders (Jupiter fills those).</li>
         </ul>
         <p>Network costs are separate and go to Solana validators: the base fee, the priority fee from your preset, and a Jito tip if set. Jupiter's routing is free.</p>
@@ -295,11 +298,11 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%
         </figure>
         <ol class="steps">
           <li><span>The terminal derives the next stealth wallet from your signature and checks the chain that it has never been used, so a cleared browser or a new device never reuses one.</span></li>
-          <li><span>It asks 1Click for a SOL → SOL route to the stealth wallet, with <b>Confidential Intents</b> on: the sender, amount and route stay off NEAR's public record. If a route can't be confidential, it falls back to a standard intent and tells you.</span></li>
+          <li><span>It asks 1Click for a SOL → SOL route to the stealth wallet, with <b>Confidential Intents</b> on: the sender, amount and route stay off NEAR's public record. It asks for the advanced level first, then basic. If neither will route it, nothing is sent; a public route only happens if you choose it.</span></li>
           <li><span>It checks the quote before sending anything: the recipient must be the stealth wallet, refunds must go to your wallet, the amount and assets must match, and the deposit address must not be one of yours. Otherwise it refuses.</span></li>
-          <li><span>You sign one transaction: SOL to the deposit address, plus the <span data-cfg="fee">0.5%</span> fee.</span></li>
+          <li><span>You approve the funding in one wallet prompt: a plain transfer to each deposit address. The <span data-cfg="fee">0.5%</span> fee is taken inside the route. In Strong mode (the default) the amount is split into up to three uneven, non-round routes, sent at random intervals of 4–16 seconds.</span></li>
           <li><span>NEAR Intents settles and the bridge pays the stealth wallet, usually within a minute or two. The terminal follows the route's status.</span></li>
-          <li><span>The stealth wallet buys on Jupiter, keeping 0.01 SOL for network fees and token-account rent.</span></li>
+          <li><span>After a random 8–28 second pause, the stealth wallet buys on Jupiter, keeping 0.01 SOL for network fees and token-account rent.</span></li>
         </ol>
         <h3>Exiting</h3>
         <figure class="fig mid">
@@ -311,10 +314,25 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%
         <h3>If something goes wrong</h3>
         <p>A route that can't complete is refunded by NEAR Intents to the wallet that sent it. Stealth wallets can always be rebuilt by signing again, and Portfolio scans your stealth wallets on-chain and lists every one with funds, with buttons to exit or export its key, so nothing is stranded. If you've made many stealth wallets, Scan further looks deeper.</p>
         <div class="note ink">
-          <p><b>What Private mode does not do.</b> Nothing makes a wallet untraceable. An observer who sees 1.000 SOL leave your wallet and 0.998 SOL reach a fresh wallet a minute later can guess. Vary amounts, don't buy the instant the stealth wallet is funded, and don't send funds between stealth wallets and wallets you've used publicly. Private mode makes tracing expensive and uncertain; it doesn't make it impossible. Privatus doesn't run a mixer and never touches the funds in transit.</p>
+          <p><b>What Private mode does not do.</b> Nothing makes a wallet untraceable. NEAR's 1Click service sees both ends of a route. An observer who sees SOL leave your wallet and a similar amount reach a fresh wallet soon after can guess; Strong mode's split amounts and random timing make that harder, not impossible. Vary amounts, and don't send funds between stealth wallets and wallets you've used publicly. Private mode makes tracing expensive and uncertain; it doesn't make it impossible. Privatus doesn't run a mixer and never touches the funds in transit.</p>
         </div>
         <h3>Why NEAR Intents</h3>
         <p>It settles quickly, needs no wallet or account on NEAR, pays out from bridge-owned addresses used by everyone, and offers Confidential Intents for keeping the request itself private. Monero would need a swap in and out through third-party exchanges, slower and with more counterparties.</p>
+      </section>
+
+      <section id="proof">
+        <p class="eyebrow"><span data-glyph="shield"></span>Proof</p>
+        <h2>Don't take our word for it. <em>Check it.</em></h2>
+        <p>Three things you can verify yourself, without trusting this page.</p>
+        <h3>1. A live route, right now</h3>
+        <p>This asks NEAR Intents' 1Click API, from your browser through the Privatus gateway, for a real confidential SOL route of 0.1 SOL with the Privatus <span data-cfg="fee">0.5%</span> fee built in (<code>appFees</code>), exactly as a private buy does. It's a dry quote: nothing is created or sent.</p>
+        <p><button class="proof-btn" id="proof-run" type="button">Run a live route check</button></p>
+        <pre class="proof-out" id="proof-out" hidden></pre>
+        <h3>2. Transactions on-chain</h3>
+        <p>Private buys and exits made through the terminal, each linked to Solscan so you can see what the chain shows: the funding is a plain transfer to a one-time NEAR address, and the stealth wallet is paid by NEAR's bridge.</p>
+        <div class="tbl"><table id="proof-txs"><thead><tr><th>Step</th><th>What to look for</th><th>Transaction</th></tr></thead><tbody></tbody></table></div>
+        <h3>3. The code</h3>
+        <p>Private mode is <code>stealth.js</code> (routing, quote checks, transactions) and the private-buy flow in <code>terminal.js</code>, served as plain files you can read in your browser: <a href="./stealth.js">stealth.js</a>, <a href="./terminal.js">terminal.js</a>, <a href="./config.js">config.js</a>.<span id="proof-repo"></span></p>
       </section>
 
       <section id="pulse">

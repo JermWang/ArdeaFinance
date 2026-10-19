@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import web3 from "@solana/web3.js";
-import { deriveStealth, nextUnusedStealth, scanStealths, seedFingerprint, oneclick, routeQuote, checkQuote, fundingTx, exitTx, exitAmount, waitForRoute, solAssetId, SOL_ASSET, STEALTH_MESSAGE } from "../stealth.js";
+import { deriveStealth, nextUnusedStealth, scanStealths, seedFingerprint, oneclick, routeQuote, checkQuote, fundingTx, exitTx, exitAmount, waitForRoute, solAssetId, SOL_ASSET, STEALTH_MESSAGE, ConfidentialUnavailable, intentsAccount, splitAmount } from "../stealth.js";
 import { createOneClick } from "./oneclickmock.mjs";
 import { createRequire } from "node:module";
 const { ed25519 } = createRequire(import.meta.url)("@noble/curves/ed25519");
@@ -32,7 +32,9 @@ test("route quote asks for Confidential Intents and pays exactly the stealth", a
   const r = await routeQuote({ oc: oneclick({ fetch: m.fetch }), amount: 995_000_000n, from: main.publicKey.toBase58(), to: stealth });
   assert.equal(r.confidential, true);
   const sent = m.quotes[0];
-  assert.equal(sent.confidentiality, "basic");
+  assert.equal(sent.confidentiality, "advanced");
+  assert.equal(r.level, "advanced");
+  assert.equal(sent.appFees, undefined);
   assert.equal(sent.recipient, stealth);
   assert.equal(sent.refundTo, main.publicKey.toBase58());
   assert.equal(sent.originAsset, SOL_ASSET);
@@ -42,12 +44,40 @@ test("route quote asks for Confidential Intents and pays exactly the stealth", a
   assert.equal(sent.recipientType, "DESTINATION_CHAIN");
 });
 
-test("falls back to standard intents when the confidential rail refuses, and says so", async () => {
-  const m = createOneClick({ confidential: false });
-  const r = await routeQuote({ oc: oneclick({ fetch: m.fetch }), amount: 1000n, from: main.publicKey.toBase58(), to: web3.Keypair.generate().publicKey.toBase58() });
+test("never goes public on its own when the confidential rail refuses; only with allowPublic", async () => {
+  const m = createOneClick({ confidential: false }), to = web3.Keypair.generate().publicKey.toBase58();
+  await assert.rejects(routeQuote({ oc: oneclick({ fetch: m.fetch }), amount: 1000n, from: main.publicKey.toBase58(), to }), ConfidentialUnavailable);
+  assert.deepEqual(m.quotes.map(q => q.confidentiality), ["advanced", "basic"]);
+  const r = await routeQuote({ oc: oneclick({ fetch: m.fetch }), amount: 1000n, from: main.publicKey.toBase58(), to, allowPublic: true });
   assert.equal(r.confidential, false);
-  assert.equal(m.quotes.length, 2);
-  assert.equal(m.quotes[1].confidentiality, undefined);
+  assert.equal(r.level, "public");
+  assert.equal(m.quotes.at(-1).confidentiality, undefined);
+});
+
+test("the platform fee rides in the route as an appFee, so funding is one plain transfer", async () => {
+  const m = createOneClick(), to = web3.Keypair.generate().publicKey.toBase58(), acct = intentsAccount(TREASURY);
+  await routeQuote({ oc: oneclick({ fetch: m.fetch }), amount: 1_000_000_000n, from: main.publicKey.toBase58(), to, appFee: { recipient: acct, bps: 50 } });
+  assert.deepEqual(m.quotes[0].appFees, [{ recipient: acct, fee: 50 }]);
+  const dep = web3.Keypair.generate().publicKey.toBase58();
+  const tx = fundingTx(web3, { from: main.publicKey.toBase58(), depositAddress: dep, amount: 1_000_000_000n, blockhash: web3.Keypair.generate().publicKey.toBase58() });
+  assert.equal(tx.message.compiledInstructions.length, 1);
+  assert.ok(!tx.message.staticAccountKeys.some(k => k.toBase58() === TREASURY));
+});
+
+test("intentsAccount is the hex of the Solana public key (a NEAR implicit account)", () => {
+  const kp = web3.Keypair.generate();
+  assert.equal(intentsAccount(kp.publicKey.toBase58()), Buffer.from(kp.publicKey.toBytes()).toString("hex"));
+  assert.equal(intentsAccount(TREASURY).length, 64);
+});
+
+test("splitAmount: parts add up exactly, vary in size, and none is round", () => {
+  let seed = 7; const rand = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  const parts = splitAmount(1_000_000_000n, 3, { rand });
+  assert.equal(parts.length, 3);
+  assert.equal(parts.reduce((a, b) => a + b, 0n), 1_000_000_000n);
+  assert.ok(new Set(parts.map(String)).size === 3);
+  assert.ok(parts.every(p => p % 1_000_000n !== 0n));
+  assert.deepEqual(splitAmount(5n, 1), [5n]);
 });
 
 test("refuses tampered quotes", async () => {
