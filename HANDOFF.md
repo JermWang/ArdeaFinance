@@ -20,7 +20,8 @@ Never call it "untraceable": amounts and timing can still be matched, and the do
 - `TREASURY` in `config.js` is still the wallet the code came with. Using the same treasury as another product links the two on-chain; set a new one if that matters.
 - Wallet derivation strings are `privatus/instant/0` and `privatus/stealth/<i>`, and the signed message names Privatus.
 - The 1Click `referral` is `"privatus"`; register it with NEAR Intents if referral tracking is wanted.
-- No X account or custom domain yet.
+- **Custom domain:** privatusterminal.xyz (Namecheap) and www are attached to the Railway `privatus` service (moved off the old `lacuna` project on 2026-10-19). They go live once the CNAME and `_railway-verify` TXT records from `railway domain status` are added at Namecheap. `ALLOWED_ORIGINS` (Railway variable and `worker/wrangler.toml`) lists both, and `config.js` uses same-origin for the gateway on its own domains. Once DNS is live, switch `og:url`/`og:image` to https://privatusterminal.xyz.
+- No X account yet.
 
 ## Design system
 See "Design" in `README.md`. Short version: vault navy, ivory, steel lines, one brass accent; Instrument Serif, Geist, Geist Mono; guilloché engravings drawn in `art.js`; the vault-dial mark. The docs invert it (ivory paper, navy figure plates). Re-render the PNG brand files with `media/source/render.sh` after changing the mark or the hero.

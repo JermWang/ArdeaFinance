@@ -32,4 +32,8 @@ export const RPC_URL = "";
 // After deploying worker/ (see worker/README.md), set this to the worker URL, e.g.
 // "https://privatus-proxy.<you>.workers.dev". RPC, Jupiter, NEAR Intents, Jito and X then go through
 // the proxy, which holds the keys. Empty = browsers talk to the public endpoints directly.
-export const PROXY_URL = "https://privatus.up.railway.app";
+// Served from one of the site's own domains, the gateway is that same origin (server.mjs runs both), so
+// the custom domain and the Railway domain each work on their own. Anywhere else (local preview, another
+// static host) it's the Railway deployment.
+const OWN_HOSTS = ["privatusterminal.xyz", "www.privatusterminal.xyz", "privatus.up.railway.app"];
+export const PROXY_URL = typeof location !== "undefined" && OWN_HOSTS.includes(location.hostname) ? location.origin : "https://privatus.up.railway.app";
