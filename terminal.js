@@ -64,13 +64,48 @@ const icon = (img, url, seed) => {
   return img;
 };
 const link = (href, label, cls) => { const a = make("a", cls, label); a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; return a; };
+// Small line icons (16×16, currentColor) for links and stats. Static markup, never built from data.
+const ICO = {
+  x: '<path d="M3 2.5h3l7 11h-3z" fill="currentColor" stroke="none"/><path d="M13 2.5 3.2 13.5"/>',
+  tg: '<path d="M14 2.6 1.9 7.4l4 1.3 1.5 4.6 2.2-2.5 3.4 2.5z"/><path d="M5.9 8.7 12 4.9"/>',
+  web: '<circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2.3 2.2 2.3 9.8 0 12M8 2c-2.3 2.2-2.3 9.8 0 12"/>',
+  stonk: '<path d="M2 12.5l4-4.2 3 3 5-6"/><path d="M10.5 5.3H14v3.5"/>',
+  pump: '<g transform="rotate(-38 8 8)"><rect x="2" y="5.3" width="12" height="5.4" rx="2.7"/><path d="M8 5.3v5.4"/></g>',
+  dex: '<path d="M2.5 13.5h11"/><path d="M4.5 11V7.5M8 11V3.5M11.5 11V6"/>',
+  eye: '<path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/>',
+  scan: '<circle cx="7" cy="7" r="4.5"/><path d="m10.4 10.4 3.6 3.6"/>',
+  search: '<circle cx="7" cy="7" r="4.5"/><path d="m10.4 10.4 3.6 3.6M5 7h4"/>',
+  copy: '<rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M3 10.5v-7a1 1 0 0 1 1-1h7"/>',
+  check: '<path d="m3 8.5 3 3 7-7"/>',
+  users: '<circle cx="6" cy="5.5" r="2.5"/><path d="M1.5 13.5c.5-2.5 2.3-4 4.5-4s4 1.5 4.5 4"/><path d="M10.5 3.2a2.5 2.5 0 0 1 0 4.6M12 9.8c1.3.6 2.2 1.9 2.5 3.7"/>',
+  drop: '<path d="M8 2s4.5 4.8 4.5 8A4.5 4.5 0 0 1 3.5 10C3.5 6.8 8 2 8 2z"/>',
+  bars: '<path d="M2.5 13.5h11M4.5 11V8M8 11V5M11.5 11V9"/>',
+  crown: '<path d="m2.5 12 1-7 3 3L8 3.5 9.5 8l3-3 1 7z"/>',
+  dev: '<rect x="2.5" y="3" width="11" height="8" rx="1.5"/><path d="M6 14h4M8 11v3M5.5 6 7 7.3 5.5 8.6"/>',
+  bolt: '<path d="M9 1.8 3.6 9h4l-.8 5.2L12.4 7h-4z"/>',
+  target: '<circle cx="8" cy="8" r="5.6"/><circle cx="8" cy="8" r="2.6"/><path d="M8 .9v2.4M8 12.7v2.4M.9 8h2.4M12.7 8h2.4"/>',
+  auto: '<rect x="3" y="5" width="10" height="8" rx="2"/><path d="M8 5V2.6M6 9h.01M10 9h.01M1.5 8.5v2M14.5 8.5v2"/><circle cx="8" cy="2.2" r=".6" fill="currentColor"/>',
+  shield: '<path d="M8 1.8 13 3.8v3.7c0 3.1-2.1 5.4-5 6.7-2.9-1.3-5-3.6-5-6.7V3.8z"/><path d="m5.8 8 1.5 1.5 3-3"/>',
+  star: '<path d="m8 1.9 1.8 3.8 4.1.5-3 2.9.8 4.1L8 11.2l-3.7 2 .8-4.1-3-2.9 4.1-.5z"/>',
+  gear: '<circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v1.8M8 12.7v1.8M14.5 8h-1.8M3.3 8H1.5M12.6 3.4l-1.3 1.3M4.7 11.3l-1.3 1.3M12.6 12.6l-1.3-1.3M4.7 4.7 3.4 3.4"/><circle cx="8" cy="8" r="4.6"/>',
+  ext: '<path d="M6.5 3.5H3.5v9h9v-3"/><path d="M9 2.5h4.5V7M13.5 2.5 7.5 8.5"/>',
+  heart: '<path d="M8 13.5S2 10 2 6a3 3 0 0 1 6-1 3 3 0 0 1 6 1c0 4-6 7.5-6 7.5z"/>',
+  repost: '<path d="M3 7V5.5A1.5 1.5 0 0 1 4.5 4H12l-2-2M13 9v1.5a1.5 1.5 0 0 1-1.5 1.5H4l2 2"/>',
+  close: '<path d="m4 4 8 8M12 4l-8 8"/>',
+  verified: '<path d="m8 1.5 1.7 1.3 2.1-.1.6 2 1.7 1.3-.8 2 .8 2-1.7 1.3-.6 2-2.1-.1L8 14.5l-1.7-1.3-2.1.1-.6-2-1.7-1.3.8-2-.8-2 1.7-1.3.6-2 2.1.1z"/><path d="m5.6 8 1.6 1.6 3.2-3.2"/>'
+};
+const svgIcon = (name, cls) => { const e = document.createElementNS("http://www.w3.org/2000/svg", "svg"); e.setAttribute("viewBox", "0 0 16 16"); e.setAttribute("aria-hidden", "true"); e.setAttribute("class", `ico${cls ? " " + cls : ""}`); e.innerHTML = ICO[name]; return e; };
+// An icon followed by a text label, replacing whatever the element held.
+const iconLabel = (el, name, label, cls) => { el.textContent = ""; el.append(svgIcon(name, cls)); if (label !== "" && label != null) el.append(make("span", "", label)); return el; };
+const extLink = (href, label, cls) => { const a = link(href, "", cls); if (label) a.append(label); a.append(svgIcon("ext", "ext")); a.setAttribute("aria-label", `${label || "Open"} (opens in a new tab)`); return a; };
+const qbLabel = (b, v) => { iconLabel(b, "bolt", v); b.setAttribute("aria-label", `Quick buy ${v} SOL`); return b; };
 const solscan = (kind, id) => `https://solscan.io/${kind}/${id}`;
 const rejected = e => e && (e.code === 4001 || /reject|cancel|denied|declined/i.test(e.message || ""));
 const errMsg = e => rejected(e) ? "Cancelled in wallet. Nothing was sent." : (e && e.message) || String(e);
 
 function toast(msg, kind = "", sig) {
   const t = make("div", `toast ${kind}`, msg);
-  if (sig) { t.append(" "); t.append(link(solscan("tx", sig), "Solscan ↗")); }
+  if (sig) { t.append(" "); t.append(extLink(solscan("tx", sig), "Solscan")); }
   $("toasts").append(t);
   setTimeout(() => t.remove(), kind === "err" ? 10000 : 6000);
 }
@@ -187,7 +222,7 @@ function renderWalletBtn() {
   b.className = "btn";
   const inst = settings.from === "instant";
   const bal = inst ? S.instantSol : S.sol;
-  text(b, `${inst ? "⚡ " : ""}${short(inst && S.instant ? S.instant.pk : S.wallet.pk)} · ${bal != null ? fromRaw(bal, 9, 3) : "…"} SOL`);
+  iconLabel(b, inst ? "bolt" : "key", `${short(inst && S.instant ? S.instant.pk : S.wallet.pk)} · ${bal != null ? fromRaw(bal, 9, 3) : "…"} SOL`);
 }
 async function refreshBalances() {
   if (!S.wallet) return renderWalletBtn();
@@ -312,26 +347,6 @@ function route() {
 addEventListener("hashchange", route);
 
 /* ---------- icons and token links ---------- */
-// Small line icons (16×16, currentColor) for links and stats. Static markup, never built from data.
-const ICO = {
-  x: '<path d="M3 2.5h3l7 11h-3z" fill="currentColor" stroke="none"/><path d="M13 2.5 3.2 13.5"/>',
-  tg: '<path d="M14 2.6 1.9 7.4l4 1.3 1.5 4.6 2.2-2.5 3.4 2.5z"/><path d="M5.9 8.7 12 4.9"/>',
-  web: '<circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2.3 2.2 2.3 9.8 0 12M8 2c-2.3 2.2-2.3 9.8 0 12"/>',
-  stonk: '<path d="M2 12.5l4-4.2 3 3 5-6"/><path d="M10.5 5.3H14v3.5"/>',
-  pump: '<g transform="rotate(-38 8 8)"><rect x="2" y="5.3" width="12" height="5.4" rx="2.7"/><path d="M8 5.3v5.4"/></g>',
-  dex: '<path d="M2.5 13.5h11"/><path d="M4.5 11V7.5M8 11V3.5M11.5 11V6"/>',
-  eye: '<path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/>',
-  scan: '<circle cx="7" cy="7" r="4.5"/><path d="m10.4 10.4 3.6 3.6"/>',
-  search: '<circle cx="7" cy="7" r="4.5"/><path d="m10.4 10.4 3.6 3.6M5 7h4"/>',
-  copy: '<rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M3 10.5v-7a1 1 0 0 1 1-1h7"/>',
-  check: '<path d="m3 8.5 3 3 7-7"/>',
-  users: '<circle cx="6" cy="5.5" r="2.5"/><path d="M1.5 13.5c.5-2.5 2.3-4 4.5-4s4 1.5 4.5 4"/><path d="M10.5 3.2a2.5 2.5 0 0 1 0 4.6M12 9.8c1.3.6 2.2 1.9 2.5 3.7"/>',
-  drop: '<path d="M8 2s4.5 4.8 4.5 8A4.5 4.5 0 0 1 3.5 10C3.5 6.8 8 2 8 2z"/>',
-  bars: '<path d="M2.5 13.5h11M4.5 11V8M8 11V5M11.5 11V9"/>',
-  crown: '<path d="m2.5 12 1-7 3 3L8 3.5 9.5 8l3-3 1 7z"/>',
-  dev: '<rect x="2.5" y="3" width="11" height="8" rx="1.5"/><path d="M6 14h4M8 11v3M5.5 6 7 7.3 5.5 8.6"/>'
-};
-const svgIcon = (name, cls) => { const e = document.createElementNS("http://www.w3.org/2000/svg", "svg"); e.setAttribute("viewBox", "0 0 16 16"); e.setAttribute("aria-hidden", "true"); e.setAttribute("class", `ico${cls ? " " + cls : ""}`); e.innerHTML = ICO[name]; return e; };
 // Every place a token lives: its own socials first, then the explorers.
 function tokenLinks(mint, info = {}) {
   const out = [];
@@ -368,7 +383,7 @@ function setRing(av, t, column) {
   const p = migrated ? 100 : (t.pump || t.stonk) && t.progress != null ? Math.max(0, Math.min(100, t.progress)) : null;
   av.style.setProperty("--p", p ?? 0);
   av.classList.toggle("ring", p != null); av.classList.toggle("hot", p != null && p >= 80 && !migrated); av.classList.toggle("grad", !!migrated);
-  const badge = av.querySelector(".av-badge"); badge.textContent = migrated ? "✓" : ""; badge.hidden = !migrated;
+  const badge = av.querySelector(".av-badge"); badge.textContent = ""; if (migrated) badge.append(svgIcon("check")); badge.hidden = !migrated;
   av.title = migrated ? "Migrated to an AMM pool" : p != null ? `Bonding curve ${p.toFixed(1)}%` : "";
 }
 
@@ -492,6 +507,10 @@ async function curveLoop() {
   setTimeout(curveLoop, S.route === "pulse" ? 6000 : 20000);
 }
 
+// Placeholder cards while the first tokens stream in; after 12 s with nothing, the empty state says why.
+let pulseWaitedOut = false;
+setTimeout(() => { pulseWaitedOut = true; pulseDirty = true; }, 12000);
+function skeletonCard() { const d = make("div", "skel"); d.setAttribute("aria-hidden", "true"); const l = make("div", "l"); l.append(make("i"), make("i"), make("i")); d.append(make("i", "c"), l, make("i", "b")); return d; }
 function renderPulse(force) {
   if (S.route !== "pulse") return;
   if (!force && !pulseDirty) { tickAges(); return; }
@@ -505,11 +524,12 @@ function renderPulse(force) {
     const host = col.querySelector(".plist");
     if (!list.length) {
       const msg = key === "new" ? "Waiting for new pump.fun launches…" : key === "final" ? `Tokens past ${settings.finalStretch}% of their bonding curve show here.` : "Graduated tokens show here.";
+      if (!cardEls.size && key !== "final" && !pulseWaitedOut) { if (!host.querySelector(".skel")) { host.textContent = ""; for (let i = 0; i < 6; i++) host.append(skeletonCard()); } continue; }
       if (host.querySelector(".empty")?.dataset.msg !== msg) { host.textContent = ""; host.append(emptyArt("stream", msg)); }
       continue;
     }
     const els = list.map(t => { let el = cardEls.get(t.mint); if (!el) { el = buildCard(t); cardEls.set(t.mint, el); } updateCard(el, t); return el; });
-    host.querySelector(".empty")?.remove();
+    host.querySelector(".empty")?.remove(); host.querySelectorAll(".skel").forEach(s => s.remove());
     els.forEach((el, i) => { if (host.children[i] !== el) host.insertBefore(el, host.children[i] || null); });
     while (host.children.length > els.length) host.lastChild.remove();
   }
@@ -525,7 +545,7 @@ function buildCard(t) {
   main.append(top, stats, links);
   const qb = make("button", "qb"); qb.type = "button";
   qb.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); quickBuy(t.mint, qb); });
-  const sn = make("button", "snipe", "🎯"); sn.type = "button";
+  const sn = make("button", "snipe"); sn.append(svgIcon("target")); sn.type = "button";
   sn.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); toggleSnipe(t.mint); });
   const acts = make("div", "pc-acts"); acts.append(qb, sn);
   a.append(av, main, acts);
@@ -556,10 +576,11 @@ function updateCard(el, t) {
     tokenLinks(t.mint, t).filter(l => l.social || l.k === "pump" || l.k === "stonk" || l.k === "dex").forEach(l => links.append(linkBtn(l)));
     links.append(copyBtn(t.mint));
   }
-  text(el.querySelector(".qb"), `⚡ ${$("qbamt").value || settings.quickBuy}`);
+  qbLabel(el.querySelector(".qb"), $("qbamt").value || settings.quickBuy);
   const sn = el.querySelector(".snipe"), armed = snipes().some(x => x.mint === t.mint && x.status === "armed");
   sn.hidden = column === "migrated"; sn.setAttribute("aria-pressed", armed);
   sn.title = armed ? "Sniping: buys from your instant wallet the moment this migrates. Click to cancel." : "Snipe the migration: buy from your instant wallet the moment this token migrates";
+  sn.setAttribute("aria-label", armed ? "Cancel migration snipe" : "Snipe the migration");
 }
 document.querySelectorAll(".pcol").forEach(col => {
   const key = col.dataset.col, f = filters[key] = filters[key] || {};
@@ -599,7 +620,7 @@ async function loadTrending() {
       tok.append(wrap);
       const chg = make("td", "num", pct(st.priceChange)); cls(chg, st.priceChange);
       const age = Date.parse(t.firstPool?.createdAt || "");
-      const qbtd = make("td", "num"), qb = make("button", "qb", `⚡ ${$("qbamt").value || settings.quickBuy}`); qb.type = "button";
+      const qbtd = make("td", "num"), qb = qbLabel(make("button", "qb"), $("qbamt").value || settings.quickBuy); qb.type = "button";
       qb.addEventListener("click", e => { e.stopPropagation(); quickBuy(t.id, qb); });
       qbtd.append(qb);
       tr.append(make("td", "muted", String(i + 1)), tok, make("td", "num", price(t.usdPrice)), chg, make("td", "num", usd((st.buyVolume || 0) + (st.sellVolume || 0))), make("td", "num", usd(t.mcap ?? t.fdv)), make("td", "num", usd(t.liquidity)), make("td", "num", count(t.holderCount)), make("td", "num", t.organicScore != null ? t.organicScore.toFixed(0) : "—"), make("td", "num", age ? ago(Date.now() - age) : "—"), qbtd);
@@ -725,7 +746,7 @@ function renderTrades() {
   for (const t of T.trades) {
     const tr = make("tr", `trade-${t.side}${mine.has(t.user) ? " mine" : ""}${t.fresh ? " newrow" : ""}`); t.fresh = false;
     const maker = make("td"); const ml = link(solscan("account", t.user), short(t.user)); maker.append(ml);
-    const tx = make("td", "num"); tx.append(link(solscan("tx", t.sig), "↗"));
+    const tx = make("td", "num"); tx.append(extLink(solscan("tx", t.sig), "", "txl"));
     tr.append(make("td", "muted", ago(Date.now() - t.time * 1000)), make("td", "side", t.side === "buy" ? "Buy" : "Sell"), make("td", "num", solFmt(t.sol)), make("td", "num", num(t.tokens)), make("td", "num", S.solUsd && t.priceSol ? price(t.priceSol * S.solUsd) : "—"), maker, tx);
     table.append(tr);
   }
@@ -767,7 +788,7 @@ function tradeTable(list) {
   ["When", "Type", "Token", "SOL", "Tokens", "From", ""].forEach((h, i) => head.append(make("th", i > 2 && i < 5 ? "num" : "", h)));
   table.append(head);
   for (const t of list) {
-    const tr = make("tr", `trade-${t.side}`), tx = make("td", "num"); tx.append(link(solscan("tx", t.sig), "↗"));
+    const tr = make("tr", `trade-${t.side}`), tx = make("td", "num"); tx.append(extLink(solscan("tx", t.sig), "", "txl"));
     const tok = make("td"); const a = make("a", "", t.symbol || short(t.mint)); a.href = `#/token/${t.mint}`; tok.append(a);
     tr.append(make("td", "muted", new Date(t.time).toLocaleString()), make("td", "side", t.side === "buy" ? "Buy" : "Sell"), tok, make("td", "num", solFmt(t.sol)), make("td", "num", num(t.tokens)), make("td", "muted", t.from || "main"), tx);
     table.append(tr);
@@ -832,7 +853,7 @@ const amt = $("amt");
 const stealthOn = () => !!settings.stealth && T.side === "buy" && settings.from !== "instant";
 function setTradeStatus(msg, kind = "", sig) {
   const st = $("status"); st.textContent = msg; st.className = "status " + kind;
-  if (sig) { st.append(" "); st.append(link(solscan("tx", sig), "Solscan ↗")); }
+  if (sig) { st.append(" "); st.append(extLink(solscan("tx", sig), "Solscan")); }
 }
 async function refreshTokenBal() {
   if (S.route !== "token" || !S.tokenMint) return;
@@ -866,7 +887,7 @@ function renderTradePanel() {
   const ps = $("presets"); ps.textContent = "";
   settings.presets.forEach((p, i) => {
     const b = make("button"); b.type = "button"; b.setAttribute("aria-pressed", settings.preset === i);
-    b.append(make("b", "", `P${i + 1}${p.mev ? " 🛡" : ""}`), `${p.slippageBps / 100}% · ${p.priority === "veryHigh" ? "turbo" : p.priority}${p.tipSol ? " · jito" : ""}`);
+    const pb = make("b", "", `P${i + 1}`); if (p.mev) { const sh = svgIcon("shield", "mev"); pb.append(sh); b.title = "MEV-protected: sent only through Jito"; } b.append(pb, `${p.slippageBps / 100}% · ${p.priority === "veryHigh" ? "turbo" : p.priority}${p.tipSol ? " · jito" : ""}`);
     b.title = `Slippage ${p.slippageBps / 100}%, priority ${p.priority} up to ${p.maxSol} SOL${p.tipSol ? `, Jito tip ${p.tipSol} SOL${p.mev ? ", MEV-protected (Jito only)" : ""}` : ""}`;
     b.addEventListener("click", () => { settings.preset = i; saveSettings(); renderTradePanel(); scheduleQuote(); });
     ps.append(b);
@@ -901,7 +922,8 @@ function updateGo() {
   const go = $("go"), p = problem(), inst = settings.from === "instant", sym = symbolOf(S.tokenMint);
   const needConnect = !S.wallet;
   go.disabled = !!p && !needConnect;
-  text(go, needConnect ? "Connect wallet" : p || `${stealthOn() ? "Private buy" : T.side === "buy" ? "Buy" : "Sell"} ${sym}${inst ? " ⚡" : ""}`);
+  const goLabel = needConnect ? "Connect wallet" : p || `${stealthOn() ? "Private buy" : T.side === "buy" ? "Buy" : "Sell"} ${sym}`;
+  if (inst && !needConnect && !p) iconLabel(go, "bolt", goLabel); else text(go, goLabel);
   go.className = `btn go ${needConnect || !p ? (T.side === "buy" ? "buy" : "primary") : ""}`;
   const pr = preset();
   text($("fine"), stealthOn()
@@ -1028,7 +1050,7 @@ async function loadTokenOrders() {
 }
 function orderRow(o, after) {
   const row = make("div", "orow"), info = make("div"), x = make("button", "btn small", "Cancel"); x.type = "button";
-  info.append(make("b", o.side === "buy" ? "up" : "down", `Limit ${o.side}`), ` ${num(o.tokens)} ${symbolOf(o.mint)} @ ${price(o.priceUsd)} · ${solFmt(o.sol)} SOL`, make("div", "muted", `${o.from === "instant" ? "⚡ instant" : "main"}${o.filledPct > 0 ? ` · ${o.filledPct.toFixed(0)}% filled` : ""}${o.expiredAt ? ` · expires ${new Date(/^\d+$/.test(String(o.expiredAt)) ? Number(o.expiredAt) * 1000 : Date.parse(o.expiredAt)).toLocaleString()}` : ""}`));
+  info.append(make("b", o.side === "buy" ? "up" : "down", `Limit ${o.side}`), ` ${num(o.tokens)} ${symbolOf(o.mint)} @ ${price(o.priceUsd)} · ${solFmt(o.sol)} SOL`, make("div", "muted", `${o.from === "instant" ? "instant wallet" : "main wallet"}${o.filledPct > 0 ? ` · ${o.filledPct.toFixed(0)}% filled` : ""}${o.expiredAt ? ` · expires ${new Date(/^\d+$/.test(String(o.expiredAt)) ? Number(o.expiredAt) * 1000 : Date.parse(o.expiredAt)).toLocaleString()}` : ""}`));
   x.addEventListener("click", async () => {
     x.disabled = true; text(x, "Cancelling…");
     try {
@@ -1104,7 +1126,7 @@ function updateAutoChip() {
   chip.hidden = !(armed + sn);
   const paused = !S.instant;
   chip.classList.toggle("paused", paused);
-  text(chip, paused ? `🤖 ${armed + sn} paused · unlock` : `🤖 ${armed} rule${armed === 1 ? "" : "s"}${sn ? ` · ${sn} snipe${sn === 1 ? "" : "s"}` : ""}`);
+  iconLabel(chip, "auto", paused ? `${armed + sn} paused · unlock` : `${armed} rule${armed === 1 ? "" : "s"}${sn ? ` · ${sn} snipe${sn === 1 ? "" : "s"}` : ""}`);
   chip.title = paused ? "Autopilot needs your instant wallet unlocked in this tab." : "Autopilot is watching prices and migrations. Keep this terminal open.";
 }
 $("autochip").addEventListener("click", async () => { if (!S.instant) { try { await instantWallet(); updateAutoChip(); toast("Autopilot resumed.", "ok"); } catch (e) { toast(errMsg(e), "err"); } } else location.hash = "#/portfolio"; });
@@ -1162,8 +1184,9 @@ async function loadPosts() {
     for (const p of data.posts) {
       const row = make("div", "post"), body = make("div"), who = make("div", "who");
       who.append(make("b", "", p.author?.name || "—"), ` @${p.author?.username || "?"} · ${num(p.author?.followers || 0)} followers · ${ago(Date.now() - Date.parse(p.createdAt))}`);
-      const meta = make("div", "who", `♥ ${num(p.likes)} · ↻ ${num(p.reposts)} · `);
-      meta.append(link(`https://x.com/${encodeURIComponent(p.author?.username || "i")}/status/${encodeURIComponent(p.id)}`, "Open ↗"));
+      const meta = make("div", "who stats");
+      meta.append(svgIcon("heart"), make("span", "", num(p.likes)), svgIcon("repost"), make("span", "", num(p.reposts)));
+      meta.append(extLink(`https://x.com/${encodeURIComponent(p.author?.username || "i")}/status/${encodeURIComponent(p.id)}`, "Open"));
       body.append(who, make("p", "", p.text), meta);
       row.append(icon(make("img"), p.author?.image), body);
       host.append(row);
@@ -1341,7 +1364,7 @@ function startTracker() {
 function renderTracker() {
   const ul = $("tk-list"); ul.textContent = "";
   for (const w of tracked()) {
-    const li = make("li"), info = make("div"), x = make("button", "", "✕"); x.type = "button"; x.setAttribute("aria-label", `Stop tracking ${w.label}`);
+    const li = make("li"), info = make("div"), x = make("button", "icon-btn"); x.append(svgIcon("close")); x.type = "button"; x.setAttribute("aria-label", `Stop tracking ${w.label}`);
     info.append(make("div", "lab", w.label), link(solscan("account", w.address), short(w.address)));
     x.addEventListener("click", () => { store.set("lacuna-tracked", tracked().filter(t => t.address !== w.address)); seenSigs.delete(w.address); renderTracker(); });
     li.append(info, x); ul.append(li);
@@ -1356,8 +1379,8 @@ function renderFeed() {
   for (const s of feed) {
     const tr = make("tr", `trade-${s.side}${s.fresh ? " newrow" : ""}`); s.fresh = false;
     const tok = make("td"), wrap = make("a", "cell-tok"); wrap.href = `#/token/${s.mint}`; wrap.append(icon(make("img", "tok-icon"), iconOf(s.mint), s.mint), make("span", "", symbolOf(s.mint))); tok.append(wrap);
-    const qbtd = make("td", "num"), qb = make("button", "qb", `⚡ ${$("qbamt").value || settings.quickBuy}`); qb.type = "button"; qb.addEventListener("click", () => quickBuy(s.mint, qb)); qbtd.append(qb);
-    const tx = make("td", "num"); tx.append(link(solscan("tx", s.sig), "↗"));
+    const qbtd = make("td", "num"), qb = qbLabel(make("button", "qb"), $("qbamt").value || settings.quickBuy); qb.type = "button"; qb.addEventListener("click", () => quickBuy(s.mint, qb)); qbtd.append(qb);
+    const tx = make("td", "num"); tx.append(extLink(solscan("tx", s.sig), "", "txl"));
     tr.append(make("td", "muted", s.time ? ago(Date.now() - s.time * 1000) : "—"), make("td", "", s.label), make("td", "side", s.side === "buy" ? "Buy" : "Sell"), tok, make("td", "num", solFmt(s.sol)), make("td", "num", num(s.tokens)), qbtd, tx);
     table.append(tr);
   }
@@ -1555,7 +1578,8 @@ async function search(v) {
       tokenInfo.set(t.id, t);
       const li = make("li"), b = make("button"), mid = make("div"), n2 = make("div", "num");
       b.type = "button"; b.setAttribute("role", "option"); b.setAttribute("aria-selected", "false");
-      mid.append(make("div", "sym", `${t.symbol || "?"}${t.isVerified ? " ✓" : ""}`), make("div", "nm", `${t.name || ""} · ${short(t.id)}`));
+      const symEl = make("div", "sym", t.symbol || "?"); if (t.isVerified) { const v = svgIcon("verified", "vf"); symEl.append(v); symEl.title = "Verified on Jupiter"; }
+      mid.append(symEl, make("div", "nm", `${t.name || ""} · ${short(t.id)}`));
       n2.append(make("div", "", price(t.usdPrice)), make("div", "", `MC ${usd(t.mcap)}`));
       b.append(icon(make("img", "tok-icon"), t.icon, t.id), mid, n2);
       b.addEventListener("click", () => { closeResults(); q.value = ""; location.hash = `#/token/${t.id}`; });
@@ -1577,7 +1601,7 @@ function openWalletModal() {
       const box = make("div", "box");
       if (!list.length) {
         box.append(make("p", "", "No Solana wallet found in this browser."));
-        [["Phantom", "https://phantom.com/download"], ["Solflare", "https://solflare.com/download"], ["Backpack", "https://backpack.app/downloads"]].forEach(([n, u]) => box.append(link(u, `Get ${n} ↗`, "btn small")));
+        [["Phantom", "https://phantom.com/download"], ["Solflare", "https://solflare.com/download"], ["Backpack", "https://backpack.app/downloads"]].forEach(([n, u]) => box.append(extLink(u, `Get ${n}`, "btn small")));
       } else list.forEach(w => { const b = make("button", "btn primary", `Connect ${w.name}`); b.type = "button"; b.addEventListener("click", async () => { try { await connect(w); openWalletModal(); } catch (e) { toast(errMsg(e), "err"); } }); box.append(b); });
       body.append(box);
       return;
@@ -1592,15 +1616,15 @@ function openWalletModal() {
     main.append(make("h3", "", "Main wallet"), r1, r2);
     // trade from
     const from = make("div", "box"), seg = make("div", "seg");
-    for (const [w, label] of [["main", "Main · approve each trade"], ["instant", "⚡ Instant · no popups"]]) {
+    for (const [w, label] of [["main", "Main · approve each trade"], ["instant", "Instant · no popups"]]) {
       const b = make("button", "", label); b.type = "button"; b.setAttribute("aria-pressed", settings.from === w);
       b.addEventListener("click", async () => { try { if (w === "instant") await instantWallet(); settings.from = w; saveSettings(); renderWalletBtn(); if (S.route === "token") { refreshTokenBal(); renderTradePanel(); } openWalletModal(); } catch (e) { toast(errMsg(e), "err"); } });
       seg.append(b);
     }
-    from.append(make("h3", "", "Trade from"), seg, make("p", "", "⚡ buttons, presets and the trade panel use this wallet."));
+    from.append(make("h3", "", "Trade from"), seg, make("p", "", "Quick-buy buttons, presets and the trade panel use this wallet."));
     // instant
     const inst = make("div", "box");
-    inst.append(make("h3", "", "⚡ Instant wallet"));
+    inst.append(iconLabel(make("h3", "with-ico"), "bolt", "Instant wallet"));
     if (!S.instant) {
       inst.append(make("p", "", "A trading wallet derived from one signature of your main wallet. Trades sign in this tab with no popups, like Axiom. Rebuild it on any device by signing again. Keep only what you're actively trading in it."));
       const u = make("button", "btn primary", "Unlock instant wallet"); u.type = "button";
@@ -1698,7 +1722,7 @@ $("settingsbtn").addEventListener("click", () => openModal("Settings", body => {
 $("qbamt").value = settings.quickBuy;
 $("qbamt").addEventListener("input", () => {
   const v = $("qbamt").value.replace(/,/g, ".").replace(/[^\d.]/g, ""); $("qbamt").value = v;
-  if (toRaw(v, 9)) { settings.quickBuy = v; saveSettings(); document.querySelectorAll(".qb").forEach(b => text(b, `⚡ ${v}`)); }
+  if (toRaw(v, 9)) { settings.quickBuy = v; saveSettings(); document.querySelectorAll(".qb").forEach(b => qbLabel(b, v)); }
 });
 document.addEventListener("keydown", e => {
   const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || "") || modal.open;
@@ -1745,4 +1769,28 @@ document.addEventListener("visibilitychange", () => {
 });
 // reconnect silently if a wallet already trusts this site
 for (const w of providers()) { if (w.p.isConnected || w.p.publicKey) { w.p.connect?.({ onlyIfTrusted: true }).then(() => connect(w)).catch(() => {}); break; } }
-window.__gp = { board, settings, S, T }; // handy for debugging from the console
+window.__lacuna = { board, settings, S, T }; // handy for debugging from the console
+
+/* ---------- status bar ---------- */
+// Mirrors the stream chips, times a getSlot round trip to the RPC every 15 s while the tab is visible,
+// and keeps a UTC clock. Nothing here sends anything a page view doesn't already send.
+const sbCopy = (from, to, label) => { const d = from.querySelector(".dot"), t = to.querySelector(".dot"); if (d && t) t.className = d.className; to.lastChild.textContent = label; to.title = from.textContent.trim(); };
+async function pingRpc() {
+  if (!awake()) return;
+  const el = $("sb-rpc"), t0 = performance.now();
+  try {
+    const slot = await connection.getSlot();
+    const ms = Math.round(performance.now() - t0);
+    el.className = `sb lat ${ms < 250 ? "ok" : ms < 700 ? "slow" : "bad"}`; el.lastChild.textContent = `${ms} ms`;
+    $("sb-slot").lastChild.textContent = slot.toLocaleString("en-US");
+  } catch (_) { el.className = "sb lat bad"; el.lastChild.textContent = "unreachable"; }
+}
+function tickStatus() {
+  sbCopy($("pp-status"), $("sb-stream"), "Stream");
+  sbCopy($("curve-status"), $("sb-curves"), "Curves");
+  $("sb-sol").lastChild.textContent = S.solUsd ? `$${S.solUsd.toFixed(2)}` : "—";
+  $("sb-clock").firstChild.textContent = new Date().toISOString().slice(11, 19);
+}
+["sb-rpc", "sb-slot", "sb-sol"].forEach(id => { const b = $(id).querySelector("b"); b.remove(); $(id).append(b); });
+setInterval(tickStatus, 1000); tickStatus();
+setInterval(pingRpc, 15000); pingRpc();

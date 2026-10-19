@@ -155,6 +155,7 @@ details.faq div p:last-child{margin:0}
 footer{border-top:1px solid var(--rule);margin-top:40px;padding-block:40px;display:flex;justify-content:space-between;align-items:end;gap:24px;flex-wrap:wrap}
 footer .big{font:400 clamp(1.6rem,3vw,2.3rem)/1.1 var(--serif);margin:0;max-width:22ch}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;margin:0 .1em}
 </style>
 <script type="module" src="./docs.js"></script>
 </head>
@@ -224,7 +225,7 @@ footer .big{font:400 clamp(1.6rem,3vw,2.3rem)/1.1 var(--serif);margin:0;max-widt
           <thead><tr><th>Wallet</th><th>Signs with</th><th>Use it for</th></tr></thead>
           <tbody>
             <tr><td><b>Main</b></td><td>Your wallet app, with a popup per trade</td><td>Holding funds, funding the others, careful trades</td></tr>
-            <tr><td><b>Instant</b></td><td>A key in this tab's memory, no popups</td><td>⚡ buys and presets when you trade from it, plus autopilot and snipes. Fund it directly or privately.</td></tr>
+            <tr><td><b>Instant</b></td><td>A key in this tab's memory, no popups</td><td><span data-glyph="bolt" class="inl" aria-hidden="true"></span> quick buys and presets when you trade from it, plus autopilot and snipes. Fund it directly or privately.</td></tr>
             <tr><td><b>Stealth</b></td><td>A fresh key per private buy</td><td>Buys with no on-chain link to your main wallet</td></tr>
           </tbody>
         </table></div>
@@ -343,14 +344,14 @@ footer .big{font:400 clamp(1.6rem,3vw,2.3rem)/1.1 var(--serif);margin:0;max-widt
           </figure>
         </div>
         <h3>Migration sniper</h3>
-        <p>Tap 🎯 on a Pulse card to arm a snipe. When PumpPortal reports that token's migration, or the on-chain curve shows it complete, the instant wallet buys right away, and can set take-profit and stop-loss rules for the new position (Settings → After a snipe). Like autopilot, it needs the tab open.</p>
-        <p>The 🤖 chip in the top bar counts armed rules and snipes. Portfolio → Orders lists all of them.</p>
+        <p>Tap <span data-glyph="target" class="inl" aria-hidden="true"></span> on a Pulse card to arm a snipe. When PumpPortal reports that token's migration, or the on-chain curve shows it complete, the instant wallet buys right away, and can set take-profit and stop-loss rules for the new position (Settings → After a snipe). Like autopilot, it needs the tab open.</p>
+        <p>The autopilot chip in the top bar counts armed rules and snipes. Portfolio → Orders lists all of them.</p>
       </section>
 
       <section id="tracker">
         <p class="eyebrow"><span data-glyph="stack"></span>Tracker &amp; PnL</p>
         <h2>Follow wallets. <em>Keep score.</em></h2>
-        <p><b>Tracker</b> checks any wallets you add every 20 seconds and lists their new swaps, read from the chain. ⚡ on a row buys the same token with your quick-buy amount, from whichever wallet you trade from (main or instant).</p>
+        <p><b>Tracker</b> checks any wallets you add every 20 seconds and lists their new swaps, read from the chain. <span data-glyph="bolt" class="inl" aria-hidden="true"></span> on a row buys the same token with your quick-buy amount, from whichever wallet you trade from (main or instant).</p>
         <p><b>Portfolio</b> shows each wallet's positions with average cost and realized and unrealized PnL, priced in SOL. It counts trades made in the terminal; <b>Import on-chain history</b> reads the wallet's last 100 transactions so trades made elsewhere count too. Private buys are logged under the main wallet that paid for them. Everything is stored in this browser only.</p>
       </section>
 

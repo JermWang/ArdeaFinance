@@ -244,7 +244,7 @@ const ca = $("ca");
   ca.addEventListener("click", async () => {
     try { await navigator.clipboard.writeText(addr); }
     catch (_) { const t = document.createElement("textarea"); t.value = addr; t.style.cssText = "position:fixed;opacity:0"; document.body.append(t); t.select(); document.execCommand("copy"); t.remove(); }
-    $("ca-go").textContent = "Copied ✓"; ca.classList.add("copied");
+    $("ca-go").textContent = "Copied"; ca.classList.add("copied");
     clearTimeout(reset); reset = setTimeout(() => { $("ca-go").textContent = "Copy"; ca.classList.remove("copied"); }, 1600);
   });
 })();

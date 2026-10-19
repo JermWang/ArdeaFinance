@@ -16,7 +16,7 @@ const RPC_METHODS = new Set([
   "simulateTransaction", "getSignatureStatuses", "getBlockHeight", "getSlot", "getRecentPrioritizationFees",
   "getFeeForMessage", "getMinimumBalanceForRentExemption", "getEpochInfo", "getVersion", "getHealth"
 ]);
-const JUP = "https://api.jup.ag", ONECLICK = "https://1click.chaindefuser.com", JITO = "https://mainnet.block-engine.jito.wtf/api/v1/transactions";
+const JUP = "https://api.jup.ag", JUP_LITE = "https://lite-api.jup.ag", ONECLICK = "https://1click.chaindefuser.com", JITO = "https://mainnet.block-engine.jito.wtf/api/v1/transactions";
 const X_SEARCH = "https://api.x.com/2/tweets/search/recent";
 const GATEWAYS = ["https://ipfs.io/ipfs/", "https://dweb.link/ipfs/", "https://gateway.pinata.cloud/ipfs/"];
 const IPFS_PATH = /^\/ipfs\/((?:Qm[1-9A-HJ-NP-Za-km-z]{44}|b[a-z2-7]{50,})(?:\/[\w\-.%]+)*)$/;
@@ -82,12 +82,16 @@ async function rpc(req, env, cors) {
 }
 
 async function jupiter(req, env, url, cors, ctx) {
-  const target = JUP + url.pathname.slice(4) + url.search;
+  // with a key, api.jup.ag; without one, Jupiter's keyless host (the gateway's IP is shared, so a 429 there
+  // gets one retry on the other host)
+  const path = url.pathname.slice(4) + url.search, target = (env.JUP_API_KEY ? JUP : JUP_LITE) + path;
   const headers = { "content-type": "application/json", ...(env.JUP_API_KEY ? { "x-api-key": env.JUP_API_KEY } : {}) };
   const cacheable = req.method === "GET" && /^\/jup\/(tokens|price)\//.test(url.pathname);
   const cache = typeof caches !== "undefined" ? caches.default : null;
   if (cacheable && cache) { const hit = await cache.match(target); if (hit) return withCors(hit, cors); }
-  const up = await fetch(target, { method: req.method, headers, body: req.method === "POST" ? await req.text() : undefined });
+  const body = req.method === "POST" ? await req.text() : undefined;
+  let up = await fetch(target, { method: req.method, headers, body });
+  if (up.status === 429 && !env.JUP_API_KEY) up = await fetch(JUP + path, { method: req.method, headers, body });
   const res = new Response(up.body, { status: up.status, headers: { "content-type": "application/json", "cache-control": `max-age=${/\/price\//.test(url.pathname) ? 5 : 20}` } });
   if (cacheable && cache && up.ok) ctx.waitUntil(cache.put(target, res.clone()));
   return withCors(res, cors);

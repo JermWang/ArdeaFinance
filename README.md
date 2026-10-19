@@ -3,18 +3,18 @@
 A private execution terminal for Solana. Trade without leaving a trail.
 
 - **Terminal** (`app.html`), an Axiom/Padre-style trench terminal:
-  - **Pulse:** New Pairs, Final Stretch and Migrated columns. They stream live from PumpPortal's free feed of pump.fun launches and migrations, are seeded from Jupiter's recent and top-traded lists, and show bonding-curve progress and market cap read straight from the curve accounts on-chain. Each column has filters, pauses while you hover, and has ⚡ one-click buys.
+  - **Pulse:** New Pairs, Final Stretch and Migrated columns. They stream live from PumpPortal's free feed of pump.fun launches and migrations, are seeded from Jupiter's recent and top-traded lists, and show bonding-curve progress and market cap read straight from the curve accounts on-chain. Each column has filters, pauses while you hover, and has one-click buys.
   - **Trending:** Jupiter's trending, most-traded and organic lists, plus new pools, at 5m, 1h, 6h or 24h.
   - **Token pages:** DexScreener chart and stats, a bonding-curve bar, and live trades (pump.fun trade events decoded from logs or inner instructions over your RPC websocket, plus any other DEX's swaps). Also top holders labelled curve or dev, with a Track button; authorities, top-10 and dev holdings; a dev-wallet trace; a watchlist star; and your own trades.
-  - **Trade panel:** buy/sell, quick amounts, sell percentages, P1–P3 presets (slippage, priority level, priority cap), a choice of trading from Main or ⚡ Instant, and Private mode.
-  - **⚡ Instant wallet:** derived from one signature of your wallet. Trades sign in the tab with no popups. Deposit directly or privately through NEAR, withdraw directly or privately, export the key.
-  - **Tracker:** follow wallets, get a live swap feed and toasts, copy-buy with ⚡.
+  - **Trade panel:** buy/sell, quick amounts, sell percentages, P1–P3 presets (slippage, priority level, priority cap), a choice of trading from Main or Instant, and Private mode.
+  - **Instant wallet:** derived from one signature of your wallet. Trades sign in the tab with no popups. Deposit directly or privately through NEAR, withdraw directly or privately, export the key.
+  - **Tracker:** follow wallets, get a live swap feed and toasts, one-click copy-buy.
   - **Portfolio:** positions for Main or Instant with average cost and realized/unrealized PnL, sell 50%/100%, stealth wallets, the Trail audit, and activity.
   - **Orders:**
     - **Limit orders** (buy below, or sell above as a take-profit) are Jupiter Trigger v1 orders. They sit on-chain and are filled by Jupiter's keepers even with the tab closed. You can list and cancel them from the token page or Portfolio.
-    - **Autopilot** runs inside the terminal and signs with the ⚡ Instant wallet, so it only acts while the terminal is open:
+    - **Autopilot** runs inside the terminal and signs with the Instant wallet, so it only acts while the terminal is open:
       - take profit, stop loss and trailing stop by %;
-      - a **migration sniper** (🎯 on Pulse cards) that buys the moment a token migrates, with optional automatic TP/SL afterwards.
+      - a **migration sniper** (the target button on Pulse cards) that buys the moment a token migrates, with optional automatic TP/SL afterwards.
   - **Jito:** each preset can carry a Jito tip so swaps land faster. With MEV protect on, swaps go only through Jito's block engine and never touch the public mempool.
   - **Also:**
     - Posts from X on token pages (needs the proxy with an X key).

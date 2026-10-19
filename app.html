@@ -416,6 +416,104 @@ body{background:var(--ink-0) radial-gradient(1200px 500px at 70% -10%,color-mix(
 dialog{border-radius:10px}
 th{background:var(--ink-1)}
 .keybox{border-color:var(--accent)}
+/* ---------- pro pass: dense, precise, quietly animated ---------- */
+body{font-variant-numeric:tabular-nums;padding-bottom:30px;letter-spacing:-.003em}
+::selection{background:color-mix(in srgb,var(--accent) 35%,transparent);color:var(--paper)}
+*{scrollbar-width:thin;scrollbar-color:var(--ink-3) transparent}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:var(--ink-3);border-radius:4px;border:2px solid transparent;background-clip:padding-box}::-webkit-scrollbar-track{background:transparent}
+:focus-visible{outline:none;box-shadow:0 0 0 1px var(--ink-0),0 0 0 3px color-mix(in srgb,var(--accent) 75%,transparent)!important}
+
+/* icons sit inline with their labels */
+.ico{display:inline-block;vertical-align:-2px}
+.qb,.btn,.chip,.seg button,.pill,.badge,.with-ico,.icon-btn,.toast a,.status a{display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.with-ico .ico{width:14px;height:14px;color:var(--accent)}
+.btn .ico{width:13px;height:13px}
+.btn.icon-only{padding:7px 9px}.btn.icon-only .ico{width:15px;height:15px}
+.qb .ico{width:11px;height:11px;stroke-width:1.8}
+.qb-amt .qb-ic{display:flex;color:var(--accent)}.qb-amt .qb-ic .ico{width:12px;height:12px;stroke-width:1.8}
+.muted .ico,.fine .ico{width:11px;height:11px;color:var(--accent)}
+.star{display:inline-flex;align-items:center;color:var(--mute-ink);transition:color .15s,transform .15s}
+.star .ico{width:17px;height:17px}
+.star:hover{color:var(--paper)}
+.star[aria-pressed="true"]{color:var(--accent)}.star[aria-pressed="true"] .ico{fill:var(--accent)}
+.snipe{display:inline-flex;align-items:center;justify-content:center}.snipe .ico{width:13px;height:13px}
+.pcard .snipe[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--ink-1))}
+.presets button b{display:flex;align-items:center;justify-content:center;gap:4px}.presets .mev{width:11px;height:11px;color:var(--up)}
+a .ext{width:10px;height:10px;margin-left:3px;opacity:.75;stroke-width:1.7}
+a.txl{display:inline-flex;color:var(--mute-ink);padding:2px}a.txl:hover{color:var(--accent)}a.txl .ext{margin:0;width:12px;height:12px}
+.post .who.stats{display:flex;align-items:center;gap:5px}.post .who.stats .ico{width:11px;height:11px}.post .who.stats a{margin-left:6px}
+.av-badge{display:grid;place-items:center;background:var(--accent)}.av-badge .ico{width:9px;height:9px;stroke-width:2.4;color:var(--ink)}
+.results .sym{display:flex;align-items:center;gap:4px}.results .vf{width:12px;height:12px;color:var(--accent)}
+.icon-btn{background:none;border:0;padding:4px;border-radius:4px;color:var(--mute-ink);cursor:pointer}.icon-btn:hover{color:var(--down);background:var(--ink-3)}.icon-btn .ico{width:12px;height:12px}
+#autochip .ico{width:12px;height:12px;color:var(--accent)}
+#walletbtn .ico{width:12px;height:12px;color:var(--accent)}
+
+/* top bar: a brass hairline fades in under it */
+.bar{min-height:52px;padding-block:6px}
+.bar::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 55%,transparent) 30%,color-mix(in srgb,var(--accent) 55%,transparent) 70%,transparent);opacity:.55;pointer-events:none}
+.nav a{font-size:.7rem;letter-spacing:.1em;padding:9px 10px;transition:color .15s,box-shadow .2s}
+.search input{background:var(--ink-1);border-color:var(--line);transition:border-color .15s,background .15s}
+.search input:focus{background:var(--ink-2)}
+#walletbtn{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.solchip{color:var(--mute-ink)}
+.watchbar{background:var(--ink-0);min-height:32px}
+
+/* panels: a hairline of light along the top edge, quieter heads */
+.panel{box-shadow:inset 0 1px 0 rgba(239,233,220,.035),0 1px 0 rgba(0,0,0,.4)}
+.phead{padding:9px 12px;background:linear-gradient(180deg,rgba(239,233,220,.025),transparent)}
+.phead .count{font:500 .62rem var(--font-mono);color:var(--mute-ink);background:var(--ink-2);border:1px solid var(--line);border-radius:3px;padding:1px 6px}
+.pulse-top{gap:8px;margin-bottom:12px}
+.pulse-top .chip{font-size:.64rem;color:var(--mute-ink);border-color:var(--line);background:var(--ink-1)}
+
+/* Pulse cards: tighter, a brass edge on hover, a soft slide-in when new */
+.pcard{padding:9px 10px;gap:11px;border-radius:6px;overflow:hidden;flex:none}
+.skel{flex:none}
+.pcard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent);transform:scaleY(0);transition:transform .18s ease}
+.pcard:hover::before{transform:scaleY(1)}
+.pcard:hover{transform:none}
+.pcard.fresh{animation:flash 1.4s ease-out}
+.av{width:48px;height:48px}
+.pc-top b{font-size:.9rem}
+.pc-stats .mc{font-size:.8rem}
+.qb{padding:7px 10px;border-radius:5px;font-size:.72rem;transition:background .15s,border-color .15s}
+.qb:hover{background:color-mix(in srgb,var(--accent) 18%,var(--ink-1))}
+.lk{border-radius:5px;height:22px;min-width:22px}
+
+/* token page */
+.tile{border-radius:6px;padding:8px 11px}
+.tile .k{font-size:.56rem;letter-spacing:.14em}
+.tile.chg:has(.up){background:linear-gradient(180deg,color-mix(in srgb,var(--up) 10%,var(--ink-2)),var(--ink-2))}
+.tile.chg:has(.down){background:linear-gradient(180deg,color-mix(in srgb,var(--down) 10%,var(--ink-2)),var(--ink-2))}
+.trade{gap:9px}
+.amount{border-width:1px;border-radius:6px;background:var(--ink-1)}
+.amount input{font-weight:500;letter-spacing:-.01em}
+.go{border-radius:6px;font-weight:600;letter-spacing:.01em;transition:filter .15s,transform .1s}
+.go:active:not(:disabled){transform:translateY(1px)}
+.btn.buy{background:linear-gradient(180deg,#52DBA8,var(--up));border-color:var(--up)}
+.btn.primary{background:linear-gradient(180deg,#E2C080,var(--accent))}
+
+/* loading: skeleton cards with a brass-tinted shimmer */
+.skel{display:grid;grid-template-columns:48px minmax(0,1fr) 54px;gap:11px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--ink-1)}
+.skel i{display:block;height:9px;border-radius:3px;background:linear-gradient(90deg,var(--ink-2) 0%,color-mix(in srgb,var(--accent) 9%,var(--ink-3)) 45%,var(--ink-2) 90%);background-size:220% 100%;animation:shimmer 1.6s linear infinite}
+.skel i.c{width:48px;height:48px;border-radius:50%}
+.skel i.b{height:30px;border-radius:5px}
+.skel .l{display:grid;gap:7px}.skel .l i:nth-child(1){width:55%}.skel .l i:nth-child(2){width:80%}.skel .l i:nth-child(3){width:38%}
+@keyframes shimmer{to{background-position:-220% 0}}
+
+/* status bar */
+.statusbar{position:fixed;left:0;right:0;bottom:0;z-index:35;height:28px;display:flex;align-items:center;gap:18px;padding:0 14px;background:color-mix(in srgb,var(--ink-0) 94%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--line);font:500 .64rem var(--font-mono);color:var(--mute-ink);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden}
+.statusbar .sb{display:inline-flex;align-items:center;gap:6px}
+.statusbar .grow{flex:1}
+.statusbar b{color:var(--paper);font-weight:500}
+.statusbar .lat b{color:var(--mute-ink)}.statusbar .lat.ok b{color:var(--up)}.statusbar .lat.slow b{color:var(--warn)}.statusbar .lat.bad b{color:var(--down)}
+.statusbar .brandmini{color:var(--accent);letter-spacing:.16em}
+.statusbar .dot{width:6px;height:6px}
+.toasts{bottom:40px}
+.pcol{min-height:calc(100vh - 200px)}
+.plist{max-height:calc(100vh - 258px)}
+@media (max-width:1100px){.plist{max-height:none}}
+@media (max-width:760px){.statusbar .hide-sm{display:none}.statusbar{gap:12px}}
+@media (prefers-reduced-motion:reduce){.skel i{animation:none}.pcard.fresh{animation:none}.pcard::before,.star,.qb,.go{transition:none}}
 </style>
 </head>
 <body>
@@ -438,9 +536,9 @@ th{background:var(--ink-1)}
   <div class="right">
     <button class="chip" id="autochip" type="button" hidden></button>
     <span class="chip solchip" id="solprice" title="SOL price">SOL —</span>
-    <label class="qb-amt" title="Quick-buy amount for ⚡ buttons"><span>⚡</span><input id="qbamt" inputmode="decimal" aria-label="Quick-buy amount in SOL"><span>SOL</span></label>
+    <label class="qb-amt" title="Quick-buy amount for the bolt buttons"><span class="qb-ic"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M9 1.8 3.6 9h4l-.8 5.2L12.4 7h-4z"/></svg></span><input id="qbamt" inputmode="decimal" aria-label="Quick-buy amount in SOL"><span>SOL</span></label>
     <button class="btn" id="walletbtn" type="button">Connect</button>
-    <button class="btn" id="settingsbtn" type="button" aria-label="Settings">⚙</button>
+    <button class="btn icon-only" id="settingsbtn" type="button" aria-label="Settings" title="Settings"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v1.8M8 12.7v1.8M14.5 8h-1.8M3.3 8H1.5M12.6 3.4l-1.3 1.3M4.7 11.3l-1.3 1.3M12.6 12.6l-1.3-1.3M4.7 4.7 3.4 3.4"/><circle cx="8" cy="8" r="4.6"/></svg></button>
   </div>
 </header>
 <div class="watchbar" id="watchbar"></div>
@@ -452,7 +550,7 @@ th{background:var(--ink-1)}
       <span class="chip" id="pp-status"><span class="dot"></span>pump.fun stream</span>
       <span class="chip" id="sf-status"><span class="dot"></span>stonk.fun</span>
       <span class="chip" id="curve-status"><span class="dot"></span>curves</span>
-      <span class="muted mono" style="font-size:.7rem">Hover a column to pause it · ⚡ buys with your quick-buy amount</span>
+      <span class="muted mono" style="font-size:.7rem">Hover a column to pause it · <svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M9 1.8 3.6 9h4l-.8 5.2L12.4 7h-4z"/></svg> buys with your quick-buy amount</span>
       <div class="seg mob-cols" id="mobcols" role="group" aria-label="Column">
         <button type="button" data-col="new" aria-pressed="true">New</button>
         <button type="button" data-col="final" aria-pressed="false">Final stretch</button>
@@ -487,7 +585,7 @@ th{background:var(--ink-1)}
           <div class="tok-id">
             <div class="av big" id="t-av"><img class="tok-icon" id="t-icon" alt=""><span class="av-badge" hidden></span></div>
             <div class="tok-titles">
-              <h1><span id="t-sym">—</span><span class="tname" id="t-name"></span><button class="star" id="t-star" type="button" aria-pressed="false" aria-label="Add to watchlist">★</button></h1>
+              <h1><span id="t-sym">—</span><span class="tname" id="t-name"></span><button class="star" id="t-star" type="button" aria-pressed="false" aria-label="Add to watchlist"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="m8 1.9 1.8 3.8 4.1.5-3 2.9.8 4.1L8 11.2l-3.7 2 .8-4.1-3-2.9 4.1-.5z"/></svg></button></h1>
               <div class="sub"><span id="t-ca"></span><span class="pill" id="t-age" hidden></span><span class="pill curvepill" id="t-curve" hidden></span></div>
             </div>
           </div>
@@ -522,7 +620,7 @@ th{background:var(--ink-1)}
     <aside class="tok-side">
       <div class="panel trade" aria-label="Trade">
         <div class="seg" role="group" aria-label="Side"><button type="button" class="b" id="side-buy" aria-pressed="true">Buy</button><button type="button" class="s" id="side-sell" aria-pressed="false">Sell</button></div>
-        <div class="from"><span>Trade from</span><div class="seg" id="fromseg" role="group" aria-label="Trading wallet"><button type="button" data-w="main" aria-pressed="true">Main</button><button type="button" data-w="instant" aria-pressed="false">⚡ Instant</button></div></div>
+        <div class="from"><span>Trade from</span><div class="seg" id="fromseg" role="group" aria-label="Trading wallet"><button type="button" data-w="main" aria-pressed="true">Main</button><button type="button" data-w="instant" aria-pressed="false"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M9 1.8 3.6 9h4l-.8 5.2L12.4 7h-4z"/></svg>Instant</button></div></div>
         <div class="from"><label for="amt" id="amt-label">Amount</label><button type="button" class="btn small" id="bal">Bal —</button></div>
         <div class="amount"><input id="amt" inputmode="decimal" placeholder="0.0" autocomplete="off"><span class="unit" id="amt-unit">SOL</span></div>
         <div class="quick" id="quick"></div>
@@ -558,7 +656,7 @@ th{background:var(--ink-1)}
           <div class="arow"><span title="Take profit">TP +</span><input class="inp" id="ap-tp" inputmode="decimal" value="100" aria-label="Take profit percent"><span>% sell</span><input class="inp" id="ap-tp-sell" inputmode="numeric" value="50" aria-label="Take profit sell percent"><span>%</span><button class="btn small" type="button" data-add="tp">Add</button></div>
           <div class="arow"><span title="Stop loss">SL −</span><input class="inp" id="ap-sl" inputmode="decimal" value="30" aria-label="Stop loss percent"><span>% sell</span><input class="inp" id="ap-sl-sell" inputmode="numeric" value="100" aria-label="Stop loss sell percent"><span>%</span><button class="btn small" type="button" data-add="sl">Add</button></div>
           <div class="arow"><span title="Trailing stop: sells when price falls this far below its peak">Trail −</span><input class="inp" id="ap-tr" inputmode="decimal" value="20" aria-label="Trailing stop percent"><span>% sell</span><input class="inp" id="ap-tr-sell" inputmode="numeric" value="100" aria-label="Trailing stop sell percent"><span>%</span><button class="btn small" type="button" data-add="trail">Add</button></div>
-          <p class="fine">Autopilot sells from your ⚡ Instant wallet while this terminal is open. Entry is the current price when you add a rule.</p>
+          <p class="fine">Autopilot sells from your instant wallet while this terminal is open. Entry is the current price when you add a rule.</p>
           <div class="olist" id="ap-list"></div>
         </div>
       </div>
@@ -584,7 +682,7 @@ th{background:var(--ink-1)}
   <section class="view" id="v-portfolio" hidden>
     <div class="cards" id="pf-cards"></div>
     <div class="panel" style="margin-bottom:10px">
-      <div class="phead"><h2>Positions</h2><div class="seg" id="pf-wallet" role="group" aria-label="Wallet"><button type="button" data-w="main" aria-pressed="true">Main</button><button type="button" data-w="instant" aria-pressed="false">⚡ Instant</button></div><span class="grow"></span><span class="muted mono" style="font-size:.66rem">PnL counts trades made in this terminal, at average cost and current prices</span></div>
+      <div class="phead"><h2>Positions</h2><div class="seg" id="pf-wallet" role="group" aria-label="Wallet"><button type="button" data-w="main" aria-pressed="true">Main</button><button type="button" data-w="instant" aria-pressed="false"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M9 1.8 3.6 9h4l-.8 5.2L12.4 7h-4z"/></svg>Instant</button></div><span class="grow"></span><span class="muted mono" style="font-size:.66rem">PnL counts trades made in this terminal, at average cost and current prices</span></div>
       <div class="tscroll"><table id="pf-table"></table></div>
     </div>
     <div class="panel" style="margin-bottom:10px">
@@ -607,6 +705,16 @@ th{background:var(--ink-1)}
 </main>
 
 <dialog id="modal" aria-labelledby="m-title"><div class="mhead"><h2 id="m-title"></h2><button class="btn small" id="m-close" type="button">Close</button></div><div class="mbody" id="m-body"></div></dialog>
+<footer class="statusbar" id="statusbar" aria-label="Status">
+  <span class="sb brandmini">LACUNA</span>
+  <span class="sb" id="sb-stream"><span class="dot"></span>Stream</span>
+  <span class="sb hide-sm" id="sb-curves"><span class="dot"></span>Curves</span>
+  <span class="sb lat" id="sb-rpc" title="Round trip to the Solana RPC through the gateway">RPC <b>—</b></span>
+  <span class="sb hide-sm" id="sb-slot">Slot <b>—</b></span>
+  <span class="grow"></span>
+  <span class="sb" id="sb-sol">SOL <b>—</b></span>
+  <span class="sb hide-sm" id="sb-clock"><b>--:--:--</b> UTC</span>
+</footer>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script src="./vendor/solana-web3.min.js"></script>
