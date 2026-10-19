@@ -37,3 +37,6 @@ export const RPC_URL = "";
 // static host) it's the Railway deployment.
 const OWN_HOSTS = ["privatusterminal.xyz", "www.privatusterminal.xyz", "privatus.up.railway.app"];
 export const PROXY_URL = typeof location !== "undefined" && OWN_HOSTS.includes(location.hostname) ? location.origin : "https://privatusterminal.xyz";
+
+// The Privatus token's mint. Shown on the landing page (copy bar and a Trade button) from launch.
+export const TOKEN_CA = "FepxP15gLqWBW3pHV9Mmcb625UtPst7dFk1v2Ffhpump";

@@ -1,6 +1,6 @@
 // Landing page: the code-drawn art (art.js), the diagrams, and the read-only Trail audit.
 import { trace, isAddress, short, DEFAULT_RPC as PUBLIC_RPC } from "./trace.js";
-import { RPC_URL, PROXY_URL, FEE_BPS } from "./config.js";
+import { RPC_URL, PROXY_URL, FEE_BPS, TOKEN_CA } from "./config.js";
 const DEFAULT_RPC = PROXY_URL ? `${PROXY_URL.replace(/\/$/, "")}/rpc` : RPC_URL || PUBLIC_RPC;
 import { C, REDUCE, renderGlyphs, renderIcons, hero } from "./art.js";
 import { renderDiagrams } from "./diagrams.js";
@@ -229,13 +229,13 @@ copyBtn.addEventListener("click", async () => {
 });
 
 /* ---------- token contract address ---------- */
-// TOKEN_CA comes from the proxy server's environment (server.mjs answers /env.js), falling back to ./env.js.
+// TOKEN_CA is set in config.js, so the address shows from the first second; the server's /env.js can override it.
 const ca = $("ca");
 (async () => {
   let env = {};
   try { env = await import(PROXY_URL ? `${PROXY_URL.replace(/\/$/, "")}/env.js` : "./env.js"); }
   catch (_) { try { env = await import("./env.js"); } catch (_) {} }
-  const addr = isAddress(env.TOKEN_CA || "") ? env.TOKEN_CA : "";
+  const addr = isAddress(env.TOKEN_CA || "") ? env.TOKEN_CA : isAddress(TOKEN_CA || "") ? TOKEN_CA : "";
   if (!addr) return;
   $("ca-v").textContent = addr;
   ca.disabled = false;

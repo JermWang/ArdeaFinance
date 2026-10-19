@@ -248,6 +248,8 @@ svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;ma
 h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 38%,#D2A55F 64%,#E9C88A 82%,#B98A48 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .ca-go{background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 38%,#D2A55F 64%,#E9C88A 82%,#B98A48 100%)}
 .eyebrow::before{background:linear-gradient(90deg,#F6D292,#C39653)}
+.ca-row{display:flex;gap:12px;align-items:stretch}.ca-row .ca{flex:1;min-width:0}.ca-trade{flex:none;border-radius:12px;padding:0 24px}
+@media (max-width:760px){.ca-row{flex-direction:column}.ca-trade{padding:14px 20px}}
 </style>
 </head>
 <body>
@@ -405,7 +407,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 
           <p class="eyebrow">The token</p>
           <h2>Every use has <em>a job to do.</em></h2>
         </div>
-        <p>Every terminal trade and private buy pays a <span data-cfg="fee">0.5%</span> fee in SOL. The token ties that fee to the people who trade. The ticker and launch details aren't public yet.</p>
+        <p>Every terminal trade and private buy pays a <span data-cfg="fee">0.5%</span> fee in SOL. The token ties that fee to the people who trade.</p>
       </div>
       <div class="tiers">
         <div class="tier"><span data-glyph="stairs"></span><h3>Fee tiers</h3><p>Hold more, pay less than the base fee on every trade.</p></div>
@@ -413,11 +415,11 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 
         <div class="tier"><span data-glyph="stealth"></span><h3>Private limits</h3><p>Holders get higher Private mode limits per buy than the beta cap.</p></div>
         <div class="tier"><span data-glyph="link"></span><h3>Referrals</h3><p>Bring traders and earn a share of their fees, paid in the token.</p></div>
       </div>
-      <button class="ca" id="ca" type="button" disabled aria-label="Contract address coming soon">
+      <div class="ca-row"><button class="ca" id="ca" type="button" aria-label="Copy contract address FepxP15gLqWBW3pHV9Mmcb625UtPst7dFk1v2Ffhpump">
         <span class="ca-k">Contract</span>
-        <span class="ca-v" id="ca-v">Coming soon</span>
+        <span class="ca-v" id="ca-v">FepxP15gLqWBW3pHV9Mmcb625UtPst7dFk1v2Ffhpump</span>
         <span class="ca-go" id="ca-go">Copy</span>
-      </button>
+      </button><a class="btn brass ca-trade" href="./app.html#/token/FepxP15gLqWBW3pHV9Mmcb625UtPst7dFk1v2Ffhpump">Trade on Privatus <span class="arr">→</span></a></div>
     </section>
   </div>
 </main>
