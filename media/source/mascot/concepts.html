@@ -1,0 +1,44 @@
+<!doctype html>
+<!-- Mascot concept sheet: each candidate large, at nav size, as a favicon, and in a lockup. -->
+<html lang="en"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;background:#05080D;color:#EFE9DC;font-family:Geist,sans-serif}
+body{width:1800px;padding:56px 64px;box-sizing:border-box}
+h1{font:400 56px/1 "Instrument Serif",serif;margin:0 0 8px}
+.lead{font:500 13px "Geist Mono",monospace;letter-spacing:.2em;text-transform:uppercase;color:#8B93A1;margin:0 0 40px}
+.row{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.card{background:radial-gradient(circle at 50% 38%,#16223A,#0A0E14 65%);border:1px solid #263142;border-radius:18px;padding:30px;display:flex;flex-direction:column;gap:22px}
+.n{font:500 12px "Geist Mono",monospace;letter-spacing:.22em;color:#D6B26E}
+.big{height:330px;display:grid;place-items:center}
+.big svg{width:300px;height:300px;filter:drop-shadow(0 0 30px rgba(214,178,110,.12))}
+h2{font:400 36px/1 "Instrument Serif",serif;margin:0}
+p{margin:0;color:#A9AFBA;font-size:15px;line-height:1.55}
+.sizes{display:flex;align-items:center;gap:22px;border-top:1px solid #263142;padding-top:20px}
+.nav{display:flex;align-items:center;gap:9px;background:#0A0E14;border:1px solid #263142;border-radius:8px;padding:10px 14px}
+.nav svg{width:30px;height:30px}.nav span{font:400 26px/1 "Instrument Serif",serif}
+.fav{width:32px;height:32px;border-radius:7px;background:#0A0E14;border:1px solid #263142;display:grid;place-items:center}.fav svg{width:24px;height:24px}
+.tiny svg{width:18px;height:18px}
+.pfp{width:72px;height:72px;border-radius:50%;background:radial-gradient(circle at 50% 40%,#1A2740,#0A0E14);display:grid;place-items:center;border:1px solid #33405A}.pfp svg{width:52px;height:52px}
+.lbl{font:500 11px "Geist Mono",monospace;color:#5E6878;letter-spacing:.14em}
+</style></head><body>
+<h1>Lacuna mascot: three directions</h1><p class="lead">Animated · drawn in code · ivory, navy and one brass detail</p>
+<div class="row" id="row"></div>
+<script type="module">
+import { MASCOTS } from "./mascots.js";
+const info = {
+  octopus: ["01", "The Octopus", "Escapes in a cloud of ink instead of leaving a trail. Deep-sea navy is already our ground, and ink ties to the banknote engraving. Animation: tentacles sway, it blinks, then vanishes behind an ink puff."],
+  chameleon: ["02", "The Chameleon", "Blends into any background, and its curled tail is the dial from the current mark. Animation: the turret eye looks around on its own and the skin shifts colour to hide."],
+  crab: ["03", "The Hermit Crab", "Lives inside a vault-dial shell: a small creature hiding in a vault. The shell keeps the current mark whole. Animation: the dial clicks, eye stalks blink, the claw snaps."]
+};
+for (const k of ["octopus", "chameleon", "crab"]) {
+  const [n, name, text] = info[k], m = MASCOTS[k];
+  const card = document.createElement("div"); card.className = "card";
+  card.innerHTML = `<span class="n">${n}</span><div class="big"></div><h2>${name}</h2><p>${text}</p><div class="sizes"><div class="nav"></div><div class="pfp"></div><div class="fav"></div><div class="fav tiny"></div><span class="lbl">NAV · PFP · 24PX · 18PX</span></div>`;
+  card.querySelector(".big").append(m());
+  const nav = card.querySelector(".nav"); nav.append(m({ engraved: false })); const w = document.createElement("span"); w.textContent = "Lacuna"; nav.append(w);
+  card.querySelector(".pfp").append(m({ engraved: false }));
+  card.querySelectorAll(".fav").forEach(f => f.append(m({ engraved: false, animate: false })));
+  document.getElementById("row").append(card);
+}
+</script></body></html>

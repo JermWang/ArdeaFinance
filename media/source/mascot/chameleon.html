@@ -1,0 +1,44 @@
+<!doctype html>
+<!-- The Privatus chameleon: presentation sheet (hero, lockups, sizes, on dark and on paper). -->
+<html lang="en"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;background:#05080D;color:#EFE9DC;font-family:Geist,sans-serif}
+body{width:1800px;height:1000px;display:grid;grid-template-columns:1.15fr 1fr;gap:22px;padding:48px 56px;box-sizing:border-box}
+.hero{border-radius:20px;border:1px solid #263142;background:radial-gradient(circle at 50% 44%,#1A2742,#0A0E14 62%);display:grid;place-items:center;position:relative;overflow:hidden}
+.hero svg{width:640px;height:640px;filter:drop-shadow(0 0 40px rgba(214,178,110,.16))}
+.hero .cap{position:absolute;left:30px;top:26px;font:500 12px "Geist Mono",monospace;letter-spacing:.22em;color:#8B93A1}
+.hero .cap b{color:#D6B26E;font-weight:500}
+.side{display:grid;grid-template-rows:auto auto 1fr;gap:22px}
+.panel{border-radius:20px;border:1px solid #263142;background:#0A0E14;padding:30px}
+.lock{display:flex;align-items:center;gap:18px}.lock svg{width:96px;height:96px}.lock span{font:400 92px/1 "Instrument Serif",serif;letter-spacing:-.01em}
+.paper{background:#F1ECE1;color:#0E1520;border-color:#DED5C2}
+.paper .lock span{color:#0E1520}
+.sizes{display:flex;align-items:end;gap:28px}
+.s{display:flex;flex-direction:column;align-items:center;gap:10px;font:500 11px "Geist Mono",monospace;letter-spacing:.14em;color:#5E6878}
+.pfp{width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 50% 42%,#1D2B47,#0A0E14 70%);border:1px solid #33405A;display:grid;place-items:center}.pfp svg{width:118px;height:118px}
+.nav{display:flex;align-items:center;gap:9px;background:#0E131B;border:1px solid #263142;border-radius:8px;padding:9px 14px}.nav svg{width:30px;height:30px}.nav span{font:400 26px/1 "Instrument Serif",serif;color:#EFE9DC;letter-spacing:0}
+.fav{border-radius:7px;background:#0A0E14;border:1px solid #263142;display:grid;place-items:center}
+.f32{width:40px;height:40px}.f32 svg{width:32px;height:32px}.f16{width:24px;height:24px}.f16 svg{width:18px;height:18px}
+</style></head><body>
+<div class="hero"><span class="cap">PRIVATUS · <b>THE CHAMELEON</b></span></div>
+<div class="side">
+  <div class="panel"><div class="lock" id="l1"><span>Privatus</span></div></div>
+  <div class="panel paper"><div class="lock" id="l2"><span>Privatus</span></div></div>
+  <div class="panel"><div class="sizes">
+    <div class="s"><div class="pfp" id="pfp"></div>PFP</div>
+    <div class="s"><div class="nav" id="nav"><span>Privatus</span></div>NAV</div>
+    <div class="s"><div class="fav f32" id="f32"></div>32</div>
+    <div class="s"><div class="fav f16" id="f16"></div>16</div>
+  </div></div>
+</div>
+<script type="module">
+import { chameleon } from "./mascots.js";
+document.querySelector(".hero").append(chameleon());
+document.getElementById("l1").prepend(chameleon({ engraved: false, tongue: false, camo: false }));
+document.getElementById("l2").prepend(chameleon({ engraved: false, tongue: false, camo: false, tone: "ink" }));
+document.getElementById("pfp").append(chameleon({ engraved: false, tongue: false }));
+document.getElementById("nav").prepend(chameleon({ engraved: false, tongue: false, branch: false, camo: false }));
+document.getElementById("f32").append(chameleon({ engraved: false, tongue: false, branch: false, animate: false }));
+document.getElementById("f16").append(chameleon({ engraved: false, tongue: false, branch: false, animate: false }));
+</script></body></html>
