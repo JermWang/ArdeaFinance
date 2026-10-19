@@ -1,0 +1,124 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import web3 from "@solana/web3.js";
+import { toRaw, fromRaw, feeOnBuy, feeOnSell, buildSwapTx, prepareSwap, jupiter, SOL_MINT } from "../swap.js";
+import { quoteFor, instructionsFor, handleJupiter } from "./jupmock.mjs";
+
+const TREASURY = "DGorZp9ari8RGGdiQbXCsQ62HDmkxSL66xxQcYvWfWMP";
+const MINT = "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263";
+
+// Decode the compiled transaction back into readable instructions.
+function readable(tx) {
+  const keys = tx.message.staticAccountKeys.map(k => k.toBase58());
+  return tx.message.compiledInstructions.map(ci => {
+    const program = keys[ci.programIdIndex], data = Buffer.from(ci.data);
+    if (program === "11111111111111111111111111111111" && data.readUInt32LE(0) === 2)
+      return { kind: "transfer", from: keys[ci.accountKeyIndexes[0]], to: keys[ci.accountKeyIndexes[1]], lamports: data.readBigUInt64LE(4) };
+    return { kind: program.startsWith("Memo") ? data.toString() : "compute" };
+  });
+}
+
+test("decimal amounts convert without floating point", () => {
+  assert.equal(toRaw("1.5", 9), 1_500_000_000n);
+  assert.equal(toRaw("0.000000001", 9), 1n);
+  assert.equal(toRaw("0.0000000019", 9), 1n);
+  assert.equal(toRaw("12", 0), 12n);
+  assert.equal(toRaw("abc", 9), null);
+  assert.equal(toRaw("", 9), null);
+  assert.equal(fromRaw(1_500_000_000n, 9), "1.5");
+  assert.equal(fromRaw(123456789n, 5, 2), "1234.56");
+});
+
+test("fee math: buys take it off the input, sells off the guaranteed minimum", () => {
+  assert.deepEqual(feeOnBuy(1_000_000_000n, 50), { fee: 5_000_000n, swapAmount: 995_000_000n });
+  assert.equal(feeOnSell({ otherAmountThreshold: "2000000000" }, 50), 10_000_000n);
+  assert.deepEqual(feeOnBuy(199n, 50), { fee: 0n, swapAmount: 199n });
+});
+
+test("buy transaction pays the treasury before the swap", () => {
+  const user = web3.Keypair.generate().publicKey.toBase58();
+  const tx = buildSwapTx(web3, { parts: instructionsFor(user), user, treasury: TREASURY, fee: 5_000_000n, side: "buy", blockhash: web3.Keypair.generate().publicKey.toBase58() });
+  const steps = readable(tx);
+  assert.deepEqual(steps.map(s => s.kind), ["compute", "setup", "transfer", "swap", "cleanup"]);
+  assert.deepEqual(steps[2], { kind: "transfer", from: user, to: TREASURY, lamports: 5_000_000n });
+  assert.equal(tx.message.staticAccountKeys[0].toBase58(), user, "user pays network fees");
+});
+
+test("sell transaction pays the treasury after the SOL is unwrapped", () => {
+  const user = web3.Keypair.generate().publicKey.toBase58();
+  const tx = buildSwapTx(web3, { parts: instructionsFor(user), user, treasury: TREASURY, fee: 7n, side: "sell", blockhash: web3.Keypair.generate().publicKey.toBase58() });
+  assert.deepEqual(readable(tx).map(s => s.kind), ["compute", "setup", "swap", "cleanup", "transfer"]);
+});
+
+test("no fee, no transfer", () => {
+  const user = web3.Keypair.generate().publicKey.toBase58();
+  const tx = buildSwapTx(web3, { parts: instructionsFor(user), user, treasury: TREASURY, fee: 0n, side: "buy", blockhash: web3.Keypair.generate().publicKey.toBase58() });
+  assert.ok(!readable(tx).some(s => s.kind === "transfer"));
+});
+
+const fakeFetch = async (url, init = {}) => ({ ok: true, status: 200, json: async () => handleJupiter(url, init.body ? JSON.parse(init.body) : null) });
+const connection = { getLatestBlockhash: async () => ({ blockhash: web3.Keypair.generate().publicKey.toBase58(), lastValidBlockHeight: 100 }), getAddressLookupTable: async () => ({ value: null }) };
+
+test("prepareSwap quotes the post-fee amount on buys", async () => {
+  const kp = web3.Keypair.generate(), user = kp.publicKey.toBase58();
+  const r = await prepareSwap({ web3, jup: jupiter({ fetch: fakeFetch }), connection, side: "buy", mint: MINT, amountRaw: 1_000_000_000n, user, treasury: TREASURY, feeBps: 50, slippageBps: 300, priorityMaxLamports: 1e6 });
+  assert.equal(r.quote.inAmount, "995000000");
+  assert.equal(r.quote.inputMint, SOL_MINT);
+  assert.equal(r.fee, 5_000_000n);
+  r.tx.sign([kp]);
+  assert.equal(readable(web3.VersionedTransaction.deserialize(r.tx.serialize())).find(s => s.kind === "transfer").lamports, 5_000_000n);
+});
+
+test("prepareSwap charges sells on the guaranteed minimum", async () => {
+  const user = web3.Keypair.generate().publicKey.toBase58();
+  const r = await prepareSwap({ web3, jup: jupiter({ fetch: fakeFetch }), connection, side: "sell", mint: MINT, amountRaw: 2_000_000_000_000n, user, treasury: TREASURY, feeBps: 50, slippageBps: 300, priorityMaxLamports: 1e6 });
+  const q = quoteFor({ inputMint: MINT, outputMint: SOL_MINT, amount: 2_000_000_000_000n, slippageBps: 300 });
+  assert.equal(r.fee, BigInt(q.otherAmountThreshold) * 50n / 10000n);
+});
+
+test("Jupiter errors become readable messages", async () => {
+  const limited = jupiter({ fetch: async () => ({ ok: false, status: 429, json: async () => ({}) }) });
+  await assert.rejects(limited.quote({ inputMint: SOL_MINT, outputMint: MINT, amount: 1n, slippageBps: 1 }), /rate limiting/);
+  const noRoute = jupiter({ fetch: async () => ({ ok: false, status: 400, json: async () => ({ error: "Could not find any route", errorCode: "COULD_NOT_FIND_ANY_ROUTE" }) }) });
+  await assert.rejects(noRoute.quote({ inputMint: SOL_MINT, outputMint: MINT, amount: 1n, slippageBps: 1 }), /No route/);
+  let sent;
+  const keyed = jupiter({ apiKey: "k", fetch: async (u, init) => { sent = init; return { ok: true, status: 200, json: async () => ([]) }; } });
+  await keyed.search("bonk");
+  assert.equal(sent.headers["x-api-key"], "k");
+});
+
+test("Jito tip is appended to the swap and sent through the block engine", async () => {
+  const { JITO_TIP_ACCOUNTS, sendAndConfirm } = await import("../swap.js");
+  const kp = web3.Keypair.generate(), user = kp.publicKey.toBase58();
+  const r = await prepareSwap({ web3, jup: jupiter({ fetch: fakeFetch }), connection, side: "buy", mint: MINT, amountRaw: 1_000_000_000n, user, treasury: TREASURY, feeBps: 50, slippageBps: 300, priorityMaxLamports: 1e6, tipLamports: 200_000n });
+  const steps = readable(r.tx);
+  const tipStep = steps[steps.length - 1];
+  assert.equal(tipStep.kind, "transfer"); assert.equal(tipStep.lamports, 200_000n); assert.ok(JITO_TIP_ACCOUNTS.includes(tipStep.to));
+  const noTip = await prepareSwap({ web3, jup: jupiter({ fetch: fakeFetch }), connection, side: "buy", mint: MINT, amountRaw: 1_000_000_000n, user, treasury: TREASURY, feeBps: 50, slippageBps: 300, priorityMaxLamports: 1e6, tipLamports: 500n });
+  assert.equal(readable(noTip.tx).filter(s => s.kind === "transfer").length, 1, "tips under Jito's 1000-lamport minimum are dropped");
+  r.tx.sign([kp]);
+  const jitoCalls = [], rpcSends = [];
+  const conn = {
+    simulateTransaction: async () => ({ value: { err: null, logs: [] } }),
+    sendRawTransaction: async () => { rpcSends.push(1); return "RPCSIG"; },
+    getSignatureStatuses: async () => ({ value: [{ confirmationStatus: "confirmed", err: null }] }),
+    getBlockHeight: async () => 1
+  };
+  const f = async (url, init) => { jitoCalls.push({ url, body: JSON.parse(init.body) }); return { ok: true, status: 200, json: async () => ({ result: "JITOSIG" }) }; };
+  assert.equal(await sendAndConfirm(conn, r.tx, 100, { jito: "https://jito.test/api/v1/transactions", mevProtect: true, fetch: f }), "JITOSIG");
+  assert.equal(rpcSends.length, 0, "MEV-protected sends skip the public RPC");
+  assert.equal(jitoCalls[0].body.method, "sendTransaction"); assert.deepEqual(jitoCalls[0].body.params[1], { encoding: "base64" });
+  assert.equal(await sendAndConfirm(conn, r.tx, 100, { jito: "https://jito.test/api/v1/transactions", fetch: f }), "RPCSIG");
+  assert.equal(rpcSends.length, 1); assert.equal(jitoCalls.length, 2, "fast mode sends through both");
+  const failing = { ...conn, simulateTransaction: async () => ({ value: { err: { InstructionError: [3, { Custom: 6001 }] }, logs: ["slippage exceeded"] } }) };
+  await assert.rejects(sendAndConfirm(failing, r.tx, 100, { jito: "x", mevProtect: true, fetch: f }), /slippage/);
+});
+
+test("preflight stops a transaction that would fail before any wallet sees it, with the reason", async () => {
+  const { preflight } = await import("../swap.js");
+  const sim = (err, logs = []) => ({ simulateTransaction: async (tx, opts) => { assert.equal(opts.sigVerify, false); return { value: { err, logs } }; } });
+  await preflight(sim(null), {});
+  await assert.rejects(preflight(sim({ InstructionError: [0, { Custom: 1 }] }, ["Transfer: insufficient lamports 337300000, need 1000000000"]), {}), /Not enough SOL/);
+  await assert.rejects(preflight(sim({ InsufficientFundsForRent: { account_index: 1 } }), {}), /0\.00089 SOL/);
+  await assert.rejects(preflight(sim("AccountNotFound"), {}), /Not enough SOL/);
+});

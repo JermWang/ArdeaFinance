@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Lacuna terminal: live pump.fun Pulse, one-click trading through Jupiter, wallet tracking, orders, and Private mode over NEAR Intents.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lacuna">
+<meta property="og:title" content="Lacuna Terminal">
+<meta property="og:description" content="Live launches, one-click Jupiter trading, wallet tracking, limit orders and Private mode over NEAR Intents.">
+<meta property="og:image" content="media/banner.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="media/banner.png">
+<meta name="theme-color" content="#080B10">
+<title>Lacuna Terminal</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* Terminal: a vault-navy trading desk. Ruled panels, squared controls, mono numbers; brass marks what is
+   live or selected, green is a gain, red is a loss or a risk. */
+:root{
+  --paper:#EFE9DC;--ink:#0A0E14;--ink-0:#080B10;--ink-1:#0E131B;--ink-2:#151C27;--ink-3:#212A38;--line:#1C2431;
+  --mute:#5E6878;--mute-ink:#8B93A1;--accent:#D6B26E;--down:#F06A6A;--up:#43D19E;--warn:#E8A35A;
+  --font-display:"Geist","Segoe UI",system-ui,sans-serif;--font-mono:"Geist Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --serif:"Instrument Serif",Georgia,serif;
+  --r:6px;color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--ink-0);color:var(--paper);font-family:var(--font-display);font-size:14px;line-height:1.45;overflow-x:hidden}
+a{color:inherit}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.mono{font-family:var(--font-mono)}
+.up{color:var(--up)}.down{color:var(--down)}.warnc{color:var(--warn)}.muted{color:var(--mute-ink)}
+[hidden]{display:none!important}
+
+/* buttons and inputs */
+.btn{font:600 .8rem var(--font-display);border-radius:4px;padding:7px 14px;border:1.5px solid var(--ink-3);background:transparent;color:var(--paper);cursor:pointer;white-space:nowrap;transition:transform .12s,background .12s,border-color .12s}
+.btn:hover:not(:disabled){border-color:var(--mute-ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+.btn.primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn.buy{background:var(--up);border-color:var(--up);color:var(--ink)}
+.btn.small{padding:4px 10px;font-size:.72rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.inp{background:var(--ink-2);border:1.5px solid var(--ink-3);border-radius:8px;padding:7px 10px;font:500 .78rem var(--font-mono);color:var(--paper);min-width:0}
+.inp:focus{outline:none;border-color:var(--accent)}
+.chip{display:inline-flex;align-items:center;gap:6px;font:500 .68rem var(--font-mono);border:1px solid var(--ink-3);border-radius:4px;padding:3px 9px;white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--mute-ink);display:inline-block}
+.dot.live{background:var(--up);box-shadow:0 0 0 3px color-mix(in srgb,var(--up) 25%,transparent)}
+.dot.warn{background:var(--warn)}
+.tok-icon{width:28px;height:28px;border-radius:7px;background:var(--ink-3);object-fit:cover;display:block;flex:none}
+
+/* top bar */
+.bar{position:sticky;top:0;z-index:30;display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:8px 14px;background:color-mix(in srgb,var(--ink-0) 92%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:9px;text-decoration:none}
+.brand .mark{width:24px;height:24px;display:block;color:var(--paper)}
+.brand .word{font:400 1.35rem/1 var(--serif);letter-spacing:.01em}
+.nav{display:flex;gap:2px}
+.nav a{font:500 .74rem var(--font-mono);letter-spacing:.06em;text-transform:uppercase;text-decoration:none;padding:7px 10px;border-radius:8px;color:var(--mute-ink);white-space:nowrap}
+.nav a:hover{color:var(--paper)}
+.nav a[aria-current="page"]{background:var(--ink-2);color:var(--paper)}
+.nav a.docs-link{border:1px solid var(--ink-3)}
+.nav a.x-link{display:inline-flex;align-items:center;padding:7px 9px}
+.x-link svg{width:13px;height:13px;display:block}
+.search{position:relative;max-width:460px;width:100%;justify-self:center}
+.search input{width:100%;padding:8px 12px 8px 32px;border-radius:4px}
+.search svg{position:absolute;left:11px;top:50%;width:13px;height:13px;transform:translateY(-50%);color:var(--mute-ink)}
+.search kbd{position:absolute;right:10px;top:50%;transform:translateY(-50%);font:.64rem var(--font-mono);color:var(--mute-ink);border:1px solid var(--ink-3);border-radius:4px;padding:0 5px}
+.results{position:absolute;left:0;right:0;min-width:min(380px,calc(100vw - 24px));top:calc(100% + 6px);background:var(--ink-1);border:1px solid var(--ink-3);border-radius:12px;padding:6px;list-style:none;margin:0;max-height:420px;overflow:auto;box-shadow:0 24px 48px -24px #000;z-index:40}
+.results li button{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:7px 8px;cursor:pointer}
+.results li button:hover,.results li button[aria-selected="true"]{background:var(--ink-2)}
+.results .sym{font-weight:600}
+.results .nm,.results .num{font:.68rem var(--font-mono);color:var(--mute-ink)}
+.results .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.results .num{text-align:right}
+.results .note{font:.72rem var(--font-mono);color:var(--mute-ink);padding:8px}
+.right{display:flex;gap:6px;align-items:center}
+.qb-amt{display:flex;align-items:center;gap:4px;background:var(--ink-2);border:1.5px solid var(--ink-3);border-radius:4px;padding:2px 8px 2px 10px}
+.qb-amt span{font:.74rem var(--font-mono);color:var(--accent)}
+.qb-amt span:last-child{color:var(--mute-ink)}
+.qb-amt input{width:42px;background:none;border:0;padding:5px 2px;font:600 .78rem var(--font-mono);color:var(--paper)}
+.qb-amt input:focus{outline:none}
+@media (max-width:1100px){.nav a{padding:7px 7px}.search kbd{display:none}}
+@media (max-width:1000px){.brand .word{display:none}}
+@media (max-width:860px){
+  .bar{grid-template-columns:auto minmax(0,1fr);gap:8px}
+  .right{justify-self:end}
+  .nav{grid-column:1/-1;grid-row:3;overflow-x:auto}
+  .search{grid-column:1/-1;grid-row:2;max-width:none}
+  .brand .word,.solchip{display:none}
+}
+
+/* watchlist bar */
+.watchbar{display:flex;gap:6px;align-items:center;padding:6px 14px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;min-height:36px}
+.watchbar .lab{font:.62rem var(--font-mono);letter-spacing:.12em;color:var(--mute-ink);text-transform:uppercase;flex:none}
+.watchbar a{flex:none;display:flex;align-items:center;gap:6px;text-decoration:none;font:.72rem var(--font-mono);padding:3px 9px;border-radius:4px;background:var(--ink-1);border:1px solid var(--line)}
+.watchbar a img{width:16px;height:16px;border-radius:4px}
+.watchbar .muted{font:.7rem var(--font-mono)}
+
+.view{padding:12px 14px 40px;max-width:1680px;margin-inline:auto}
+.panel{background:var(--ink-1);border:1px solid var(--line);border-radius:var(--r);min-width:0}
+.phead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border-bottom:1px solid var(--line)}
+.phead h2{margin:0;font:600 .78rem var(--font-mono);letter-spacing:.12em;text-transform:uppercase}
+.phead .grow{flex:1}
+
+/* pulse */
+.pulse-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.pulse-top h1{margin:0 6px 0 0;font:400 1.9rem/1 var(--serif)}
+.pulse-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pcol{display:flex;flex-direction:column;min-height:calc(100vh - 170px)}
+.pcol .phead .count{font:.68rem var(--font-mono);color:var(--mute-ink)}
+.pcol .paused{font:.62rem var(--font-mono);color:var(--warn);letter-spacing:.08em}
+.pcol .filters{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.pcol .filters .inp{flex:1 1 90px;padding:5px 8px;font-size:.7rem}
+.pcol .filters label{display:flex;align-items:center;gap:5px;font:.68rem var(--font-mono);color:var(--mute-ink)}
+.plist{flex:1;overflow:auto;padding:6px;display:flex;flex-direction:column;gap:5px;max-height:calc(100vh - 230px)}
+.plist .empty{font:.74rem var(--font-mono);color:var(--mute-ink);padding:18px 10px;text-align:center}
+.art-empty{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.art-empty svg{width:150px;max-width:70%;height:auto;display:block;opacity:.9}
+.tdart{padding:6px 0}
+.pcard{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px;border-radius:9px;background:var(--ink-2);border:1px solid transparent;cursor:pointer;color:inherit;text-decoration:none;position:relative}
+.pcard:hover{border-color:var(--ink-3)}
+.pcard.fresh{animation:flash 1.2s ease-out}
+@keyframes flash{from{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--ink-2))}}
+.pcard .tok-icon{width:44px;height:44px;border-radius:9px}
+.pc-top{display:flex;align-items:baseline;gap:6px;min-width:0}
+.pc-top b{font-size:.86rem;white-space:nowrap}
+.pc-top .nm{font-size:.74rem;color:var(--mute-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.pc-top .age{margin-left:auto;font:.68rem var(--font-mono);color:var(--up);flex:none}
+.pc-meta{display:flex;gap:9px;flex-wrap:wrap;font:.68rem var(--font-mono);color:var(--mute-ink);margin-top:3px}
+.pc-meta b{color:var(--paper);font-weight:500}
+.pc-meta .soc{display:flex;gap:6px}
+.pc-meta .soc a{color:var(--mute-ink);text-decoration:none}
+.pc-meta .soc a:hover{color:var(--paper)}
+.pbar{height:4px;border-radius:2px;background:var(--ink-3);margin-top:6px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--up);border-radius:2px}
+.pbar.hot i{background:var(--accent)}
+.qb{font:600 .74rem var(--font-mono);border-radius:8px;border:1px solid var(--ink-3);background:var(--ink-1);color:var(--accent);padding:6px 9px;cursor:pointer;white-space:nowrap}
+.qb:hover{border-color:var(--accent)}
+.qb:disabled{opacity:.5;cursor:wait}
+.seg.mob-cols{display:none}
+@media (max-width:1100px){.pulse-cols{grid-template-columns:minmax(0,1fr)}.pcol{min-height:0}.pcol:not(.on){display:none}.seg.mob-cols{display:inline-flex}.plist{max-height:none}}
+
+/* tables */
+table{width:100%;border-collapse:collapse;font:.76rem var(--font-mono);font-variant-numeric:tabular-nums}
+th{text-align:left;font-weight:500;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mute-ink);padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;background:var(--ink-1)}
+td{padding:7px 10px;border-bottom:1px solid var(--ink-2);white-space:nowrap}
+.num{text-align:right}
+tr.pick{cursor:pointer}
+tr.pick:hover td{background:var(--ink-2)}
+.tscroll{overflow-x:auto}
+.cell-tok{display:flex;gap:8px;align-items:center}
+.cell-tok .tok-icon{width:22px;height:22px;border-radius:5px}
+.seg{display:inline-flex;background:var(--ink-2);border-radius:4px;padding:3px;gap:2px}
+.seg button{border:0;background:none;border-radius:4px;padding:5px 11px;font:500 .72rem var(--font-mono);cursor:pointer;color:var(--mute-ink)}
+.seg button[aria-pressed="true"]{background:var(--paper);color:var(--ink)}
+.tdempty{padding:18px 12px;font:.74rem var(--font-mono);color:var(--mute-ink)}
+
+/* token page */
+.tokview{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:10px}
+.tok-main{display:flex;flex-direction:column;gap:10px;min-width:0}
+.tok-side{display:flex;flex-direction:column;gap:10px;min-width:0}
+@media (max-width:1000px){.tokview{display:flex;flex-direction:column}.tok-main,.tok-side{display:contents}.tok-main>.panel:first-child{order:1}.tok-side>.trade{order:2}.tok-side>.orders{order:3}.tok-main>.panel:nth-child(2){order:4}.tok-side>.audit{order:5}.chart{height:320px}}
+.tok-head{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;padding:12px 14px}
+.tok-id{display:flex;gap:10px;align-items:center;min-width:0}
+.tok-id .tok-icon{width:40px;height:40px;border-radius:9px}
+.tok-id h1{margin:0;font-size:1.1rem;line-height:1.15;display:flex;gap:8px;align-items:center}
+.tok-id .sub{font:.68rem var(--font-mono);color:var(--mute-ink);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tok-id .sub button{background:none;border:0;padding:0;cursor:pointer;color:var(--mute-ink);font:inherit}
+.tok-id .sub button:hover,.tok-id .sub a:hover{color:var(--paper)}
+.tok-id .sub a{text-decoration:none}
+.star{background:none;border:0;cursor:pointer;font-size:1rem;color:var(--mute-ink);padding:0}
+.star[aria-pressed="true"]{color:var(--warn)}
+.stats{display:flex;flex-wrap:wrap;gap:6px 18px;margin-left:auto}
+.stat{display:flex;flex-direction:column}
+.stat .k{font:.58rem var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mute-ink)}
+.stat .v{font:500 .86rem var(--font-mono);font-variant-numeric:tabular-nums}
+.chart{position:relative;height:clamp(300px,50vh,560px);overflow:hidden;border-top:1px solid var(--line)}
+.chart iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.chart .empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;font:.76rem var(--font-mono);color:var(--mute-ink);padding:20px;background-image:repeating-linear-gradient(0deg,color-mix(in srgb,var(--ink-3) 70%,transparent) 0 1px,transparent 1px 11px)}
+.curvebar{padding:10px 14px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;font:.7rem var(--font-mono)}
+.curvebar .pbar{flex:1;margin:0;height:6px}
+.tablist{display:flex;gap:2px;padding:6px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tablist button{flex:none;font:500 .7rem var(--font-mono);letter-spacing:.08em;text-transform:uppercase;background:none;border:0;border-radius:7px;padding:6px 11px;color:var(--mute-ink);cursor:pointer}
+.tablist button[aria-selected="true"]{background:var(--ink-3);color:var(--paper)}
+.tabpanel{min-height:160px;max-height:440px;overflow:auto}
+tr.trade-buy td.side{color:var(--up)}
+tr.trade-sell td.side{color:var(--down)}
+tr.mine td{background:color-mix(in srgb,var(--warn) 9%,transparent)}
+tr.newrow td{animation:rowflash 1s ease-out}
+@keyframes rowflash{from{background:color-mix(in srgb,var(--paper) 10%,transparent)}}
+.audit{padding:12px 14px;display:grid;gap:7px;font:.74rem var(--font-mono)}
+.audit .row{display:flex;justify-content:space-between;gap:10px}
+.audit .row .k{color:var(--mute-ink)}
+.audit h3{margin:0 0 2px;font:600 .82rem var(--font-display)}
+.audit p{margin:0;color:var(--mute-ink);font-size:.68rem;line-height:1.5;overflow-wrap:anywhere}
+
+/* trade panel */
+.trade{padding:12px;display:flex;flex-direction:column;gap:10px}
+.trade>.seg{display:grid;grid-template-columns:1fr 1fr;width:100%}
+.trade>.seg button{padding:8px;font:600 .84rem var(--font-display)}
+.trade>.seg button.b[aria-pressed="true"]{background:var(--up);color:var(--ink)}
+.trade>.seg button.s[aria-pressed="true"]{background:var(--down);color:var(--ink)}
+.from{display:flex;justify-content:space-between;align-items:center;gap:8px;font:.7rem var(--font-mono);color:var(--mute-ink)}
+.from .seg button{padding:4px 9px;font:500 .68rem var(--font-mono)}
+.amount{display:flex;align-items:center;background:var(--ink-2);border:1.5px solid var(--ink-3);border-radius:10px;padding:2px 12px}
+.amount:focus-within{border-color:var(--accent)}
+.amount input{flex:1;min-width:0;background:none;border:0;font:600 1.25rem var(--font-mono);padding:8px 0}
+.amount input:focus{outline:none}
+.amount .unit{font:600 .76rem var(--font-mono);color:var(--mute-ink)}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.quick button{font:500 .72rem var(--font-mono);background:var(--ink-2);border:1px solid var(--ink-3);border-radius:7px;padding:6px 2px;cursor:pointer}
+.quick button:hover{border-color:var(--mute-ink)}
+.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.presets button{font:500 .64rem var(--font-mono);background:var(--ink-2);border:1px solid var(--ink-3);border-radius:7px;padding:5px 2px;cursor:pointer;color:var(--mute-ink);line-height:1.3}
+.presets button b{display:block;color:var(--paper);font-size:.72rem}
+.presets button[aria-pressed="true"]{border-color:var(--paper)}
+.stealth-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;border-radius:6px;border:1px dashed var(--ink-3);background:var(--ink-1)}
+.stealth-toggle b{display:block;font-size:.8rem}
+.stealth-toggle span{font:.64rem var(--font-mono);color:var(--mute-ink)}
+.stealth-toggle.on{border-color:color-mix(in srgb,var(--accent) 70%,transparent);border-style:solid;background:color-mix(in srgb,var(--accent) 6%,var(--ink-1))}
+.switch{width:36px;height:20px;border-radius:3px;background:var(--ink-3);position:relative;flex:none;border:0;cursor:pointer}
+.switch::after{content:"";position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:2px;background:var(--mute-ink);transition:transform .15s}
+.switch[aria-checked="true"]{background:var(--accent)}
+.switch[aria-checked="true"]::after{transform:translateX(16px);background:var(--ink)}
+.switch:disabled{cursor:not-allowed;opacity:.5}
+.tag{font:500 .56rem var(--font-mono);letter-spacing:.12em;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:2px}
+.quote{display:grid;gap:4px;padding:8px 10px;background:var(--ink-2);border-radius:10px;font:.72rem var(--font-mono)}
+.quote .row{display:flex;justify-content:space-between;gap:10px}
+.quote .row .k{color:var(--mute-ink)}
+.go{width:100%;padding:12px;font-size:.92rem}
+.status{margin:0;font:.7rem var(--font-mono);color:var(--mute-ink);min-height:1.2em;overflow-wrap:anywhere}
+.status.err{color:var(--down)}.status.ok{color:var(--up)}
+.gsteps{margin:0;padding:0 0 0 18px;display:grid;gap:3px;font:.68rem var(--font-mono);color:var(--mute-ink)}
+.gsteps li.active{color:var(--paper)}.gsteps li.done{color:var(--up)}
+.fine{margin:0;font:.62rem var(--font-mono);color:var(--mute);line-height:1.5}
+
+/* orders */
+.orders .opanel{padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.orders .two-seg{display:grid;grid-template-columns:1fr 1fr;width:100%}
+.orders .olab{font:.66rem var(--font-mono);color:var(--mute-ink);display:flex;justify-content:space-between;gap:6px}
+.amount.sm input{font-size:1rem;padding:6px 0}
+.orders select.inp{padding:4px 8px;font-size:.7rem}
+.arow{display:flex;align-items:center;gap:5px;font:.7rem var(--font-mono);color:var(--mute-ink)}
+.arow span:first-child{min-width:3.6em}
+.arow .inp{width:46px;padding:4px 6px;font-size:.72rem}
+.arow .btn{margin-left:auto}
+.olist{display:grid;gap:4px}
+.orow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;background:var(--ink-2);border-radius:8px;padding:7px 9px;font:.7rem var(--font-mono)}
+.orow .muted{font-size:.64rem}
+.pcard .snipe{font:600 .7rem var(--font-mono);border-radius:8px;border:1px solid var(--ink-3);background:var(--ink-1);color:var(--mute-ink);padding:6px 7px;cursor:pointer;margin-right:4px}
+.pcard .snipe[aria-pressed="true"]{border-color:var(--warn);color:var(--warn)}
+.pc-acts{display:flex;align-items:center}
+.post{display:grid;grid-template-columns:32px minmax(0,1fr);gap:10px;padding:10px 14px;border-bottom:1px solid var(--ink-2);font-size:.8rem}
+.post img{width:32px;height:32px;border-radius:50%;background:var(--ink-3)}
+.post .who{font:.7rem var(--font-mono);color:var(--mute-ink)}
+.post .who b{color:var(--paper)}
+.post p{margin:3px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+#autochip{cursor:pointer;background:none;color:var(--paper)}
+#autochip.paused{border-color:var(--warn);color:var(--warn)}
+
+/* tracker / portfolio */
+.two{display:grid;grid-template-columns:320px minmax(0,1fr);gap:10px;align-items:start}
+@media (max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}
+.wl{list-style:none;margin:0;padding:6px;display:grid;gap:4px}
+.wl:empty{display:none}
+.wl li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px;border-radius:8px;background:var(--ink-2);font:.72rem var(--font-mono);overflow-wrap:anywhere}
+.wl li .lab{font:600 .82rem var(--font-display)}
+.wl li button{background:none;border:0;color:var(--mute-ink);cursor:pointer}
+.form{display:grid;gap:6px;padding:10px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:10px}
+.card{padding:12px 14px}
+.card .k{font:.6rem var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mute-ink)}
+.card .v{font:600 1.15rem var(--font-mono);margin-top:3px}
+.stealth-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--ink-2);border-radius:9px;padding:9px 12px;font:.72rem var(--font-mono);overflow-wrap:anywhere}
+.stealth-row .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+#g-list>.muted,#x-list .muted{font-size:.72rem}
+.keybox{grid-column:1/-1;font:.66rem var(--font-mono);background:var(--ink-0);border:1px dashed var(--accent);border-radius:8px;padding:8px;overflow-wrap:anywhere}
+
+/* modal + toasts */
+dialog{background:var(--ink-1);color:var(--paper);border:1px solid var(--ink-3);border-radius:14px;padding:0;width:min(560px,calc(100vw - 24px));max-height:calc(100vh - 40px)}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+.mhead{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.mhead h2{margin:0;font:400 1.5rem/1.1 var(--serif)}
+.mbody{padding:14px 16px;display:grid;gap:14px;overflow:auto;max-height:calc(100vh - 120px)}
+.mbody h3{margin:0;font-size:.84rem}
+.mbody .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.mbody label{display:grid;gap:4px;font:.66rem var(--font-mono);color:var(--mute-ink);letter-spacing:.04em}
+.box{background:var(--ink-2);border-radius:10px;padding:12px;display:grid;gap:8px}
+.box .row{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;font:.74rem var(--font-mono)}
+.box p{margin:0;font:.68rem var(--font-mono);color:var(--mute-ink);line-height:1.5}
+.toasts{position:fixed;right:14px;bottom:14px;display:grid;gap:8px;z-index:60;max-width:min(380px,calc(100vw - 28px));pointer-events:none}
+.toasts a{pointer-events:auto}
+.toast{background:var(--ink-2);border:1px solid var(--ink-3);border-left:3px solid var(--mute-ink);border-radius:10px;padding:10px 12px;font:.74rem var(--font-mono);box-shadow:0 16px 32px -16px #000;overflow-wrap:anywhere}
+.toast.ok{border-left-color:var(--up)}.toast.err{border-left-color:var(--down)}.toast.info{border-left-color:var(--warn)}
+.toast a{color:var(--mute-ink)}
+@media (prefers-reduced-motion:reduce){.pcard.fresh,tr.newrow td,.chart .empty{animation:none}.btn,.switch::after{transition:none}}
+
+/* visual pass: softer surfaces, avatars with curve rings, icon links, tiles and meters instead of walls of numbers */
+.panel{border-radius:8px}
+.phead h2{display:flex;align-items:center;gap:8px}
+.phead h2 svg.colg{width:15px;height:15px;color:var(--accent)}
+.ico{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.plist{gap:7px;padding:8px}
+.pcard{grid-template-columns:auto minmax(0,1fr) auto;gap:12px;padding:10px 12px;border-radius:12px;transition:border-color .15s,transform .15s,background .15s}
+.pcard:hover{border-color:var(--ink-3);background:color-mix(in srgb,var(--paper) 3%,var(--ink-2));transform:translateY(-1px)}
+.av{--p:0;position:relative;width:54px;height:54px;border-radius:50%;padding:3px;background:var(--ink-3);flex:none}
+.av.ring{background:conic-gradient(var(--up) calc(var(--p) * 1%),var(--ink-3) 0)}
+.av.ring.hot{background:conic-gradient(var(--accent) calc(var(--p) * 1%),var(--ink-3) 0)}
+.av.grad{background:var(--warn)}
+.av .tok-icon,.pcard .av .tok-icon{width:100%;height:100%;border-radius:50%;border:2px solid var(--ink-2);object-fit:cover;background:var(--ink-1);image-rendering:auto}
+.av-badge{position:absolute;right:-3px;bottom:-3px;width:18px;height:18px;border-radius:50%;background:var(--warn);color:var(--ink);font:700 .6rem/15px var(--font-mono);text-align:center;border:2px solid var(--ink-2)}
+.av.big{width:66px;height:66px}
+.av.big .tok-icon{border-color:var(--ink-1)}
+.av.big .av-badge{border-color:var(--ink-1)}
+.pc-main{min-width:0}
+.pc-top{align-items:center}
+.pc-top b{font-size:.94rem;letter-spacing:-.01em}
+.pc-top .nm{font-size:.76rem}
+.pc-top .age{font:500 .64rem var(--font-mono);color:var(--mute-ink);background:var(--ink-1);border-radius:4px;padding:2px 7px}
+.pc-top .age.new{color:var(--up)}
+.pc-stats{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.pc-stats .mc{font:600 .82rem var(--font-mono);margin-right:3px}
+.pc-stats .st{display:inline-flex;align-items:center;gap:4px;font:.66rem var(--font-mono);color:var(--mute-ink);background:var(--ink-1);border-radius:6px;padding:2px 6px}
+.pc-stats .st b{color:var(--paper);font-weight:500}
+.pc-stats .st.warn,.pc-stats .st.warn b{color:var(--warn)}
+.pc-stats .curve{font:600 .66rem var(--font-mono);color:var(--up)}
+.pc-stats .curve.hot{color:var(--accent)}
+.pc-links{display:flex;gap:4px;margin-top:7px;flex-wrap:wrap}
+.lk{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:24px;min-width:24px;padding:0 6px;border-radius:7px;background:var(--ink-1);border:1px solid var(--line);color:var(--mute-ink);text-decoration:none;cursor:pointer;font:500 .7rem var(--font-mono);transition:color .12s,border-color .12s,background .12s}
+.lk:hover{color:var(--paper);border-color:var(--ink-3);background:var(--ink-3)}
+.lk.soc{color:var(--paper)}
+.lk-tg:hover{color:#2AABEE}.lk-web:hover{color:var(--up)}.lk-pump:hover{color:#86EFAC}.lk-stonk:hover{color:#4FD18B}.lk-dex:hover,.lk-eye:hover,.lk-scan:hover,.lk-search:hover{color:var(--warn)}
+.lk.done{color:var(--up);border-color:var(--up)}
+.pc-acts{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.qb{padding:8px 11px;border-radius:9px;background:color-mix(in srgb,var(--accent) 12%,var(--ink-1));border-color:color-mix(in srgb,var(--accent) 35%,var(--ink-3))}
+.pcard .snipe{margin:0;padding:5px 7px;text-align:center}
+@media (max-width:520px){.pcard{grid-template-columns:auto minmax(0,1fr);}.pc-acts{grid-column:1/-1;flex-direction:row}.pc-acts .qb{flex:1}.av{width:48px;height:48px}}
+
+/* token page */
+.tok-head{justify-content:space-between;padding:14px 16px 10px}
+.tok-id{gap:14px}
+.tok-titles{min-width:0}
+.tok-titles h1{font:400 1.9rem/1.05 var(--serif);display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin:0}
+.tok-titles .tname{font:400 .84rem var(--font-display);color:var(--mute-ink)}
+.tok-titles .sub{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:7px}
+.pill{font:500 .66rem var(--font-mono);background:var(--ink-2);border-radius:4px;padding:4px 10px;color:var(--mute-ink)}
+.curvepill{color:var(--up)}
+.links{display:flex;flex-wrap:wrap;gap:6px}
+.links .lk{height:30px;padding:0 10px;font-size:.72rem;border-radius:9px}
+.links .lk .ico,.sub .lk .ico{width:13px;height:13px}
+.sub .lk{height:26px;padding:0 9px;border-radius:4px}
+.tdesc{margin:0;padding:0 16px 12px;color:var(--mute-ink);font-size:.82rem;line-height:1.55;max-width:96ch;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.tiles{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;padding:0 16px 14px}
+.tile{background:var(--ink-2);border-radius:10px;padding:8px 11px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.tile .k{font:.58rem var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mute-ink)}
+.tile .v{font:600 .92rem var(--font-mono);font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile.chg:has(.up){background:color-mix(in srgb,var(--up) 13%,var(--ink-2))}
+.tile.chg:has(.down){background:color-mix(in srgb,var(--down) 12%,var(--ink-2))}
+@media (max-width:1300px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:560px){.tiles{grid-template-columns:repeat(6,minmax(0,1fr));padding:0 12px 12px}.tile{grid-column:span 3}.tile.chg{grid-column:span 2}.tok-head{padding:12px}.links .lk span{display:none}.links .lk{width:32px;padding:0}}
+.audit{gap:10px}
+.badges{display:flex;gap:6px;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:5px;font:500 .68rem var(--font-mono);border-radius:4px;padding:4px 10px;background:var(--ink-2);color:var(--mute-ink)}
+.badge.ok{color:var(--up);background:color-mix(in srgb,var(--up) 12%,var(--ink-2))}
+.badge.bad{color:var(--down);background:color-mix(in srgb,var(--down) 12%,var(--ink-2))}
+.meter{display:grid;gap:5px}
+.meter .mrow{display:flex;justify-content:space-between;gap:10px}
+.meter .mrow .k{color:var(--mute-ink)}
+.mbar{height:6px;border-radius:3px;background:var(--ink-3);overflow:hidden}
+.mbar i{display:block;height:100%;background:var(--up);border-radius:3px;transition:width .4s}
+.mbar i.warn{background:var(--warn)}
+
+/* lists and portfolio */
+.cell-tok .tok-icon,.results .tok-icon,.watchbar a img{border-radius:50%}
+.card{display:flex;gap:12px;align-items:center}
+.card .cg{width:26px;height:26px;color:var(--mute-ink);flex:none}
+.alloc{grid-column:1/-1;padding:12px 14px;display:grid;gap:9px}
+.alloc>.k{font:.6rem var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mute-ink)}
+.abar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--ink-3);gap:2px}
+.abar i{display:block;height:100%;min-width:2px}
+.alegend{display:flex;flex-wrap:wrap;gap:6px 16px}
+.ali{display:inline-flex;align-items:center;gap:6px;font:.7rem var(--font-mono)}
+.ali>i{width:8px;height:8px;border-radius:2px;flex:none}
+.ali .tok-icon{width:16px;height:16px;border-radius:50%}
+td.pnl .pb{display:block;height:3px;border-radius:2px;margin:4px 0 0 auto;opacity:.85}
+.pb.pos{background:var(--up)}.pb.neg{background:var(--down)}
+@media (prefers-reduced-motion:reduce){.pcard,.lk,.mbar i{transition:none}.pcard:hover{transform:none}}
+
+/* Lacuna desk finish: hairline rules, brass for the selected state, an engraved backdrop behind the views */
+body{background:var(--ink-0) radial-gradient(1200px 500px at 70% -10%,color-mix(in srgb,var(--accent) 5%,transparent),transparent 70%) no-repeat}
+.bar{background:color-mix(in srgb,var(--ink-0) 90%,transparent)}
+.nav a[aria-current="page"]{background:none;color:var(--paper);box-shadow:inset 0 -2px 0 var(--accent);border-radius:0}
+.nav a.docs-link{border-color:var(--line)}
+.btn{border-width:1px}
+.btn.primary{color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink-3);color:var(--paper);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 45%,transparent)}
+.trade>.seg button.b[aria-pressed="true"]{box-shadow:none}
+.trade>.seg button.s[aria-pressed="true"]{box-shadow:none}
+.tablist button[aria-selected="true"]{background:none;color:var(--paper);box-shadow:inset 0 -2px 0 var(--accent);border-radius:0}
+.pcard{background:var(--ink-1);border-color:var(--line)}
+.pcard:hover{border-color:color-mix(in srgb,var(--accent) 40%,var(--line));background:var(--ink-2)}
+@keyframes flash{from{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--ink-2))}}
+.qb{color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--ink-1));border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
+.tile,.quote,.box{border:1px solid var(--line)}
+.tile .v,.card .v{font-weight:500}
+.card .v{font:400 1.45rem/1.1 var(--serif)}
+.presets button[aria-pressed="true"]{border-color:var(--accent);color:var(--paper)}
+.toast{border-radius:6px}
+dialog{border-radius:10px}
+th{background:var(--ink-1)}
+.keybox{border-color:var(--accent)}
+</style>
+</head>
+<body>
+<header class="bar">
+  <a class="brand" href="./" aria-label="Lacuna home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
+  <nav class="nav" aria-label="Terminal">
+    <a href="#/" data-route="pulse">Pulse</a>
+    <a href="#/trending" data-route="trending">Trending</a>
+    <a href="#/tracker" data-route="tracker">Tracker</a>
+    <a href="#/portfolio" data-route="portfolio">Portfolio</a>
+    <a href="./docs.html" class="docs-link">Docs</a>
+  </nav>
+  <div class="search">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    <label class="sr" for="q">Search tokens</label>
+    <input class="inp" id="q" placeholder="Search token or paste mint" autocomplete="off" spellcheck="false" role="combobox" aria-controls="results" aria-expanded="false">
+    <kbd>/</kbd>
+    <ul class="results" id="results" role="listbox" hidden></ul>
+  </div>
+  <div class="right">
+    <button class="chip" id="autochip" type="button" hidden></button>
+    <span class="chip solchip" id="solprice" title="SOL price">SOL —</span>
+    <label class="qb-amt" title="Quick-buy amount for ⚡ buttons"><span>⚡</span><input id="qbamt" inputmode="decimal" aria-label="Quick-buy amount in SOL"><span>SOL</span></label>
+    <button class="btn" id="walletbtn" type="button">Connect</button>
+    <button class="btn" id="settingsbtn" type="button" aria-label="Settings">⚙</button>
+  </div>
+</header>
+<div class="watchbar" id="watchbar"></div>
+
+<main>
+  <section class="view" id="v-pulse" hidden>
+    <div class="pulse-top">
+      <h1>Pulse</h1>
+      <span class="chip" id="pp-status"><span class="dot"></span>pump.fun stream</span>
+      <span class="chip" id="sf-status"><span class="dot"></span>stonk.fun</span>
+      <span class="chip" id="curve-status"><span class="dot"></span>curves</span>
+      <span class="muted mono" style="font-size:.7rem">Hover a column to pause it · ⚡ buys with your quick-buy amount</span>
+      <div class="seg mob-cols" id="mobcols" role="group" aria-label="Column">
+        <button type="button" data-col="new" aria-pressed="true">New</button>
+        <button type="button" data-col="final" aria-pressed="false">Final stretch</button>
+        <button type="button" data-col="migrated" aria-pressed="false">Migrated</button>
+      </div>
+    </div>
+    <div class="pulse-cols">
+      <div class="panel pcol on" data-col="new"><div class="phead"><h2><span data-glyph="flame" class="colg"></span>New Pairs</h2><span class="count"></span><span class="grow"></span><span class="paused" hidden>PAUSED</span></div>
+        <div class="filters"><input class="inp" data-f="q" placeholder="Filter name" aria-label="Filter New Pairs by name"><input class="inp" data-f="minMcap" placeholder="Min MC $" inputmode="numeric" aria-label="Minimum market cap"><label><input type="checkbox" data-f="socials">Socials</label></div><div class="plist"></div></div>
+      <div class="panel pcol" data-col="final"><div class="phead"><h2><span data-glyph="stairs" class="colg"></span>Final Stretch</h2><span class="count"></span><span class="grow"></span><span class="paused" hidden>PAUSED</span></div>
+        <div class="filters"><input class="inp" data-f="q" placeholder="Filter name" aria-label="Filter Final Stretch by name"><input class="inp" data-f="minMcap" placeholder="Min MC $" inputmode="numeric" aria-label="Minimum market cap"><label><input type="checkbox" data-f="socials">Socials</label></div><div class="plist"></div></div>
+      <div class="panel pcol" data-col="migrated"><div class="phead"><h2><span data-glyph="route" class="colg"></span>Migrated</h2><span class="count"></span><span class="grow"></span><span class="paused" hidden>PAUSED</span></div>
+        <div class="filters"><input class="inp" data-f="q" placeholder="Filter name" aria-label="Filter Migrated by name"><input class="inp" data-f="minMcap" placeholder="Min MC $" inputmode="numeric" aria-label="Minimum market cap"><label><input type="checkbox" data-f="socials">Socials</label></div><div class="plist"></div></div>
+    </div>
+  </section>
+
+  <section class="view" id="v-trending" hidden>
+    <div class="panel">
+      <div class="phead"><h2>Trending</h2>
+        <div class="seg" id="tr-cat" role="group" aria-label="List"><button type="button" data-v="toptrending" aria-pressed="true">Trending</button><button type="button" data-v="toptraded" aria-pressed="false">Most traded</button><button type="button" data-v="toporganicscore" aria-pressed="false">Organic</button><button type="button" data-v="recent" aria-pressed="false">New pools</button></div>
+        <div class="seg" id="tr-int" role="group" aria-label="Interval"><button type="button" data-v="5m" aria-pressed="false">5m</button><button type="button" data-v="1h" aria-pressed="true">1h</button><button type="button" data-v="6h" aria-pressed="false">6h</button><button type="button" data-v="24h" aria-pressed="false">24h</button></div>
+        <span class="grow"></span><span class="muted mono" id="tr-note" style="font-size:.68rem"></span>
+      </div>
+      <div class="tscroll"><table id="tr-table"></table></div>
+    </div>
+  </section>
+
+  <section class="view tokview" id="v-token" hidden>
+    <div class="tok-main">
+      <div class="panel">
+        <div class="tok-head">
+          <div class="tok-id">
+            <div class="av big" id="t-av"><img class="tok-icon" id="t-icon" alt=""><span class="av-badge" hidden></span></div>
+            <div class="tok-titles">
+              <h1><span id="t-sym">—</span><span class="tname" id="t-name"></span><button class="star" id="t-star" type="button" aria-pressed="false" aria-label="Add to watchlist">★</button></h1>
+              <div class="sub"><span id="t-ca"></span><span class="pill" id="t-age" hidden></span><span class="pill curvepill" id="t-curve" hidden></span></div>
+            </div>
+          </div>
+          <div class="links" id="t-links"></div>
+        </div>
+        <p class="tdesc" id="t-desc" hidden></p>
+        <div class="tiles">
+          <div class="tile"><span class="k">Price</span><span class="v" id="s-price">—</span></div>
+          <div class="tile"><span class="k">Market cap</span><span class="v" id="s-mcap">—</span></div>
+          <div class="tile"><span class="k">Liquidity</span><span class="v" id="s-liq">—</span></div>
+          <div class="tile"><span class="k">Vol 24h</span><span class="v" id="s-vol">—</span></div>
+          <div class="tile chg"><span class="k">5m</span><span class="v" id="s-c5">—</span></div>
+          <div class="tile chg"><span class="k">1h</span><span class="v" id="s-c1">—</span></div>
+          <div class="tile chg"><span class="k">24h</span><span class="v" id="s-c24">—</span></div>
+        </div>
+        <div class="chart" id="chart"><div class="empty">Loading chart…</div></div>
+        <div class="curvebar" id="curvebar" hidden><span>Bonding curve</span><div class="pbar"><i></i></div><span id="curvepct"></span></div>
+      </div>
+      <div class="panel">
+        <div class="tablist" role="tablist" aria-label="Token data">
+          <button role="tab" type="button" aria-selected="true" aria-controls="tp-trades" id="tt-trades">Trades</button>
+          <button role="tab" type="button" aria-selected="false" aria-controls="tp-holders" id="tt-holders">Holders</button>
+          <button role="tab" type="button" aria-selected="false" aria-controls="tp-mine" id="tt-mine">My trades</button>
+          <button role="tab" type="button" aria-selected="false" aria-controls="tp-posts" id="tt-posts">Posts</button>
+        </div>
+        <div class="tabpanel" role="tabpanel" id="tp-trades" aria-labelledby="tt-trades"></div>
+        <div class="tabpanel" role="tabpanel" id="tp-holders" aria-labelledby="tt-holders" hidden></div>
+        <div class="tabpanel" role="tabpanel" id="tp-mine" aria-labelledby="tt-mine" hidden></div>
+        <div class="tabpanel" role="tabpanel" id="tp-posts" aria-labelledby="tt-posts" hidden></div>
+      </div>
+    </div>
+    <aside class="tok-side">
+      <div class="panel trade" aria-label="Trade">
+        <div class="seg" role="group" aria-label="Side"><button type="button" class="b" id="side-buy" aria-pressed="true">Buy</button><button type="button" class="s" id="side-sell" aria-pressed="false">Sell</button></div>
+        <div class="from"><span>Trade from</span><div class="seg" id="fromseg" role="group" aria-label="Trading wallet"><button type="button" data-w="main" aria-pressed="true">Main</button><button type="button" data-w="instant" aria-pressed="false">⚡ Instant</button></div></div>
+        <div class="from"><label for="amt" id="amt-label">Amount</label><button type="button" class="btn small" id="bal">Bal —</button></div>
+        <div class="amount"><input id="amt" inputmode="decimal" placeholder="0.0" autocomplete="off"><span class="unit" id="amt-unit">SOL</span></div>
+        <div class="quick" id="quick"></div>
+        <div class="presets" id="presets" role="group" aria-label="Trade presets"></div>
+        <div class="stealth-toggle" id="stealth-box">
+          <div><b>Private mode<span class="tag">BETA</span></b><span id="stealth-sub">Buy from a fresh wallet via NEAR Intents</span></div>
+          <button class="switch" id="stealth-switch" type="button" role="switch" aria-checked="false" aria-label="Private mode"></button>
+        </div>
+        <ol class="gsteps" id="gsteps" hidden><li>Fund the route from your wallet</li><li>NEAR Intents pays a fresh stealth wallet</li><li>Stealth wallet buys</li></ol>
+        <div class="quote" id="quote" hidden></div>
+        <button class="btn primary go" id="go" type="button">Connect wallet</button>
+        <p class="status" id="status" aria-live="polite"></p>
+        <p class="fine" id="fine"></p>
+      </div>
+      <div class="panel orders" id="orders">
+        <div class="tablist" role="tablist" aria-label="Orders">
+          <button role="tab" type="button" aria-selected="true" aria-controls="op-limit" id="ot-limit">Limit</button>
+          <button role="tab" type="button" aria-selected="false" aria-controls="op-auto" id="ot-auto">Auto TP/SL</button>
+        </div>
+        <div role="tabpanel" id="op-limit" aria-labelledby="ot-limit" class="opanel">
+          <div class="seg two-seg" id="lo-side" role="group" aria-label="Limit side"><button type="button" data-v="buy" aria-pressed="true">Buy below</button><button type="button" data-v="sell" aria-pressed="false">Sell above</button></div>
+          <label class="olab" for="lo-price">Target price (USD) <span id="lo-mc" class="muted"></span></label>
+          <div class="amount sm"><input id="lo-price" inputmode="decimal" placeholder="0.00" autocomplete="off"><span class="unit">USD</span></div>
+          <div class="quick" id="lo-steps"></div>
+          <label class="olab" for="lo-amt" id="lo-amt-label">Spend (SOL)</label>
+          <div class="amount sm"><input id="lo-amt" inputmode="decimal" placeholder="0.0" autocomplete="off"><span class="unit" id="lo-unit">SOL</span></div>
+          <div class="from"><span>Expires</span><select class="inp" id="lo-exp" aria-label="Expiry"><option value="0">Never</option><option value="3600">1 hour</option><option value="86400" selected>24 hours</option><option value="604800">7 days</option></select></div>
+          <button class="btn primary" id="lo-go" type="button">Place limit order</button>
+          <p class="fine">Placed on-chain through Jupiter and filled by its keepers, even with this tab closed.</p>
+          <div class="olist" id="lo-list"></div>
+        </div>
+        <div role="tabpanel" id="op-auto" aria-labelledby="ot-auto" class="opanel" hidden>
+          <div class="arow"><span title="Take profit">TP +</span><input class="inp" id="ap-tp" inputmode="decimal" value="100" aria-label="Take profit percent"><span>% sell</span><input class="inp" id="ap-tp-sell" inputmode="numeric" value="50" aria-label="Take profit sell percent"><span>%</span><button class="btn small" type="button" data-add="tp">Add</button></div>
+          <div class="arow"><span title="Stop loss">SL −</span><input class="inp" id="ap-sl" inputmode="decimal" value="30" aria-label="Stop loss percent"><span>% sell</span><input class="inp" id="ap-sl-sell" inputmode="numeric" value="100" aria-label="Stop loss sell percent"><span>%</span><button class="btn small" type="button" data-add="sl">Add</button></div>
+          <div class="arow"><span title="Trailing stop: sells when price falls this far below its peak">Trail −</span><input class="inp" id="ap-tr" inputmode="decimal" value="20" aria-label="Trailing stop percent"><span>% sell</span><input class="inp" id="ap-tr-sell" inputmode="numeric" value="100" aria-label="Trailing stop sell percent"><span>%</span><button class="btn small" type="button" data-add="trail">Add</button></div>
+          <p class="fine">Autopilot sells from your ⚡ Instant wallet while this terminal is open. Entry is the current price when you add a rule.</p>
+          <div class="olist" id="ap-list"></div>
+        </div>
+      </div>
+      <div class="panel audit" id="audit"><h3>Token info</h3><span class="muted">Loading…</span></div>
+    </aside>
+  </section>
+
+  <section class="view two" id="v-tracker" hidden>
+    <div class="panel">
+      <div class="phead"><h2>Tracked wallets</h2></div>
+      <form class="form" id="tk-form" autocomplete="off">
+        <input class="inp" id="tk-addr" placeholder="Wallet address" spellcheck="false" aria-label="Wallet address to track">
+        <div style="display:flex;gap:6px"><input class="inp" id="tk-label" placeholder="Label, e.g. Whale 1" style="flex:1" aria-label="Label"><button class="btn primary" type="submit">Track</button></div>
+      </form>
+      <ul class="wl" id="tk-list"></ul>
+    </div>
+    <div class="panel">
+      <div class="phead"><h2>Live trades</h2><span class="chip" id="tk-status"><span class="dot"></span>idle</span><span class="grow"></span><span class="muted mono" style="font-size:.68rem">Checks each wallet every 20s through your RPC</span></div>
+      <div class="tscroll"><table id="tk-feed"></table></div>
+    </div>
+  </section>
+
+  <section class="view" id="v-portfolio" hidden>
+    <div class="cards" id="pf-cards"></div>
+    <div class="panel" style="margin-bottom:10px">
+      <div class="phead"><h2>Positions</h2><div class="seg" id="pf-wallet" role="group" aria-label="Wallet"><button type="button" data-w="main" aria-pressed="true">Main</button><button type="button" data-w="instant" aria-pressed="false">⚡ Instant</button></div><span class="grow"></span><span class="muted mono" style="font-size:.66rem">PnL counts trades made in this terminal, at average cost and current prices</span></div>
+      <div class="tscroll"><table id="pf-table"></table></div>
+    </div>
+    <div class="panel" style="margin-bottom:10px">
+      <div class="phead"><h2>Orders</h2><span class="grow"></span><span class="muted mono" style="font-size:.66rem">Limit orders live on-chain · autopilot and snipes run while the terminal is open</span></div>
+      <div class="tscroll"><table id="pf-orders"></table></div>
+    </div>
+    <div class="panel" style="margin-bottom:10px">
+      <div class="phead"><h2>Stealth wallets</h2><span class="grow"></span><button class="btn small" id="g-unlock" type="button">Unlock stealth wallets</button></div>
+      <div style="padding:10px;display:grid;gap:8px" id="g-list"><span class="muted mono" style="font-size:.72rem">Stealth wallets are rebuilt from one signature of your wallet. Unlock to see them.</span></div>
+    </div>
+    <div class="panel" style="margin-bottom:10px">
+      <div class="phead"><h2>Trail audit</h2><span class="muted mono" id="x-grade" style="font-size:.7rem">What trackers can link to your main wallet</span><span class="grow"></span><span class="mono" id="x-score" style="font-weight:700">—</span><button class="btn small" id="x-run" type="button">Trace my wallet</button></div>
+      <ul class="wl" id="x-list"></ul>
+    </div>
+    <div class="panel">
+      <div class="phead"><h2>Activity</h2><span class="grow"></span><span class="muted mono" id="imp-note" style="font-size:.66rem"></span><button class="btn small" id="imp-go" type="button">Import on-chain history</button></div>
+      <div class="tscroll"><table id="pf-act"></table></div>
+    </div>
+  </section>
+</main>
+
+<dialog id="modal" aria-labelledby="m-title"><div class="mhead"><h2 id="m-title"></h2><button class="btn small" id="m-close" type="button">Close</button></div><div class="mbody" id="m-body"></div></dialog>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script src="./vendor/solana-web3.min.js"></script>
+<script type="module" src="./terminal.js"></script>
+</body>
+</html>

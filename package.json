@@ -1,0 +1,13 @@
+{
+  "name": "lacuna",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "serve": "python3 -m http.server 5179",
+    "start": "node server.mjs"
+  },
+  "devDependencies": {
+    "@solana/web3.js": "^1.98.4"
+  }
+}
