@@ -26,7 +26,7 @@ import { chameleon } from "../mascot/mascots.js";
 import { C, el, div, seal, wavesSheet, finish, lightPool, beam, flare, bokeh, dust, rng, hexA, arc } from "./cine.js";
 
 const scene = new URLSearchParams(location.search).get("s") || "hero";
-const SIZES = { pfp: [1000, 1000], banner: [1500, 500], hero: [1600, 900], private: [1600, 900], audit: [1600, 900], near: [1600, 900] };
+const SIZES = { outro: [1920, 1080], pfp: [1000, 1000], banner: [1500, 500], hero: [1600, 900], private: [1600, 900], audit: [1600, 900], near: [1600, 900] };
 const [W, H] = SIZES[scene];
 document.body.style.cssText += `width:${W}px;height:${H}px`;
 const stage = div("stage", document.body, `width:${W}px;height:${H}px`);
@@ -45,6 +45,21 @@ const brand = (parent, size = 40) => { const b = document.createElement("div"); 
 const copy = (x, y, html, w = 760) => { const d = div("copy", stage, `left:${x}px;top:${y}px;width:${w}px`); d.innerHTML = html; return d; };
 
 const S = {
+  // the demo video's closing slide: the chameleon on its branch, the name, the line, the address
+  outro() {
+    bg(`background:radial-gradient(ellipse 70% 80% at 50% 42%,#16223A 0,#0A0E14 48%,#05080D 88%)`);
+    floor(880, 77, .5);
+    place(seal({ gapA: -0.8, gapW: .36, label: false, core: false }), 960, 430, 1180, "opacity:.32;filter:blur(1.5px)");
+    lightPool(960, 420, 520, C.BRASS, .16, stage);
+    beam(960 + 230, 430 - 220, -44, 1100, 380, C.BRASS2, .55, stage);
+    place(chameleon({ engraved: true, tongue: false, branch: true, animate: false }), 960, 360, 420, "filter:drop-shadow(0 0 30px rgba(214,178,110,.2))");
+    bokeh(20, { x0: 0, y0: 0, x1: 1920, y1: 1080, rMin: 10, rMax: 60, seed: 51, parent: stage });
+    dust(80, { x0: 1100, y0: 0, x1: 1920, y1: 500, seed: 6, parent: stage });
+    copy(0, 600, `<div style="text-align:center"><div style="font:400 150px/1 'Instrument Serif',serif;letter-spacing:-.01em">Privatus</div>
+      <p class="kick" style="justify-content:center;margin:26px 0 0;font-size:18px">Trade without leaving a trail</p>
+      <p class="tag" style="margin:30px 0 0;font-size:20px;letter-spacing:.26em"><b>privatusterminal.xyz</b></p></div>`, 1920);
+    finish({ grain: .12, vignette: .72 });
+  },
   pfp() {
     bg(`background:radial-gradient(circle at 50% 46%,#152033 0,#0A0E14 42%,#05080D 75%)`);
     place(seal({ label: false, core: false, gapA: -Math.PI / 4, gapW: .42, dense: 1.1 }), 500, 500, 1020, "opacity:.9;transform:rotate(0deg)");

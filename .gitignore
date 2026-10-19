@@ -1,2 +1,4 @@
 node_modules/
 .claude/
+media/demo/.frames/
+media/demo/*.mp4
