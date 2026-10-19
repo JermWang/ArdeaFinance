@@ -1,0 +1,160 @@
+<!doctype html>
+<!-- Lacuna promo scenes. Open with ?s=<scene> (pfp, banner, hero, private, audit, near); render.sh shoots each
+     one at its exact size with headless Chrome. -->
+<html lang="en"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;overflow:hidden;background:#05080D;color:#EFE9DC;font-family:Geist,sans-serif}
+.stage{position:relative;overflow:hidden}
+.fx,.beam{position:absolute;inset:0;pointer-events:none}
+.layer{position:absolute}
+.persp{position:absolute;inset:0;perspective:900px;overflow:hidden}
+.copy{position:absolute;z-index:5}
+.kick{font:500 15px "Geist Mono",monospace;letter-spacing:.24em;text-transform:uppercase;color:#8B93A1;display:flex;align-items:center;gap:14px}
+.kick::before{content:"";width:26px;height:1px;background:#D6B26E}
+h1{font:400 112px/.96 "Instrument Serif",serif;margin:22px 0 0;letter-spacing:-.012em;text-shadow:0 0 40px rgba(0,0,0,.6)}
+h1 em{color:#D6B26E;text-shadow:0 0 30px rgba(214,178,110,.35)}
+.sub{font:400 21px/1.5 Geist,sans-serif;color:#A9AFBA;margin:26px 0 0;max-width:30ch}
+.brand{display:flex;align-items:center;gap:14px}
+.brand svg{width:40px;height:40px}
+.brand span{font:400 40px/1 "Instrument Serif",serif;color:#EFE9DC}
+.tag{font:500 13px "Geist Mono",monospace;letter-spacing:.22em;text-transform:uppercase;color:#8B93A1}
+.tag b{color:#D6B26E;font-weight:500}
+</style></head><body>
+<script type="module">
+import { C, el, div, seal, mark, wavesSheet, finish, lightPool, beam, flare, bokeh, dust, rng, hexA, arc } from "./cine.js";
+
+const scene = new URLSearchParams(location.search).get("s") || "hero";
+const SIZES = { pfp: [1000, 1000], banner: [1500, 500], hero: [1600, 900], private: [1600, 900], audit: [1600, 900], near: [1600, 900] };
+const [W, H] = SIZES[scene];
+document.body.style.cssText += `width:${W}px;height:${H}px`;
+const stage = div("stage", document.body, `width:${W}px;height:${H}px`);
+const place = (node, x, y, size, css = "") => { const d = div("layer", stage, `left:${x - size / 2}px;top:${y - size / 2}px;width:${size}px;height:${size}px;${css}`); node.setAttribute("width", size); node.setAttribute("height", size); d.appendChild(node); return d; };
+const bg = (css) => div("fx", stage, css);
+const floor = (horizon, tilt = 76, glow = .5) => {
+  // banknote lines laid flat as a floor running to a lit horizon
+  const p = div("persp", stage, `perspective-origin:50% ${horizon}px`);
+  const sheet = wavesSheet(W * 3, 2600, { gap: 16, amp: 7, period: 120, sw: 1.1 });
+  const s = div("layer", p, `left:${-W}px;top:${horizon}px;width:${W * 3}px;height:2600px;transform-origin:50% 0;transform:rotateX(${tilt}deg);opacity:.55;-webkit-mask-image:linear-gradient(180deg,transparent,#000 6%,#000);mask-image:linear-gradient(180deg,transparent,#000 6%,#000)`);
+  s.appendChild(sheet);
+  div("fx", stage, `top:${horizon - 120}px;bottom:auto;height:240px;background:radial-gradient(ellipse 60% 50% at 50% 50%,${hexA(C.BRASS, glow * .5)},transparent 70%);mix-blend-mode:screen`);
+  div("fx", stage, `top:${horizon - 1}px;bottom:auto;height:2px;background:linear-gradient(90deg,transparent,${hexA(C.BRASS2, glow)},transparent);filter:blur(1px)`);
+};
+const brand = (parent, size = 40) => { const b = document.createElement("div"); b.className = "brand"; const m = mark({ outerRot: 0, innerRot: 0 }); m.style.width = m.style.height = size + "px"; const t = document.createElement("span"); t.textContent = "Lacuna"; t.style.fontSize = size + "px"; b.append(m, t); parent.appendChild(b); return b; };
+const copy = (x, y, html, w = 760) => { const d = div("copy", stage, `left:${x}px;top:${y}px;width:${w}px`); d.innerHTML = html; return d; };
+
+const S = {
+  pfp() {
+    bg(`background:radial-gradient(circle at 50% 46%,#152033 0,#0A0E14 42%,#05080D 75%)`);
+    place(seal({ label: false, core: false, gapA: -Math.PI / 4, gapW: .42, dense: 1.1 }), 500, 500, 1020, "opacity:.9;transform:rotate(0deg)");
+    lightPool(500, 500, 420, C.BRASS, .22, stage);
+    beam(500 + Math.cos(-Math.PI / 4) * 120, 500 + Math.sin(-Math.PI / 4) * 120, -45, 760, 230, C.BRASS2, .8, stage);
+    div("layer", stage, `left:${500 - 255}px;top:${500 - 255}px;width:510px;height:510px;border-radius:50%;background:radial-gradient(circle,#0A0E14 0,#0A0E14 64%,rgba(10,14,20,.0) 72%)`);
+    div("layer", stage, `left:${500 - 236}px;top:${500 - 236}px;width:472px;height:472px;border-radius:50%;border:1.5px solid ${hexA(C.BRASS, .55)};box-shadow:0 0 30px ${hexA(C.BRASS, .25)},inset 0 0 40px ${hexA(C.BRASS, .12)}`);
+    place(mark(), 500, 500, 360, "filter:drop-shadow(0 0 18px rgba(214,178,110,.25))");
+    flare(500 + Math.cos(-Math.PI / 4) * 330, 500 + Math.sin(-Math.PI / 4) * 330, 620, C.BRASS2, stage);
+    dust(70, { x0: 520, y0: 60, x1: 960, y1: 480, seed: 4, parent: stage });
+    finish({ grain: .12, vignette: .7 });
+  },
+  banner() {
+    bg(`background:radial-gradient(ellipse 70% 120% at 76% 40%,#14203A 0,#0A0E14 45%,#05080D 80%)`);
+    floor(318, 78, .6);
+    place(seal({ gapA: -0.75, gapW: .36 }), 1165, 236, 600, "transform:perspective(1200px) rotateY(-24deg) rotateX(4deg)");
+    beam(1165 + 150, 236 - 140, -42, 700, 260, C.BRASS2, .8, stage);
+    flare(1290, 120, 1100, C.BRASS2, stage);
+    bokeh(18, { x0: 760, y0: 20, x1: 1500, y1: 480, rMin: 6, rMax: 30, seed: 11, parent: stage });
+    dust(60, { x0: 1150, y0: 0, x1: 1500, y1: 260, seed: 2, parent: stage });
+    const c = copy(330, 132, "", 640); brand(c, 74);
+    c.insertAdjacentHTML("beforeend", `<p class="kick" style="margin:24px 0 0">Trade without leaving a trail</p><p class="tag" style="margin:12px 0 0">Private execution for Solana · <b>NEAR Intents</b></p>`);
+    finish({ grain: .13, vignette: .7 });
+  },
+  hero() {
+    bg(`background:radial-gradient(ellipse 60% 80% at 68% 38%,#15213A 0,#0A0E14 45%,#05080D 85%)`);
+    floor(560, 77, .55);
+    place(seal({ gapA: -0.8, gapW: .36 }), 1110, 392, 780, "transform:perspective(1400px) rotateY(-20deg) rotateX(5deg)");
+    lightPool(1110, 392, 520, C.BRASS, .14, stage);
+    beam(1110 + 190, 392 - 185, -44, 900, 340, C.BRASS2, .85, stage);
+    flare(1270, 232, 1300, C.BRASS2, stage);
+    bokeh(22, { x0: 700, y0: 0, x1: 1600, y1: 860, rMin: 8, rMax: 46, seed: 5, parent: stage });
+    dust(110, { x0: 1150, y0: 0, x1: 1600, y1: 420, seed: 8, parent: stage });
+    const c = copy(110, 150, "", 700); brand(c, 40);
+    c.insertAdjacentHTML("beforeend", `<p class="kick" style="margin:120px 0 0">Private execution for Solana</p><h1>Trade without<br>leaving <em>a trail.</em></h1><p class="sub">Each private buy comes from a fresh wallet, funded through NEAR Intents.</p>`);
+    finish({ grain: .13, vignette: .78, letterbox: 0 });
+  },
+  private() {
+    bg(`background:radial-gradient(ellipse 55% 75% at 56% 44%,#14203A 0,#0A0E14 45%,#05080D 85%)`);
+    floor(600, 78, .45);
+    const cx = 960, cy = 410, sz = 580;
+    place(seal({ gapA: -0.62, gapW: .4 }), cx, cy, sz, "");
+    // the trail: your wallet's history, coming in from the foreground and stopping at the seal
+    const svg = el("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}` }); const lay = div("layer", stage, `left:0;top:0;width:${W}px;height:${H}px`); lay.appendChild(svg);
+    const defs = el("defs", {}, svg), blur = [0, 1, 2.5, 5, 9].map((s, i) => { const f = el("filter", { id: "db" + i, x: "-100%", y: "-100%", width: "300%", height: "300%" }, defs); el("feGaussianBlur", { stdDeviation: s }, f); return `url(#db${i})`; });
+    const P = t => { const x0 = -60, y0 = 980, x1 = cx - sz * .43, y1 = cy + 70, c1 = [380, 900], c2 = [480, cy + 140], u = 1 - t; return [u ** 3 * x0 + 3 * u * u * t * c1[0] + 3 * u * t * t * c2[0] + t ** 3 * x1, u ** 3 * y0 + 3 * u * u * t * c1[1] + 3 * u * t * t * c2[1] + t ** 3 * y1]; };
+    for (let i = 0; i <= 34; i++) { const t = i / 34, [x, y] = P(t), r = 2 + (1 - t) ** 2 * 26; el("circle", { cx: x, cy: y, r, fill: t > .2 ? C.IVORY : C.IVORY, opacity: .25 + t * .6, filter: blur[Math.min(4, Math.floor((1 - t) * 5))] }, svg); }
+    // the new wallet's line leaving through the gap, to a small light in the distance
+    const ga = -0.62, gx = cx + Math.cos(ga) * sz * .5, gy = cy + Math.sin(ga) * sz * .5, nx = 1420, ny = 150;
+    const glow = el("filter", { id: "lg", x: "-50%", y: "-50%", width: "200%", height: "200%" }, defs); el("feGaussianBlur", { stdDeviation: 6, result: "b" }, glow); const mg = el("feMerge", {}, glow); el("feMergeNode", { in: "b" }, mg); el("feMergeNode", { in: "SourceGraphic" }, mg);
+    el("path", { d: `M${gx} ${gy}C${gx + 120} ${gy - 120} ${nx - 160} ${ny + 30} ${nx} ${ny}`, fill: "none", stroke: C.BRASS2, "stroke-width": 2.4, filter: "url(#lg)" }, svg);
+    el("circle", { cx: nx, cy: ny, r: 18, fill: "none", stroke: C.BRASS, "stroke-width": 2, filter: "url(#lg)" }, svg);
+    el("circle", { cx: nx, cy: ny, r: 5, fill: C.BRASS2, filter: "url(#lg)" }, svg);
+    const lab = (x, y, a, b, anchor = "start") => { const t1 = el("text", { x, y, "font-family": "'Geist Mono',monospace", "font-size": 14, "font-weight": 600, fill: C.IVORY, "letter-spacing": ".18em", "text-anchor": anchor }, svg); t1.textContent = a; const t2 = el("text", { x, y: y + 22, "font-family": "'Geist Mono',monospace", "font-size": 13, fill: C.MUTE, "letter-spacing": ".1em", "text-anchor": anchor }, svg); t2.textContent = b; };
+    lab(nx, ny + 52, "NEW WALLET", "no history", "middle");
+    lightPool(nx, ny, 160, C.BRASS, .35, stage);
+    flare(nx, ny, 700, C.BRASS2, stage);
+    bokeh(14, { x0: 0, y0: 500, x1: 700, y1: 900, rMin: 14, rMax: 60, colors: [C.IVORY, C.STEEL2], alpha: [.04, .12], seed: 21, parent: stage });
+    dust(60, { x0: 1000, y0: 60, x1: 1600, y1: 400, seed: 12, parent: stage });
+    const c = copy(110, 96, "", 640);
+    c.insertAdjacentHTML("beforeend", `<p class="kick">Private mode · NEAR Intents</p><h1 style="font-size:92px">Cut the line<br>between you and<br><em>your trades.</em></h1>`);
+    copy(110, 808, `<p class="tag">Your wallet → one-time deposit &nbsp;·&nbsp; NEAR bridge → new wallet &nbsp;·&nbsp; <b>No on-chain link</b></p>`, 1400);
+    finish({ grain: .13, vignette: .8 });
+  },
+  audit() {
+    bg(`background:radial-gradient(ellipse 65% 75% at 62% 52%,#121C30 0,#0A0E14 48%,#05080D 85%)`);
+    // the wallet graph trackers draw, laid on a tilted plate
+    const gw = 1500, gh = 900, svg = el("svg", { width: gw, height: gh, viewBox: `0 0 ${gw} ${gh}` });
+    const plate = div("layer", stage, `left:${W - gw + 120}px;top:40px;width:${gw}px;height:${gh}px;transform:perspective(1300px) rotateX(48deg) rotateZ(-8deg);transform-origin:50% 60%`);
+    plate.appendChild(svg);
+    const defs = el("defs", {}, svg), gf = el("filter", { id: "gg", x: "-50%", y: "-50%", width: "200%", height: "200%" }, defs); el("feGaussianBlur", { stdDeviation: 5, result: "b" }, gf); const m = el("feMerge", {}, gf); el("feMergeNode", { in: "b" }, m); el("feMergeNode", { in: "SourceGraphic" }, m);
+    for (let y = 0; y <= gh; y += 30) el("line", { x1: 0, y1: y, x2: gw, y2: y, stroke: C.STEEL, "stroke-width": .8, opacity: .22 }, svg);
+    for (let x = 0; x <= gw; x += 30) el("line", { x1: x, y1: 0, x2: x, y2: gh, stroke: C.STEEL, "stroke-width": .8, opacity: .12 }, svg);
+    const you = [460, 470], nodes = [
+      { p: [900, 220], c: C.IVORY, r: 30, l: "FUNDER" }, { p: [1230, 300], c: C.MUTE, r: 14, l: "SIBLINGS ×3", sib: true },
+      { p: [1260, 560], c: C.DOWN, r: 40, l: "BINANCE 2" }, { p: [860, 520], c: C.MUTE, r: 16, l: "DEPOSIT" }, { p: [920, 760], c: C.IVORY, r: 26, l: "LINKED" }];
+    const curve = (a, b, bend = 50) => { const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, nx = -(b[1] - a[1]), ny = b[0] - a[0], L = Math.hypot(nx, ny); return `M${a[0]} ${a[1]}Q${mx + nx / L * bend} ${my + ny / L * bend} ${b[0]} ${b[1]}`; };
+    nodes.forEach(n => el("path", { d: curve(you, n.p), fill: "none", stroke: n.c === C.DOWN ? C.DOWN : C.STEEL2, "stroke-width": 2, opacity: .8, filter: "url(#gg)" }, svg));
+    el("path", { d: curve(nodes[3].p, nodes[2].p, 30), fill: "none", stroke: C.DOWN, "stroke-width": 2, opacity: .8, filter: "url(#gg)" }, svg);
+    el("path", { d: curve(nodes[0].p, nodes[1].p, 30), fill: "none", stroke: C.STEEL2, "stroke-width": 1.6, opacity: .7 }, svg);
+    const ring = (p, r, col) => { el("circle", { cx: p[0], cy: p[1], r, fill: C.BG, stroke: col, "stroke-width": 3, filter: "url(#gg)" }, svg); el("circle", { cx: p[0], cy: p[1], r: r * .6, fill: "none", stroke: col, "stroke-width": 1.5, opacity: .6 }, svg); el("circle", { cx: p[0], cy: p[1], r: Math.max(3, r * .16), fill: col }, svg); };
+    nodes.forEach(n => { if (n.sib) [0, 1, 2].forEach(i => ring([n.p[0] + Math.cos(i * 2.1) * 30, n.p[1] + Math.sin(i * 2.1) * 24], 11, n.c)); else ring(n.p, n.r, n.c); const t = el("text", { x: n.p[0], y: n.p[1] + n.r + 34, "text-anchor": "middle", "font-family": "'Geist Mono',monospace", "font-size": 18, "font-weight": 500, "letter-spacing": ".14em", fill: n.c === C.DOWN ? C.DOWN : C.MUTE }, svg); t.textContent = n.l; });
+    ring(you, 46, C.BRASS); el("path", { d: arc(you[0], you[1], 60, -.3, TAU() - .9), fill: "none", stroke: C.BRASS, "stroke-width": 3, filter: "url(#gg)" }, svg);
+    const yt = el("text", { x: you[0], y: you[1] + 96, "text-anchor": "middle", "font-family": "'Geist Mono',monospace", "font-size": 20, "font-weight": 600, "letter-spacing": ".2em", fill: C.BRASS }, svg); yt.textContent = "YOU";
+    lightPool(1250, 560, 260, C.DOWN, .25, stage);
+    lightPool(720, 430, 300, C.BRASS, .14, stage);
+    bokeh(16, { x0: 600, y0: 0, x1: 1600, y1: 900, rMin: 10, rMax: 50, colors: [C.STEEL2, C.IVORY, C.DOWN], alpha: [.04, .14], seed: 31, parent: stage });
+    const c = copy(110, 110, "", 640);
+    c.insertAdjacentHTML("beforeend", `<p class="kick">Free tool · Trail audit</p><h1 style="font-size:96px">Your wallet is<br>a public ledger.</h1><p class="sub">Paste any address and see the links trackers draw: funding, exchanges, linked wallets, habits.</p>`);
+    copy(110, 640, `<div style="display:flex;align-items:baseline;gap:16px"><span style="font:400 120px/1 'Instrument Serif',serif;color:${C.DOWN};text-shadow:0 0 40px ${hexA(C.DOWN, .4)}">83</span><span class="tag">/100 · <b style="color:${C.DOWN}">Exposed</b></span></div>`, 600);
+    finish({ grain: .13, vignette: .8 });
+  },
+  near() {
+    bg(`background:radial-gradient(ellipse 80% 70% at 60% 70%,#162238 0,#0A0E14 50%,#05080D 90%)`);
+    // macro shot: the seal laid flat like a dial, sharp through a band, out of focus near and far
+    const mk = (css) => place(seal({ gapA: -1.2, gapW: .3, dense: 1.3 }), 900, 700, 2100, `transform:perspective(1100px) rotateX(62deg) rotateZ(18deg);${css}`);
+    mk("filter:blur(7px);opacity:.8");
+    mk("-webkit-mask-image:linear-gradient(180deg,transparent 30%,#000 44%,#000 56%,transparent 70%);mask-image:linear-gradient(180deg,transparent 30%,#000 44%,#000 56%,transparent 70%)");
+    lightPool(1000, 560, 700, C.BRASS, .2, stage);
+    beam(1700, -40, 150, 1500, 420, C.BRASS2, .3, stage);
+    flare(1180, 470, 1400, C.BRASS2, stage);
+    bokeh(26, { x0: 0, y0: 0, x1: 1600, y1: 900, rMin: 10, rMax: 70, seed: 41, parent: stage });
+    dust(90, { x0: 600, y0: 80, x1: 1600, y1: 600, seed: 14, parent: stage });
+    bg(`background:linear-gradient(180deg,rgba(5,8,13,.85) 0,rgba(5,8,13,.2) 34%,transparent 50%)`);
+    const c = copy(110, 96, "", 900);
+    c.insertAdjacentHTML("beforeend", `<p class="kick">Powered by NEAR Intents</p><h1 style="font-size:88px">Confidential routing,<br><em>settled by solvers.</em></h1>`);
+    brand(copy(110, 800, "", 400), 34);
+    finish({ grain: .14, vignette: .75 });
+  }
+};
+function TAU() { return Math.PI * 2; }
+S[scene]();
+document.fonts.ready.then(() => document.body.dataset.ready = "1");
+</script></body></html>
