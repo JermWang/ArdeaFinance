@@ -1,4 +1,5 @@
-// pump.fun on-chain reading: bonding curve state and trade events, straight from the chain.
+// pump.fun on-chain reading for Pulse and token pages: bonding curve state and trade events, decoded straight from
+// the chain with no third-party indexer.
 // Layouts: BondingCurve = 8-byte discriminator, virtualTokenReserves u64, virtualSolReserves u64,
 // realTokenReserves u64, realSolReserves u64, tokenTotalSupply u64, complete bool (newer versions
 // append more fields, which we ignore). TradeEvent = discriminator bddb7fd34ee661ee, mint, solAmount u64,

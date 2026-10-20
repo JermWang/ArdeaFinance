@@ -1,4 +1,6 @@
-// Live data for the terminal. Network only; parsing lives in pump.js and market.js.
+// Live data for the terminal: the PumpPortal stream, bonding-curve reads, live trades over the RPC websocket, holders,
+// wallet history and token metadata. Network only; parsing lives in pump.js and market.js, and every request goes
+// through Ardea's gateway when one is configured.
 import { bondingCurveAddress, decodeCurve, tradesFromLogs, tradesFromTx, fromBase64, eventPriceSol, PUMP_PROGRAM } from "./pump.js";
 import { base58Decode, rpcClient, TX_OPTS } from "./trace.js";
 import { walletSwaps, SOL_MINT } from "./market.js";

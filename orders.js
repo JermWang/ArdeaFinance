@@ -1,4 +1,4 @@
-// Orders beyond market swaps.
+// Orders beyond market swaps, for the Ardea terminal.
 // - Limit orders (buy below, sell above = take-profit) are Jupiter Trigger v1 orders: placed on-chain,
 //   filled by Jupiter's keepers even when this tab is closed.
 // - The autopilot (stop-loss, trailing stop, take-profit by %, migration sniper) runs inside the terminal
