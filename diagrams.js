@@ -17,7 +17,7 @@ export function stealthRoute(svg, narrow = false) {
       n("dep", ...at.dep, "Exchange A", "SOL → XMR", { glyph: "file" }),
       n("xmr", ...at.xmr, "Monero", "ring sigs · RingCT", { glyph: "lock", tone: "core" }),
       n("exb", ...at.exb, "Exchange B", "XMR → SOL", { glyph: "file" }),
-      n("stealth", ...at.stealth, "Stealth", "fresh wallet", { glyph: "stealth", tone: "brass" }),
+      n("stealth", ...at.stealth, "Clean wallet", "armed · fires instantly", { glyph: "stealth", tone: "brass" }),
       n("jup", ...at.jup, "Jupiter", "swap", { glyph: "route" })
     ],
     links: [{ from: "main", to: "dep" }, { from: "dep", to: "xmr" }, { from: "xmr", to: "exb" }, { from: "exb", to: "stealth" }, { from: "stealth", to: "jup" }, { from: "main", to: "fee" }],

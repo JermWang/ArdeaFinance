@@ -162,7 +162,7 @@ export function renderGlyphs(root = document) {
 export function hero(svg) {
   const m = el("svg", { x: 160, y: 20, width: 280, height: 280, overflow: "visible" }, svg);
   logoMark(m, { tone: "orange" });
-  const y = 420, xs = [70, 300, 530], labels = [["YOUR WALLET", "public history"], ["MONERO", "SOL → XMR → SOL"], ["NEW WALLET", "no history"]];
+  const y = 420, xs = [70, 300, 530], labels = [["YOUR WALLET", "public history"], ["MONERO", "SOL → XMR → SOL"], ["ARMED WALLET", "fires in one click"]];
   const line = el("path", { d: `M${xs[0]} ${y}H${xs[2]}`, stroke: C.LINE, "stroke-width": 1.2 }, svg);
   xs.forEach((x, i) => {
     el("circle", { cx: x, cy: y, r: i === 1 ? 7 : 5, fill: i === 0 ? C.IVORY : C.BRASS }, svg);

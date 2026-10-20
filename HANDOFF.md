@@ -8,6 +8,8 @@ Live: https://ardea-production.up.railway.app (Railway project **ardea**, servic
 ## Status
 
 Done and live:
+- **Arm a wallet** is the headline feature: landing hero and first section, the terminal opens on the Arm screen
+  (`#/`), header chip shows armed wallets, buys and ⚡ fire armed wallets instantly. Logic in `armory.js` (tested).
 - Engine: Houdini Monero route for private buys, exits and instant-wallet deposits/withdrawals; order checks; no
   fallback path; background route completion with resume after reload. 71 tests pass (`npm test`).
 - Gateway: `/houdini/*` with the partner key and compliance headers. Railway variables are set: `RPC_URL`,

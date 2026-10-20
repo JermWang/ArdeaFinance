@@ -2,13 +2,19 @@
 
 [![test](https://github.com/JermWang/ardea/actions/workflows/test.yml/badge.svg)](https://github.com/JermWang/ardea/actions/workflows/test.yml)
 
-A Solana trading terminal whose Private mode funds every buy through Monero.
+Arm a clean wallet through Monero, then fire private buys from it instantly. A full Solana trading terminal sits around it.
 
 Ardea is built on the Privatus codebase (itself descended from Ghostprint) by the same team, with a new name, look and
 privacy route. Live at https://ardea-production.up.railway.app until the custom domain is added.
 
 ## What it does
 
+- **Arm a wallet** (the default screen of `app.html`, `#/`): fund one to five fresh stealth wallets through Monero ahead
+  of time, in one wallet approval. The total is split into uneven sizes; each wallet gets its own Houdini route (forced
+  through Monero, order checked), sent 3–15 s apart. When a wallet's SOL lands it's **armed**. With Private mode on,
+  any buy or ⚡ quick-buy fires the oldest armed wallet instantly with its whole balance (`fireArmed` in
+  `terminal.js`, `pickArmed` in `armory.js`). The 0.5% fee is paid at arming; firing is free. Disarming returns the SOL
+  through Monero. Without an armed wallet, Private mode falls back to a per-buy route (10–40 min).
 - **Terminal** (`app.html`): Pulse (new pairs, final stretch, migrated, streamed live from PumpPortal), Trending, token
   pages with live trades and holders, one-click Jupiter trades with presets, an instant wallet derived from one
   signature, wallet tracker, limit orders, portfolio and PnL.

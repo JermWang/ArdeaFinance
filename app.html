@@ -8,11 +8,11 @@
 <meta property="og:site_name" content="Ardea">
 <meta property="og:title" content="Ardea Terminal">
 <meta property="og:description" content="Live launches, one-click Jupiter trading, wallet tracking, limit orders and Private mode routed through Monero.">
-<meta property="og:image" content="https://ardea-production.up.railway.app/media/banner.png?v=1">
+<meta property="og:image" content="https://ardea-production.up.railway.app/media/banner.png?v=2">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://ardea-production.up.railway.app/media/banner.png?v=1">
+<meta name="twitter:image" content="https://ardea-production.up.railway.app/media/banner.png?v=2">
 <meta name="theme-color" content="#0E0E0E">
 <title>Ardea Terminal</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -630,13 +630,43 @@ body{padding-left:78px}
   .pcard .pc-disc .av,.pcard .pc-disc .av.ring,.pcard .pc-disc .av.grad{width:52px;height:52px}
 }
 @media (prefers-reduced-motion:reduce){.pc-ring .val{transition:none}}
+/* Arm a wallet */
+.nav a[data-route="arm"]{--ic:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2v4M12 18v4M2 12h4M18 12h4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z'/></svg>")}
+.armchip{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,var(--line));text-decoration:none;font-weight:600}
+.arm{max-width:980px;margin:0 auto;padding:34px 24px 60px}
+.arm-eyebrow{font:500 .7rem var(--font-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin:0}
+.arm h1{font:500 clamp(2.1rem,4.4vw,3.4rem)/1.04 var(--serif);margin:14px 0 0;letter-spacing:-.01em}
+.arm h1 em{color:var(--accent)}
+.arm-lede{max-width:66ch;color:var(--mute-ink);font-size:.98rem;line-height:1.65;margin:18px 0 30px}
+.arm-lede .ico{width:13px;height:13px;vertical-align:-2px;fill:var(--accent)}
+.arm-stats{display:flex;gap:44px;flex-wrap:wrap;padding:18px 0;border-block:1px solid var(--line)}
+.arm-stats div{display:flex;flex-direction:column;gap:2px}
+.arm-stats i{font:500 .62rem var(--font-mono);font-style:normal;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.arm-stats b{font:500 1.7rem/1.1 var(--serif);color:var(--paper)}
+.arm-form{display:grid;grid-template-columns:minmax(0,1fr) 160px auto;gap:10px;margin-top:22px}
+.arm-form .inp{height:46px;font-size:.95rem}
+.arm-go{height:46px;padding:0 30px;font-size:.95rem}
+.arm-status{margin:12px 0 0;font-size:.74rem;line-height:1.6;max-width:80ch}
+.arm-list{margin-top:26px}
+.arm-row{display:flex;align-items:center;gap:14px;justify-content:space-between;padding:13px 0;border-top:1px solid var(--line);font:.8rem var(--font-mono)}
+.arm-row .meta{flex:1;color:var(--mute-ink);min-width:0}
+.arm-row .meta b{color:var(--paper);margin-right:4px}
+.arm-row[data-state="armed"] .meta b{color:var(--accent)}
+.arm-row[data-state="armed"]::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);flex:none}
+.arm-row .meta a{color:inherit}
+.arm-how{list-style:none;margin:44px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;counter-reset:a}
+.arm-how li{counter-increment:a;color:var(--mute-ink);font-size:.86rem;line-height:1.6;padding-top:14px;border-top:1px solid var(--line)}
+.arm-how li b{display:block;color:var(--paper);font:500 1.15rem var(--serif);margin-bottom:4px}
+.arm-how li b::before{content:counter(a) ". ";color:var(--accent)}
+@media (max-width:760px){.arm{padding:22px 16px 40px}.arm-form{grid-template-columns:minmax(0,1fr) 120px}.arm-go{grid-column:1/-1}.arm-how{grid-template-columns:minmax(0,1fr)}.arm-stats{gap:28px}}
 </style>
 </head>
 <body>
 <header class="bar">
   <a class="brand" href="./" aria-label="Ardea home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
   <nav class="nav" aria-label="Terminal">
-    <a href="#/" data-route="pulse">Pulse</a>
+    <a href="#/" data-route="arm">Arm</a>
+    <a href="#/pulse" data-route="pulse">Pulse</a>
     <a href="#/trending" data-route="trending">Trending</a>
     <a href="#/tracker" data-route="tracker">Tracker</a>
     <a href="#/portfolio" data-route="portfolio">Portfolio</a>
@@ -652,6 +682,7 @@ body{padding-left:78px}
     <ul class="results" id="results" role="listbox" hidden></ul>
   </div>
   <div class="right">
+    <a class="chip armchip" id="armchip" href="#/" hidden title="Armed wallets ready to fire"></a>
     <button class="chip" id="autochip" type="button" hidden></button>
     <span class="chip solchip" id="solprice" title="SOL price">SOL —</span>
     <label class="qb-amt" title="Quick-buy amount for the bolt buttons"><span class="qb-ic"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M9 1.8 3.6 9h4l-.8 5.2L12.4 7h-4z"/></svg></span><input id="qbamt" inputmode="decimal" aria-label="Quick-buy amount in SOL"><span>SOL</span></label>
@@ -662,6 +693,19 @@ body{padding-left:78px}
 <div class="watchbar" id="watchbar"></div>
 
 <main>
+  <section class="view" id="v-arm" hidden>
+    <div class="arm">
+      <p class="arm-eyebrow">Arm a wallet · funded through Monero</p>
+      <h1>Arm a clean wallet. <em>Fire private buys instantly.</em></h1>
+      <p class="arm-lede">Fund fresh wallets through Monero ahead of time. When you spot a coin, an armed wallet buys it in one click: no route to wait for, and because the funding happened earlier, the buy's timing and amount don't line up with your deposit. With Private mode on, every buy and every <svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M9 1.8 3.6 9h4l-.8 5.2L12.4 7h-4z"/></svg> quick-buy fires the next armed wallet.</p>
+      <div id="arm-body"></div>
+      <ol class="arm-how">
+        <li><b>Arm</b>Pick a total and how many wallets. You approve once; each wallet gets its own Monero route, sent at random intervals.</li>
+        <li><b>Wait once</b>SOL becomes XMR, crosses Monero, and an unrelated exchange pays each wallet. 10–40 minutes, in the background.</li>
+        <li><b>Fire</b>Any buy fires the oldest armed wallet with its whole balance, signed in this tab. Disarm any time: it returns through Monero.</li>
+      </ol>
+    </div>
+  </section>
   <section class="view" id="v-pulse" hidden>
     <div class="pulse-top">
       <h1>Pulse</h1>

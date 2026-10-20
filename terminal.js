@@ -11,6 +11,7 @@ import { pumpPortal, stonkFun, tokenTrades, readCurves, metadata, holders, recen
 import { renderGlyphs, emblem, glyphSVG } from "./art.js";
 import { X_URL, TOKEN_CA, HOLDER_TIERS } from "./config.js";
 import { tierFor } from "./tiers.js";
+import { armSizes, pickArmed, armSummary, ARM_MAX_WALLETS } from "./armory.js";
 
 const web3 = window.solanaWeb3;
 const $ = id => document.getElementById(id);
@@ -255,6 +256,7 @@ async function refreshBalances() {
   } catch (_) {}
   await refreshTier();
   renderWalletBtn();
+  readArmBalances().then(renderArmChip); resumeArming();
   if (S.route === "token") { refreshTokenBal(); renderTradePanel(); }
 }
 
@@ -345,6 +347,11 @@ async function quickBuy(mint, btn) {
   if (btn) btn.disabled = true;
   try {
     if (settings.from === "main" && !S.wallet && !(await ensureConnected())) return;
+    // with Private mode on, the bolt fires an armed wallet when one is ready: an instant private buy
+    if (settings.stealth && settings.from !== "instant" && S.wallet) {
+      await readArmBalances();
+      if (armReady()) { const f = await fireArmed(mint); toast(`Armed wallet #${f.index} bought ≈${num(f.tokens)} ${symbolOf(mint)} with ${solFmt(f.sol)} SOL`, "ok", f.sig); return; }
+    }
     const r = await executeTrade({ side: "buy", mint, amountRaw: amount, onStatus: () => {} });
     toast(`Bought ≈${num(r.tokens)} ${symbolOf(mint)} for ${solFmt(r.sol)} SOL`, "ok", r.sig);
   } catch (e) { toast(errMsg(e), "err"); }
@@ -352,18 +359,19 @@ async function quickBuy(mint, btn) {
 }
 
 /* ---------- router ---------- */
-const VIEWS = ["pulse", "trending", "token", "tracker", "portfolio"];
+const VIEWS = ["arm", "pulse", "trending", "token", "tracker", "portfolio"];
 let leaveToken = () => {};
 function route() {
   const h = location.hash.replace(/^#\/?/, "");
   let [name, arg] = h.split("/");
-  if (!name) name = "pulse";
+  if (!name) name = "arm";
   if (isAddress(name)) { location.replace(`#/token/${name}`); return; } // old deep links
-  if (!VIEWS.includes(name) || (name === "token" && !isAddress(arg || ""))) name = "pulse";
+  if (!VIEWS.includes(name) || (name === "token" && !isAddress(arg || ""))) name = "arm";
   if (S.route === "token" && (name !== "token" || arg !== S.tokenMint)) leaveToken();
   S.route = name;
   VIEWS.forEach(v => { $(`v-${v}`).hidden = v !== name; });
   document.querySelectorAll(".nav a").forEach(a => a.setAttribute("aria-current", a.dataset.route === name ? "page" : "false"));
+  if (name === "arm") { document.title = "Arm · Ardea"; renderArm(); readArmBalances().then(refreshArmViews); resumeArming(); }
   if (name === "pulse") { document.title = "Pulse · Ardea"; renderPulse(true); }
   if (name === "trending") { document.title = "Trending · Ardea"; loadTrending(); }
   if (name === "token") openToken(arg);
@@ -1010,6 +1018,7 @@ function amountRaw() {
 }
 function problem() {
   if (T.decimals == null) return "Loading token…";
+  if (stealthOn() && armReady()) return null; // an armed wallet fires its own balance; no amount needed
   const raw = amountRaw();
   if (!raw) return "Enter an amount";
   if (stealthOn() && raw > toRaw(String(STEALTH_MAX_SOL), 9)) return `Private mode limit is ${STEALTH_MAX_SOL} SOL · switch it off`;
@@ -1027,11 +1036,13 @@ function updateGo() {
   const go = $("go"), p = problem(), inst = settings.from === "instant", sym = symbolOf(S.tokenMint);
   const needConnect = !S.wallet;
   go.disabled = !!p && !needConnect;
-  const goLabel = needConnect ? "Connect wallet" : p || `${stealthOn() ? "Private buy" : T.side === "buy" ? "Buy" : "Sell"} ${sym}`;
+  const armed = stealthOn() && armReady();
+  const goLabel = needConnect ? "Connect wallet" : p || (armed ? `Fire armed wallet · ${fromRaw((armBalances[armed.address] ?? 0n) - STEALTH_GAS_RESERVE, 9, 3)} SOL → ${sym}` : `${stealthOn() ? "Private buy" : T.side === "buy" ? "Buy" : "Sell"} ${sym}`);
   if (inst && !needConnect && !p) iconLabel(go, "bolt", goLabel); else text(go, goLabel);
   go.className = `btn go ${needConnect || !p ? (T.side === "buy" ? "buy" : "primary") : ""}`;
   const pr = preset();
-  text($("fine"), stealthOn()
+  text($("fine"), armed ? `Armed wallet #${armed.index} fires its whole balance through Jupiter, signed in this tab. It was funded through Monero earlier, so the buy is instant and its timing and amount don't line up with your deposit. No fee now: it was paid at arming.`
+    : stealthOn()
     ? `Private mode: your wallet signs one transaction, the amount to a one-time Monero route address plus the ${feeBps() / 100}%${S.fee.tier ? ` (holder tier ${S.fee.tier})` : ""} fee to the treasury. The SOL crosses Monero through two unrelated exchanges (10–40 min, their fees included in the quote) and lands in a fresh stealth wallet, which buys. Houdini sees both ends, and a close observer can still try to match amounts and timing.`
     : `${feeBps() / 100}% fee in SOL${S.fee.tier ? ` (holder tier ${S.fee.tier})` : ""} · P${settings.preset + 1}: ${pr.slippageBps / 100}% slippage, ${pr.priority} priority up to ${pr.maxSol} SOL${pr.tipSol ? ` · Jito tip ${pr.tipSol} SOL${pr.mev ? " (MEV-protected)" : ""}` : ""} · ${inst ? "signed instantly by your instant wallet" : "you approve every trade in your wallet"}`);
 }
@@ -1056,7 +1067,9 @@ function renderQuote(qt, fee) {
   const buy = T.side === "buy", outDec = buy ? T.decimals : 9, outSym = buy ? symbolOf(S.tokenMint) : "SOL";
   const route = [...new Set((qt.routePlan || []).map(r => r.swapInfo?.label).filter(Boolean))].slice(0, 3).join(" → ");
   const rows = [["You get ≈", `${fromRaw(qt.outAmount, outDec, 4)} ${outSym}`], ["Minimum", `${fromRaw(qt.otherAmountThreshold, outDec, 4)} ${outSym}`], ["Price impact", `${(Number(qt.priceImpactPct || 0) * 100).toFixed(2)}%`], ["Route", route || "—"], [`Fee ${feeBps() / 100}%${S.fee.tier ? ` · holder tier ${S.fee.tier}` : ""}`, `${fromRaw(fee, 9, 6)} SOL`]];
-  if (stealthOn()) rows.push(["Private route", "SOL → XMR → SOL via Houdini → fresh wallet"], ["Route time", "10–40 min; the stealth wallet buys when its SOL lands"], ["Route fees", "two exchange hops; the exact SOL out is shown before you sign"]);
+  const armedQ = stealthOn() && armReady();
+  if (armedQ) rows.splice(0, rows.length, ["Fires", `armed wallet #${armedQ.index}, its whole balance`], ["Spend", `${fromRaw((armBalances[armedQ.address] ?? 0n) - STEALTH_GAS_RESERVE, 9, 4)} SOL`], ["Funded", "through Monero, earlier"], ["Fee", "none now; paid at arming"]);
+  else if (stealthOn()) rows.push(["Private route", "SOL → XMR → SOL via Houdini → fresh wallet"], ["Route time", "10–40 min; or arm a wallet ahead to buy instantly"], ["Route fees", "two exchange hops; the exact SOL out is shown before you sign"]);
   const box = $("quote"); box.textContent = "";
   for (const [k, v] of rows) { const r = make("div", "row"); r.append(make("span", "k", k), make("span", "", v)); box.append(r); }
   box.hidden = false;
@@ -1080,7 +1093,7 @@ $("go").addEventListener("click", async () => {
   if (!S.wallet) { await ensureConnected(); return; }
   if (S.busy || problem()) return;
   if (!TREASURY) return setTradeStatus(TRADING_CLOSED, "err");
-  if (stealthOn()) return stealthBuy();
+  if (stealthOn()) return armReady() ? fireFromPanel() : stealthBuy();
   const go = $("go"), raw = amountRaw(), mint = S.tokenMint, sym = symbolOf(mint), side = T.side;
   S.busy = true; go.disabled = true;
   try {
@@ -1364,8 +1377,10 @@ async function finishPrivateBuy(rec) {
   const tag = `Stealth #${rec.index}`, save = patch => { rec = { ...rec, ...patch }; saveStealth(rec); };
   try {
     if (rec.state === "routing") {
-      await waitForRoute(hd, rec.routeId, { onStatus: label => { save({ route: label }); if (S.route === "portfolio") renderStealths(); } });
+      await waitForRoute(hd, rec.routeId, { onStatus: label => { save({ route: label }); refreshArmViews(); } });
       await waitForSol(rec.address, STEALTH_GAS_RESERVE + 1n, 10 * 60_000);
+      // an armed wallet has no token yet: it waits, funded, until a buy fires it
+      if (rec.armed && !rec.mint) { save({ state: "armed", route: undefined, error: undefined, armedAt: Date.now() }); toast(`Wallet #${rec.index} is armed: its SOL arrived through Monero. Private buys now fire instantly.`, "ok"); refreshArmViews(); return; }
       save({ state: "funded", route: "delivered", error: undefined });
       toast(`${tag} received its SOL through Monero.`, "ok");
     }
@@ -1387,6 +1402,149 @@ async function finishPrivateBuy(rec) {
     toast(`${tag}: ${errMsg(e)}`, "err");
   } finally { finishing.delete(rec.index); if (S.route === "portfolio") renderStealths(); }
 }
+/* ---------- Arm a wallet ---------- */
+// Arming funds fresh stealth wallets through Monero ahead of time: one wallet approval for all of them, the fee paid
+// once, at arming. An armed wallet then fires a private buy instantly with its whole balance: there is no route to
+// wait for, and because the funding happened earlier, the buy's timing and amount don't line up with your deposit.
+const armBalances = {};
+async function readArmBalances() {
+  const recs = S.wallet ? stealthRecords().filter(r => r.armed) : [];
+  await Promise.all(recs.map(async r => { try { armBalances[r.address] = BigInt(await connection.getBalance(new web3.PublicKey(r.address))); } catch (_) {} }));
+  return recs;
+}
+const armReady = () => S.wallet ? pickArmed(stealthRecords(), armBalances, STEALTH_GAS_RESERVE) : null;
+function refreshArmViews() {
+  renderArmChip();
+  if (S.route === "arm") renderArm();
+  if (S.route === "portfolio") renderStealths();
+  if (S.route === "token") updateGo();
+}
+function renderArmChip() {
+  const chip = $("armchip");
+  if (!chip) return;
+  const s = armSummary(S.wallet ? stealthRecords() : [], armBalances, STEALTH_GAS_RESERVE);
+  chip.hidden = !s.ready && !s.arming;
+  text(chip, s.ready ? `${s.ready} armed · ${fromRaw(s.readySol, 9, 2)} SOL` : `${s.arming} arming…`);
+}
+// Resume any arming routes after a reload: they only wait for the chain, no signature needed.
+function resumeArming() { if (S.wallet) stealthRecords().filter(r => r.armed && r.state === "routing" && r.routeId).forEach(r => finishPrivateBuy(r)); }
+
+async function armWallets(totalRaw, count, say) {
+  if (!TREASURY) throw new SwapError(TRADING_CLOSED);
+  const main = S.wallet.pk, seed = await walletSeed(), sizes = armSizes(totalRaw, count);
+  // distinct fresh wallets, each checked on-chain so none is ever reused
+  const picks = [];
+  let start = stealthRecords().reduce((m, g) => Math.max(m, g.index + 1), 0);
+  for (let i = 0; i < count; i++) { const p = await nextUnusedStealth(web3, seed, { isUsed: usedOnChain, start }); picks.push(p); start = p.index + 1; }
+  const token = await routeToken(), routes = [], fees = [];
+  for (let i = 0; i < count; i++) {
+    say(`Opening Monero route ${i + 1} of ${count}…`);
+    const fee = feeOf(sizes[i], feeBps());
+    fees.push(fee);
+    routes.push(await routeQuote({ hd, token, amount: sizes[i] - fee, from: main, to: picks[i].stealth.publicKey.toBase58() }));
+    if (i < count - 1) await sleep(1300); // the gateway opens at most one order per second
+  }
+  const recs = picks.map((p, i) => ({ index: p.index, address: p.stealth.publicKey.toBase58(), armed: true, state: "funding", routeId: routes[i].id, depositAddress: routes[i].depositAddress, amountOut: String(routes[i].amountOut), sol: Number(sizes[i]) / 1e9, createdAt: Date.now() }));
+  recs.forEach(saveStealth);
+  const out = routes.reduce((n, r) => n + r.amountOut, 0n), feeTotal = fees.reduce((a, b) => a + b, 0n);
+  say(`Approve ${count === 1 ? "one transaction" : `${count} transactions in one prompt`}: ${fromRaw(totalRaw - feeTotal, 9, 4)} SOL into Monero routes plus the ${feeBps() / 100}% fee (${fromRaw(feeTotal, 9, 4)} SOL). About ${fromRaw(out, 9, 4)} SOL arrives across ${count} clean wallet${count > 1 ? "s" : ""} in 10–40 minutes.`);
+  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
+  const txs = routes.map((r, i) => fundingTx(web3, { from: main, depositAddress: r.depositAddress, amount: sizes[i] - fees[i], fee: fees[i], treasury: TREASURY, blockhash }));
+  for (const tx of txs) await preflight(connection, tx);
+  const p = S.wallet.p, signed = p.signAllTransactions ? await p.signAllTransactions(txs) : [];
+  if (!p.signAllTransactions) for (const tx of txs) signed.push(await p.signTransaction(tx));
+  for (let i = 0; i < signed.length; i++) {
+    if (i) { const ms = jitter(3000, 15000); say(`Sent ${i} of ${signed.length}. The next goes in ${Math.round(ms / 1000)}s, so the deposits don't line up.`); await sleep(ms); }
+    const sig = await sendAndConfirm(connection, signed[i], lastValidBlockHeight, {});
+    const rec = { ...recs[i], state: "routing", fundingSig: sig };
+    saveStealth(rec);
+    finishPrivateBuy(rec);
+  }
+  refreshArmViews(); refreshBalances();
+  return { count, out };
+}
+
+// Fire: the oldest armed wallet buys `mint` with its whole balance, signed in this tab. No fee here; it was paid at arming.
+async function fireArmed(mint, { onStatus = () => {} } = {}) {
+  await readArmBalances();
+  const armed = armReady();
+  if (!armed) throw new StealthError("No armed wallet is ready. Arm one first, or turn Private mode off.");
+  saveStealth({ ...armed, state: "firing", mint, symbol: symbolOf(mint) });
+  try {
+    const stealth = await deriveStealth(web3, await walletSeed(), armed.index), pr = preset();
+    const bal = BigInt(await connection.getBalance(stealth.publicKey)), spend = bal - STEALTH_GAS_RESERVE;
+    onStatus(`Firing armed wallet #${armed.index} (${fromRaw(spend, 9, 4)} SOL)…`);
+    const prep = await prepareSwap({ web3, jup, connection, side: "buy", mint, amountRaw: spend, user: armed.address, treasury: TREASURY, feeBps: 0, slippageBps: pr.slippageBps, priorityMaxLamports: Math.round(pr.maxSol * 1e9), priorityLevel: pr.priority });
+    const sig = await signSend(prep.tx, { local: stealth }, prep.lastValidBlockHeight);
+    const tokens = Number(prep.quote.outAmount) / 10 ** await decimalsOf(mint), sol = Number(spend) / 1e9;
+    saveStealth({ ...armed, state: "holding", mint, symbol: symbolOf(mint), buySig: sig, firedAt: Date.now() });
+    logTrade(S.wallet.pk, { sig, time: Date.now(), side: "buy", mint, symbol: symbolOf(mint), sol, tokens, from: `armed #${armed.index}` });
+    armBalances[armed.address] = 0n;
+    refreshArmViews(); refreshBalances(); renderMine();
+    return { sig, tokens, sol, index: armed.index };
+  } catch (e) { saveStealth(armed); throw e; } // still armed if the buy didn't happen
+}
+async function fireFromPanel() {
+  const go = $("go"), mint = S.tokenMint;
+  S.busy = true; go.disabled = true;
+  try {
+    text(go, "Firing…");
+    const r = await fireArmed(mint, { onStatus: m => setTradeStatus(m) });
+    setTradeStatus(`Armed wallet #${r.index} bought ≈${num(r.tokens)} ${symbolOf(mint)} with ${solFmt(r.sol)} SOL. It was funded through Monero earlier, so no transfer runs from your wallet to it.`, "ok", r.sig);
+  } catch (e) { setTradeStatus(errMsg(e), "err"); }
+  finally { S.busy = false; updateGo(); }
+}
+
+// The Arm screen: arm new wallets, see the ones arming and armed, disarm back to your wallet through Monero.
+function renderArm() {
+  const box = $("arm-body");
+  if (!box) return;
+  box.textContent = "";
+  if (!S.wallet) {
+    const b = make("button", "btn primary", "Connect wallet"); b.type = "button"; b.addEventListener("click", ensureConnected);
+    box.append(make("p", "muted", "Connect the wallet you'll arm from. It signs the funding; the armed wallets are derived from one signature of it and can be rebuilt on any device."), b);
+    return;
+  }
+  const s = armSummary(stealthRecords(), armBalances, STEALTH_GAS_RESERVE);
+  const stats = make("div", "arm-stats");
+  [["Armed", String(s.ready)], ["Ready to fire", `${fromRaw(s.readySol, 9, 3)} SOL`], ["Arming", String(s.arming)]].forEach(([k, v]) => { const d = make("div"); d.append(make("i", "", k), make("b", "", v)); stats.append(d); });
+  const form = make("div", "arm-form");
+  const total = make("input", "inp"); total.placeholder = "Total SOL, e.g. 1.5"; total.inputMode = "decimal"; total.setAttribute("aria-label", "Total SOL to arm");
+  const count = make("select", "inp"); count.setAttribute("aria-label", "Number of wallets");
+  for (let n = 1; n <= ARM_MAX_WALLETS; n++) { const o = make("option", "", `${n} wallet${n > 1 ? "s" : ""}`); o.value = n; if (n === 2) o.selected = true; count.append(o); }
+  const go = make("button", "btn primary arm-go", "Arm"); go.type = "button";
+  const st = make("p", "arm-status muted mono", `Each wallet is funded through its own Monero route (about 0.3 SOL minimum per wallet right now) and is ready in 10–40 minutes. The ${feeBps() / 100}% fee is paid once, here; firing is free.`);
+  go.addEventListener("click", async () => {
+    if (S.busy) return;
+    const raw = toRaw(total.value, 9), n = Number(count.value);
+    if (!raw) return text(st, "Enter how much SOL to arm in total.");
+    if (raw > toRaw(String(STEALTH_MAX_SOL * n), 9)) return text(st, `Up to ${STEALTH_MAX_SOL} SOL per wallet while arming is in beta.`);
+    if (S.sol != null && raw + 10_000_000n > S.sol) return text(st, "Not enough SOL in your wallet for that plus network fees.");
+    S.busy = true; go.disabled = true;
+    try { const r = await armWallets(raw, n, m => text(st, m)); text(st, `Arming ${r.count} wallet${r.count > 1 ? "s" : ""}: about ${fromRaw(r.out, 9, 4)} SOL arrives through Monero in 10–40 minutes. Keep trading; this page and the header show when they're ready.`); total.value = ""; }
+    catch (e) { text(st, errMsg(e)); }
+    finally { S.busy = false; go.disabled = false; }
+  });
+  form.append(total, count, go);
+  const list = make("div", "arm-list");
+  const recs = stealthRecords().filter(r => r.armed).sort((a, b) => b.index - a.index);
+  if (!recs.length) list.append(make("p", "muted", "No armed wallets yet."));
+  for (const r of recs) {
+    const row = make("div", "arm-row"), meta = make("div", "meta"), acts = make("div", "acts");
+    const label = { funding: "waiting for your approval", routing: r.route || "crossing Monero", armed: "armed · ready to fire", firing: "firing…", holding: `fired · holds ${r.symbol || "a token"}`, exiting: "returning to your wallet", closed: "returned", partial: "returned, tokens left" }[r.state] || r.state;
+    const bal = armBalances[r.address];
+    meta.append(make("b", "", `Wallet #${r.index}`), " ", extLink(`https://solscan.io/account/${r.address}`, short(r.address)), ` · ${label}${bal != null ? ` · ${fromRaw(bal, 9, 4)} SOL` : ""}`);
+    if (r.error) meta.append(make("span", "neg", ` · ${r.error}`));
+    if (["armed", "holding", "partial"].includes(r.state)) {
+      const b = make("button", "btn small", r.state === "armed" ? "Disarm" : "Sell all & return"); b.type = "button";
+      b.addEventListener("click", () => stealthExit(r.index, row).then(refreshArmViews));
+      acts.append(b);
+    }
+    row.dataset.state = r.state; row.append(meta, acts); list.append(row);
+  }
+  box.append(stats, form, st, list);
+}
+
 async function stealthExit(index, row) {
   if (S.busy) return;
   S.busy = true;
@@ -1876,7 +2034,8 @@ document.addEventListener("keydown", e => {
     else if (e.key === "s") { $("side-sell").click(); amt.focus(); e.preventDefault(); }
     else if (["1", "2", "3"].includes(e.key)) { settings.preset = Number(e.key) - 1; saveSettings(); renderTradePanel(); }
   }
-  if (e.key === "p") location.hash = "#/";
+  if (e.key === "p") location.hash = "#/pulse";
+  if (e.key === "a") location.hash = "#/";
 });
 
 /* ---------- boot ---------- */

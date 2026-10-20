@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Ardea is a Solana trading terminal whose Private mode funds every buy through Monero: live launches, one-click Jupiter trades, wallet tracking and orders.">
+<meta name="description" content="Ardea arms clean Solana wallets through Monero ahead of time, then fires private buys from them instantly. A full trading terminal sits around it.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ardea-production.up.railway.app/">
 <meta property="og:site_name" content="Ardea">
-<meta property="og:title" content="Ardea · Cross Monero, trade from a clean wallet">
-<meta property="og:description" content="A Solana trading terminal. Private mode sends your SOL through Monero to a fresh wallet, which makes the trade.">
-<meta property="og:image" content="https://ardea-production.up.railway.app/media/banner.png?v=1">
+<meta property="og:title" content="Ardea · Arm a clean wallet, fire private buys instantly">
+<meta property="og:description" content="Fund fresh Solana wallets through Monero ahead of time, then fire private buys from them in one click.">
+<meta property="og:image" content="https://ardea-production.up.railway.app/media/banner.png?v=2">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://ardea-production.up.railway.app/media/banner.png?v=1">
+<meta name="twitter:image" content="https://ardea-production.up.railway.app/media/banner.png?v=2">
 <meta name="theme-color" content="#141414">
 <title>Ardea</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -259,7 +259,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 
 .record{background:none;border:0;border-radius:0;gap:36px 48px;overflow:visible}
 .rec{background:none;padding:0}
 .rail{background:none}
-.cert{--ink:#F2F2F2;background:none;color:var(--ink);border-radius:0;padding:0;overflow:visible}
+.cert{--ink:#F2F2F2;background:none;color:var(--ink);border-radius:0;padding:clamp(56px,8vw,104px) 0 0;overflow:visible}
 .cert::before{display:none}
 .cert .eyebrow,.cert .note{color:var(--mute)}
 .cert .eyebrow .beta,.cert .btn.dark{color:#141414}
@@ -281,14 +281,14 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 
     <a class="brand" href="#top" aria-label="Ardea home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
     <nav class="links" aria-label="Sections">
       <a class="sec" href="#record">The record</a>
-      <a class="sec" href="#private">Private mode</a>
+      <a class="sec" href="#arm">Arm a wallet</a>
       <a class="sec" href="#desk">Terminal</a>
       <a class="sec" href="#audit">Trail audit</a>
       <a class="sec" href="#token">Token</a>
       <a href="./docs.html">Docs</a>
       <a class="x" href="https://github.com/JermWang/ardea" target="_blank" rel="noopener" aria-label="Ardea source code on GitHub" title="Source code on GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.65.5.5 5.65.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.87-1.37-3.87-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg></a>
       <a class="x" href="#" data-x hidden target="_blank" rel="noopener" aria-label="Ardea on X" title="Ardea on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
-      <a class="btn brass" href="./app.html">Open terminal</a>
+      <a class="btn brass" href="./app.html">Arm a wallet</a>
     </nav>
   </div>
 </header>
@@ -297,26 +297,60 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 
   <div class="wrap">
     <section class="hero">
       <div>
-        <p class="eyebrow">A Solana terminal, routed through Monero</p>
-        <h1>Cross Monero. <em>Trade from a clean wallet.</em></h1>
-        <p class="lede">Ardea is a full trading terminal: live launches, one-click buys, wallet tracking and orders. In <b>Private mode</b>, your SOL is swapped to XMR, crosses Monero, and is swapped back to SOL by an unrelated exchange, which pays a fresh wallet. That wallet makes the buy, so no transfer runs from your wallet to it.</p>
+        <p class="eyebrow">Arm a wallet · routed through Monero</p>
+        <h1>Arm a clean wallet. <em>Fire private buys instantly.</em></h1>
+        <p class="lede">Ardea funds fresh wallets through Monero ahead of time: your SOL becomes XMR, crosses Monero, and an unrelated exchange pays each wallet. When a coin moves, an <b>armed wallet</b> buys it in one click, with no transfer from your wallet to it and no route to wait for. A full Solana trading terminal sits around it.</p>
         <div class="ctas">
-          <a class="btn brass" href="./app.html">Open terminal <span class="arr">→</span></a>
-          <a class="btn" href="./docs.html">How it works</a>
+          <a class="btn brass" href="./app.html">Arm a wallet <span class="arr">→</span></a>
+          <a class="btn" href="#arm">How it works</a>
         </div>
         <div class="facts">
-          <div><b>Non-custodial</b><span>You sign every trade, in your own wallet</span></div>
-          <div><b>Through Monero</b><span>SOL → XMR → SOL into a fresh wallet</span></div>
-          <div><b><bdi data-cfg="fee">0.5%</bdi> flat</b><span>One fee, charged once, in SOL</span></div>
+          <div><b>Armed ahead</b><span>Funded through Monero, 10–40 min before you need it</span></div>
+          <div><b>Fires instantly</b><span>One click or one ⚡, no route to wait for</span></div>
+          <div><b><bdi data-cfg="fee">0.5%</bdi> once</b><span>Paid at arming; firing is free</span></div>
         </div>
       </div>
       <div class="seal-wrap">
-        <svg id="seal" class="seal" viewBox="0 0 600 540" role="img" aria-label="Your wallet's dotted trail runs into an engraved ring marked Monero and stops; a new wallet's line leaves through a gap in the ring, and the readout shows no direct transfer"></svg>
+        <svg id="seal" class="seal" viewBox="0 0 600 540" role="img" aria-label="The Ardea heron above a route line: your wallet, then Monero, then an armed wallet that fires in one click; direct transfer: none"></svg>
       </div>
     </section>
   </div>
 
   <div class="rail"><div class="wrap"><span>Built on</span><span>Solana</span><span>Jupiter</span><span>Monero</span><span>Houdini Swap</span><span>Jito</span><span>PumpPortal</span></div></div>
+
+  <div class="wrap">
+    <section id="arm" class="cert" aria-labelledby="pm-h">
+      <p class="eyebrow"><span class="beta">BETA</span> Arm a wallet · routed through Monero</p>
+      <h2 id="pm-h">Arm once. <em>Fire whenever.</em></h2>
+      <p class="sub">Private routes through Monero take 10–40 minutes, too slow for a coin that's moving. So Ardea does the slow part first. You arm one to five clean wallets; each is paid through Monero by an exchange, not by you. When you want in, the next armed wallet buys instantly.</p>
+      <div class="cols">
+        <div class="col"><span data-glyph="stealth"></span><h3>Armed ahead</h3><p>Arm one to five wallets in one approval. Each gets its own Monero route, sent at random intervals, at uneven sizes.</p></div>
+        <div class="col"><span data-glyph="lock"></span><h3>A real Monero hop</h3><p>Every route is forced through Monero, where ring signatures, stealth addresses and RingCT hide sender, receiver and amount. Houdini Swap runs the route; Ardea never holds your funds or XMR.</p></div>
+        <div class="col"><span data-glyph="bolt"></span><h3>Fires instantly</h3><p>With Private mode on, any buy or ⚡ quick-buy fires the oldest armed wallet with its whole balance, signed in your tab. No popups, no wait.</p></div>
+        <div class="col"><span data-glyph="clock"></span><h3>Out of step</h3><p>The funding happened earlier and in different amounts, so the buy's timing and size don't line up with your deposit, the match trackers look for.</p></div>
+      </div>
+      <div class="how">
+        <h3>How arming works</h3>
+        <ol>
+          <li><b>Arm.</b> Pick a total and how many wallets. For each, the terminal opens a SOL → XMR → SOL route with Houdini Swap, forced through Monero, and checks the order: right wallet, right amount, a private route, or it refuses.</li>
+          <li><b>Approve once.</b> One wallet prompt covers every funding transfer plus Ardea's <span data-cfg="fee">0.5%</span> fee to the treasury. They go out at random intervals. You see what will arrive before you sign.</li>
+          <li><b>It crosses Monero.</b> One exchange swaps the SOL to XMR, the XMR moves on Monero, and an unrelated exchange pays each wallet from its own funds, in 10–40 minutes, in the background. If no Monero route is available, nothing is sent.</li>
+          <li><b>Fire.</b> Any buy fires the next armed wallet through Jupiter, instantly. Sell from it whenever; disarming returns its SOL to you through Monero.</li>
+        </ol>
+      </div>
+      <figure class="route">
+        <div class="art"><svg data-diagram="stealthRoute" role="img" aria-label="Your wallet pays a one-time deposit address; the SOL is swapped to XMR, crosses Monero, and an unrelated exchange swaps it back and pays a fresh stealth wallet, which swaps on Jupiter"></svg></div>
+        <figcaption><b>Arming a wallet.</b> Your wallet pays a one-time deposit address. An unrelated exchange pays the armed wallet after the Monero hop. No on-chain transfer runs from you to it.</figcaption>
+      </figure>
+      <div class="acts">
+        <a class="btn dark" href="./app.html">Arm a wallet <span class="arr">→</span></a>
+        <a class="btn" href="./docs.html#arm">Read the details</a>
+        <p class="note">No armed wallet ready? Private mode still works: that buy waits for its own route.</p>
+      </div>
+      <div class="limits"><b>What it doesn't hide.</b> Houdini Swap sees both ends of each route (it keeps order data for 72 hours), and each exchange sees its own leg. A determined observer can still try to match amounts and timing. Arming ahead, at uneven sizes and random intervals, breaks the simple match between your deposit and your buy; it can't make tracing impossible. An armed wallet's key lives in your browser, derived from your signature, so keep only what you mean to trade in it. <a href="./docs.html#proof">See the proof</a>.
+      </div>
+    </section>
+  </div>
 
   <div class="wrap">
     <section id="record">
@@ -335,42 +369,11 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 
       </div>
     </section>
 
-    <section id="private" class="cert" aria-labelledby="pm-h">
-      <p class="eyebrow"><span class="beta">BETA</span> Private mode · routed through Monero</p>
-      <h2 id="pm-h">Your SOL goes in. <em>A stranger's wallet buys.</em></h2>
-      <p class="sub">A private buy never comes from your wallet. Your wallet pays a one-time deposit address at one exchange; the SOL becomes XMR and crosses Monero; an unrelated exchange swaps it back and pays a brand-new stealth wallet, and that wallet makes the trade.</p>
-      <div class="cols">
-        <div class="col"><span data-glyph="stealth"></span><h3>A new wallet each buy</h3><p>Every private buy runs from a stealth wallet with no history, so trackers see a stranger every time.</p></div>
-        <div class="col"><span data-glyph="lock"></span><h3>A real Monero hop</h3><p>Every route is forced through Monero, where ring signatures, stealth addresses and RingCT hide sender, receiver and amount. Houdini Swap runs the route; Ardea never holds your funds or XMR.</p></div>
-        <div class="col"><span data-glyph="key"></span><h3>Recoverable anywhere</h3><p>Stealth wallets come from one signature of your wallet. Sign again on any device to restore them. Nothing secret is stored.</p></div>
-        <div class="col"><span data-glyph="fuel"></span><h3>One clear transaction</h3><p>You sign once: the amount to the route's one-time address and the <span data-cfg="fee">0.5%</span> fee to Ardea's treasury. The treasury never pays a stealth wallet, so the fee links nothing.</p></div>
-      </div>
-      <div class="how">
-        <h3>How a private buy crosses Monero</h3>
-        <ol>
-          <li><b>Ask for a route.</b> The terminal asks Houdini Swap for a SOL → XMR → SOL route to a new stealth wallet, forced through Monero, and checks the order: right wallet, right amount, a private route, or it refuses.</li>
-          <li><b>Fund it.</b> You approve one transaction: the amount to a one-time deposit address, plus Ardea's <span data-cfg="fee">0.5%</span> fee to the treasury. You see the SOL that will arrive and the route time before you sign.</li>
-          <li><b>It crosses Monero.</b> One exchange swaps the SOL to XMR, the XMR moves on Monero, and an unrelated exchange swaps it back and pays the stealth wallet from its own funds. It takes 10–40 minutes. If no Monero route is available, nothing is sent.</li>
-          <li><b>The stealth wallet buys.</b> When the SOL lands it waits a random 30 seconds to 3 minutes, then swaps through Jupiter. Exits run the same Monero route in reverse, back to your wallet.</li>
-        </ol>
-      </div>
-      <figure class="route">
-        <div class="art"><svg data-diagram="stealthRoute" role="img" aria-label="Your wallet pays a one-time deposit address; the SOL is swapped to XMR, crosses Monero, and an unrelated exchange swaps it back and pays a fresh stealth wallet, which swaps on Jupiter"></svg></div>
-        <figcaption><b>A private buy.</b> Your wallet pays a one-time deposit address. An unrelated exchange pays the stealth wallet after the Monero hop. No on-chain transfer runs from you to it.</figcaption>
-      </figure>
-      <div class="acts">
-        <a class="btn dark" href="./app.html">Try Private mode <span class="arr">→</span></a>
-        <a class="btn" href="./docs.html#private">Read the details</a>
-        <p class="note">On by default in the terminal. A route takes 10–40 minutes; switch it off when you need raw speed.</p>
-      </div>
-      <div class="limits"><b>What it doesn't hide.</b> Houdini Swap sees both ends of each route (it keeps order data for 72 hours), and each exchange sees its own leg. A determined observer can still try to match the amount you send with the amount that arrives, and their timing. The Monero hop, its fees and the random wait before buying make that harder; they can't make it impossible. <a href="./docs.html#proof">See the proof</a>.
-      </div>
-    </section>
 
     <section id="desk">
       <div class="head">
         <div>
-          <p class="eyebrow">The terminal</p>
+          <p class="eyebrow">Around it, the terminal</p>
           <h2>A complete trading desk, <em>in your browser.</em></h2>
         </div>
         <p>Live launches, one-click buys and wallet tracking, built on public data and running in your browser. Every trade routes through Jupiter, and you sign it in your own wallet or in an instant wallet that only you can rebuild.</p>
@@ -453,7 +456,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 
 <footer>
   <div class="wrap">
     <p class="big">A wallet should only show <em>what you choose to sign.</em></p>
-    <nav aria-label="Footer"><a href="./app.html">Terminal</a><a href="./docs.html">Docs</a><a href="#audit">Trail audit</a><a href="https://github.com/JermWang/ardea" target="_blank" rel="noopener">GitHub</a><a href="#" data-x hidden target="_blank" rel="noopener">X</a><a href="#private">Private mode</a></nav>
+    <nav aria-label="Footer"><a href="./app.html">Terminal</a><a href="./docs.html">Docs</a><a href="#audit">Trail audit</a><a href="https://github.com/JermWang/ardea" target="_blank" rel="noopener">GitHub</a><a href="#" data-x hidden target="_blank" rel="noopener">X</a><a href="#arm">Arm a wallet</a></nav>
     <div class="fine">
       <a class="brand" href="#top" aria-label="Ardea home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
       <span>Non-custodial software. Privacy on a public chain is never perfect; read the limits in the docs.</span>

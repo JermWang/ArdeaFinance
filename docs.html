@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="How Ardea works: wallets, Jupiter routing, the 0.5% fee, Private mode through Monero, Pulse data, orders, the Trail audit and the gateway.">
+<meta name="description" content="How Ardea works: wallets, Jupiter routing, the 0.5% fee, Arm a wallet, Private mode through Monero, Pulse data, orders, the Trail audit and the gateway.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Ardea">
 <meta property="og:title" content="Ardea · Documentation">
-<meta property="og:description" content="How Ardea works: wallets, Jupiter routing, fees, Private mode through Monero, Pulse data, orders and the Trail audit.">
-<meta property="og:image" content="https://ardea-production.up.railway.app/media/banner.png?v=1">
+<meta property="og:description" content="How Ardea works: wallets, Jupiter routing, fees, Arm a wallet, Private mode through Monero, Pulse data, orders and the Trail audit.">
+<meta property="og:image" content="https://ardea-production.up.railway.app/media/banner.png?v=2">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://ardea-production.up.railway.app/media/banner.png?v=1">
+<meta name="twitter:image" content="https://ardea-production.up.railway.app/media/banner.png?v=2">
 <meta name="theme-color" content="#F4F4F4">
 <title>Ardea · Documentation</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -200,6 +200,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#C24A00,#933800 55%
       <a href="#wallets">Wallets</a>
       <a href="#trading">Trading</a>
       <a href="#fees">Fees</a>
+      <a href="#arm">Arm a wallet</a>
       <a href="#private">Private mode</a>
       <a href="#proof">Proof</a>
       <a href="#pulse">Pulse data</a>
@@ -287,6 +288,25 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#C24A00,#933800 55%
           <li><b>Not charged:</b> stealth exits, deposits to and withdrawals from your instant wallet, and limit orders (Jupiter fills those).</li>
         </ul>
         <p>Network costs are separate and go to Solana validators: the base fee, the priority fee from your preset, and a Jito tip if set. Jupiter's routing is free.</p>
+      </section>
+
+      <section id="arm">
+        <p class="eyebrow"><span data-glyph="bolt"></span>Arm a wallet</p>
+        <h2>Do the slow part first. <em>Fire when it counts.</em></h2>
+        <p>A private route through Monero takes 10–40 minutes, too slow for a coin that's moving. Arming moves that wait to before you need it. You fund one to five clean stealth wallets through Monero ahead of time. Each one is <b>armed</b> once its SOL lands, and with Private mode on, any buy or ⚡ quick-buy fires the oldest armed wallet instantly.</p>
+        <ol class="steps">
+          <li><span>Choose a total and a number of wallets (one to five, up to <b data-cfg="stealthMax">5 SOL</b> each in beta). The total is split into uneven, non-round sizes.</span></li>
+          <li><span>For each wallet the terminal derives the next fresh stealth wallet, checks the chain that it has never been used, opens a Houdini private-send order forced through Monero, and checks the order exactly as a private buy does. Anything off and it refuses.</span></li>
+          <li><span>You approve every funding transfer in one wallet prompt: each to its order's one-time deposit address, plus the <span data-cfg="fee">0.5%</span> fee to the treasury. The terminal sends them 3–15 seconds apart, at random.</span></li>
+          <li><span>Each route crosses Monero in 10–40 minutes, in the background, and resumes after a reload. When a wallet's SOL lands it's marked armed.</span></li>
+          <li><span><b>Firing</b> uses the oldest armed wallet: it swaps its whole balance (keeping 0.01 SOL for fees and token-account rent) through Jupiter, signed in your tab, with no fee. Each armed wallet fires once.</span></li>
+          <li><span><b>Disarming</b> sends a wallet's SOL, or what's left after selling, back to your wallet through the same Monero route.</span></li>
+        </ol>
+        <h3>Why it's more private, not just faster</h3>
+        <p>The simplest way to unmask a private buy is to match it to its funding: SOL leaves your wallet, a similar amount reaches a fresh wallet, and that wallet buys soon after. Arming breaks that pattern. The funding happens earlier, at uneven sizes, at random intervals, and the buy happens whenever you fire, with whatever arrived after the route's fees.</p>
+        <div class="note ink">
+          <p><b>What arming doesn't change.</b> Houdini sees both ends of each route, and each exchange sees its own leg. An armed wallet's key lives in your browser, derived from your wallet's signature like every stealth wallet: anyone with that signature could rebuild it, so keep in armed wallets only what you mean to trade. Arming makes tracing slower and less certain; it doesn't make it impossible.</p>
+        </div>
       </section>
 
       <section id="private">

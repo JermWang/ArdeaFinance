@@ -55,22 +55,22 @@ if (s === "pfp") {
 if (s === "xbanner") {
   glow("80%", "70%");
   const b = box(`left:${W * .3}px;top:50%;transform:translateY(-50%)`);
-  b.innerHTML = `<p class="kick">A Solana terminal · <b>routed through Monero</b></p><h1 style="font-size:76px;margin-top:18px">Cross Monero.<br><em>Trade from a clean wallet.</em></h1>`;
+  b.innerHTML = `<p class="kick">Arm a wallet · <b>routed through Monero</b></p><h1 style="font-size:76px;margin-top:18px">Arm a clean wallet.<br><em>Fire private buys instantly.</em></h1>`;
   const xm = mark(300); xm.style.cssText = `position:absolute;left:${W * .82 - 150}px;top:${H / 2 - 150}px`; document.body.append(xm);
 }
 if (s === "og") {
   glow("78%", "70%");
   const top = box("left:80px;top:72px;display:flex;align-items:center;gap:20px");
   top.append(mark(76)); top.insertAdjacentHTML("beforeend", `<span class="word" style="font-size:58px">Ardea</span>`);
-  box("left:80px;top:210px", `<h1 style="font-size:84px">Cross Monero.<br><em>Trade from a clean wallet.</em></h1>`);
-  box("left:84px;bottom:66px", `<p class="kick">Solana terminal · SOL → <b>XMR</b> → SOL · non-custodial</p>`);
+  box("left:80px;top:210px", `<h1 style="font-size:80px">Arm a clean wallet.<br><em>Fire private buys instantly.</em></h1>`);
+  box("left:84px;bottom:66px", `<p class="kick">Armed through <b>Monero</b> · fires in one click · non-custodial</p>`);
 }
 if (s === "hero") {
   glow("76%", "50%");
   const m = mark(500); m.style.cssText = `position:absolute;left:${W * .76 - 250}px;top:${H / 2 - 250}px`; document.body.append(m);
   const top = box("left:110px;top:96px;display:flex;align-items:center;gap:16px");
   top.append(mark(44)); top.insertAdjacentHTML("beforeend", `<span class="word" style="font-size:38px">Ardea</span>`);
-  box("left:110px;top:270px;width:760px", `<p class="kick">Private mode · <b>routed through Monero</b></p><h1 style="font-size:104px;margin-top:22px">Cross Monero.<br><em>Trade from a clean wallet.</em></h1><p style="font-size:22px;line-height:1.6;color:#BDBDBD;margin-top:30px;max-width:640px">A full Solana trading terminal. In Private mode your SOL becomes XMR, crosses Monero, and an unrelated exchange pays a fresh wallet that makes the buy.</p>`);
+  box("left:110px;top:270px;width:760px", `<p class="kick">Arm a wallet · <b>routed through Monero</b></p><h1 style="font-size:96px;margin-top:22px">Arm a clean wallet.<br><em>Fire private buys instantly.</em></h1><p style="font-size:22px;line-height:1.6;color:#BDBDBD;margin-top:30px;max-width:640px">Fund fresh wallets through Monero ahead of time. When a coin moves, an armed wallet buys it in one click, with no transfer from your wallet to it.</p>`);
 }
 if (s === "route") {
   glow("50%", "40%");
