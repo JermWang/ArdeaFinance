@@ -7,7 +7,7 @@ import { createRequire } from "node:module";
 const { ed25519 } = createRequire(import.meta.url)("@noble/curves/ed25519");
 const signWith = (msg, kp) => ed25519.sign(msg, kp.secretKey.slice(0, 32));
 
-const TREASURY = "DGorZp9ari8RGGdiQbXCsQ62HDmkxSL66xxQcYvWfWMP";
+const TREASURY = web3.Keypair.generate().publicKey.toBase58();
 const main = web3.Keypair.generate();
 const sig = signWith(new TextEncoder().encode(STEALTH_MESSAGE), main);
 

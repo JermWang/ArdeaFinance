@@ -23,6 +23,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+[data-x][hidden],#ca-trade[hidden]{display:none!important}
 /* Vault navy page, ivory type, one brass accent. Display type is a serif; numbers and labels are mono.
    Illustrations are fine-line guilloché engravings drawn in code (art.js). */
 :root{
@@ -420,11 +421,11 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 
         <div class="tier"><span data-glyph="stealth"></span><span class="soon">Roadmap</span><h3>Private limits</h3><p>Holders get higher Private mode limits per buy.</p></div>
         <div class="tier"><span data-glyph="link"></span><span class="soon">Roadmap</span><h3>Referrals</h3><p>Bring traders and earn a share of their fees, paid in the token.</p></div>
       </div>
-      <div class="ca-row"><button class="ca" id="ca" type="button" aria-label="Copy contract address FepxP15gLqWBW3pHV9Mmcb625UtPst7dFk1v2Ffhpump">
+      <div class="ca-row"><button class="ca" id="ca" type="button" disabled aria-label="Contract address: announced at launch">
         <span class="ca-k">Contract</span>
-        <span class="ca-v" id="ca-v">FepxP15gLqWBW3pHV9Mmcb625UtPst7dFk1v2Ffhpump</span>
+        <span class="ca-v" id="ca-v">Announced at launch</span>
         <span class="ca-go" id="ca-go">Copy</span>
-      </button><a class="btn brass ca-trade" href="./app.html#/token/FepxP15gLqWBW3pHV9Mmcb625UtPst7dFk1v2Ffhpump">Trade on Ardea <span class="arr">→</span></a></div>
+      </button><a class="btn brass ca-trade" id="ca-trade" href="./app.html" hidden>Trade on Ardea <span class="arr">→</span></a></div>
     </section>
   </div>
 </main>

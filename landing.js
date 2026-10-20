@@ -239,6 +239,7 @@ const ca = $("ca");
   const addr = isAddress(env.TOKEN_CA || "") ? env.TOKEN_CA : isAddress(TOKEN_CA || "") ? TOKEN_CA : "";
   if (!addr) return;
   $("ca-v").textContent = addr;
+  $("ca-trade").href = `./app.html#/token/${addr}`; $("ca-trade").hidden = false;
   ca.disabled = false;
   ca.setAttribute("aria-label", `Copy contract address ${addr}`);
   let reset;

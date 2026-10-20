@@ -4,7 +4,7 @@ import web3 from "@solana/web3.js";
 import { toRaw, fromRaw, feeOnBuy, feeOnSell, buildSwapTx, prepareSwap, jupiter, SOL_MINT } from "../swap.js";
 import { quoteFor, instructionsFor, handleJupiter } from "./jupmock.mjs";
 
-const TREASURY = "DGorZp9ari8RGGdiQbXCsQ62HDmkxSL66xxQcYvWfWMP";
+const TREASURY = web3.Keypair.generate().publicKey.toBase58();
 const MINT = "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263";
 
 // Decode the compiled transaction back into readable instructions.

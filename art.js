@@ -123,62 +123,6 @@ function diamond(parent, size = 4.5, fill = C.BRASS) {
   return el("path", { d: `M0 ${-size}L${size} 0L0 ${size}L${-size} 0Z`, fill, stroke: C.BG, "stroke-width": 1 }, parent);
 }
 
-/* ---------- the mascot: a chameleon ---------- */
-// It blends into any background, and its tail coils like a vault dial, ending in a brass core.
-// Drawn on a 64-unit grid into `parent` (an <svg> or <g>). The body takes `fg` (currentColor by default,
-// so it is ivory on dark pages and navy on paper). The turret eye wanders and blinks, the skin shifts
-// colour to hide, and with `tongue` it snaps a brass token out of the air every few seconds.
-export function chameleon(parent, { host, fg = "currentColor", line = C.BG, engraved = false, tongue = false, branch = false, camo = false } = {}) {
-  const g = el("g", {}, parent), svg = parent.ownerSVGElement || parent;
-  let defs = svg.querySelector(":scope > defs");
-  if (!defs) defs = el("defs", {}, svg);
-  if (branch) el("path", { d: "M3 52.5C18 51.2 40 51.2 61 52.8", fill: "none", stroke: C.STEEL, "stroke-width": 2.2, "stroke-linecap": "round" }, g);
-  const cx = 14.2, cy = 38.6;
-  let d = "M24.5 38.8C22 36.6 21 34 ", end = [cx, cy];
-  for (let i = 0; i <= 140; i++) { const u = i / 140, a = -0.15 - u * 7.4, r = 10.8 - u * 6.6; end = [cx + Math.cos(a) * r, cy + Math.sin(a) * r]; d += (i ? "L" : "") + f2(end[0]) + " " + f2(end[1]); }
-  el("path", { d, fill: "none", stroke: fg, "stroke-width": 3.8, "stroke-linecap": "round", "stroke-linejoin": "round" }, g);
-  el("circle", { cx: f2(end[0]), cy: f2(end[1]), r: 1.55, fill: C.BRASS }, g);
-  const legs = el("g", { stroke: fg, "stroke-width": 3.4, "stroke-linecap": "round", "stroke-linejoin": "round", fill: "none" }, g);
-  el("path", { d: "M30 40.5L27.2 46.4L29 51.2M29 51.2L26.6 53.6M29 51.2L31.4 53.8" }, legs);
-  el("path", { d: "M45.5 40L49.2 45.6L47.4 51.4M47.4 51.4L45 53.8M47.4 51.4L49.8 53.8" }, legs);
-  const body = "M23 38C22 28.5 30 20.6 40 20C44 19.8 46.9 20.3 49 21.6L52.4 15.6C52.9 14.8 54 14.8 54.5 15.6L60.6 26C61.7 27.9 61 30 59 30.6L53.2 32.4C51.2 37.2 47 41.6 40 42.6C33 43.6 26 42.6 23 38Z";
-  const skin = el("path", { d: body, fill: fg }, g);
-  const tint = el("path", { d: body, fill: C.BRASS, opacity: 0 }, g);
-  if (engraved) {
-    const id = "cb" + Math.random().toString(36).slice(2, 8), cp = el("clipPath", { id }, defs); el("path", { d: body }, cp);
-    let ld = "";
-    for (let r = 6; r < 30; r += 2.1) for (let s = 0; s <= 48; s++) { const a = Math.PI + s / 48 * Math.PI, rr = r + Math.sin(s * .9 + r) * .35; ld += (s ? "L" : "M") + f2(40 + Math.cos(a) * rr * 1.25) + " " + f2(46 + Math.sin(a) * rr); }
-    el("path", { d: ld, fill: "none", stroke: line, "stroke-width": .4, opacity: .085, "clip-path": `url(#${id})` }, g);
-  }
-  el("path", { d: "M27.5 37.2C33 38.6 42 38 50.5 33.4", fill: "none", stroke: C.BRASS, "stroke-width": 1.7, "stroke-linecap": "round" }, g);
-  el("path", { d: "M54.4 30.6C56.3 31 58 30.6 59.6 29.8", fill: "none", stroke: line, "stroke-width": 1, "stroke-linecap": "round", opacity: .55 }, g);
-  const tg = el("g", { opacity: 0 }, g);
-  const tLine = el("line", { x1: 59.5, y1: 29.6, x2: 59.5, y2: 29.6, stroke: "#E27F86", "stroke-width": 1.6, "stroke-linecap": "round" }, tg);
-  const tTip = el("circle", { r: 1.9, fill: "#E27F86" }, tg);
-  const token = tongue ? el("path", { d: "M0 -3.4L3.4 0L0 3.4L-3.4 0Z", fill: C.BRASS, opacity: 0 }, g) : null;
-  const eye = el("g", { transform: "translate(53.2 24.6)" }, g);
-  el("circle", { r: 5, fill: C.IVORY, stroke: line, "stroke-width": 1.4 }, eye);
-  const lid = el("g", {}, eye), pupil = el("circle", { r: 2, fill: C.BG }, lid), glint = el("circle", { r: .65, fill: "#FF8A3D" }, lid);
-  const look = ([x, y]) => { pupil.setAttribute("cx", x); pupil.setAttribute("cy", y); glint.setAttribute("cx", f2(x + .7)); glint.setAttribute("cy", f2(y - .7)); };
-  look([1.4, -.3]);
-  const blink = (t, every, off) => { const c = (t + off) % every; return c < .12 ? 1 - Math.sin(c / .12 * Math.PI) * .92 : 1; };
-  animate(t => {
-    const cyc = t % 8;
-    look(tongue && cyc > 5.2 ? [1.6, .4] : [[1.4, -.3], [-1.3, -1], [.3, 1.2], [1.5, .7], [-.8, .9]][Math.floor(t / 1.3) % 5]);
-    lid.setAttribute("transform", `scale(1 ${f2(blink(t, 4.3, .8))})`);
-    if (camo) { const c = (t % 9) / 9; tint.setAttribute("opacity", f2(Math.max(0, Math.sin(c * TAU - .5)) * .45)); tint.setAttribute("fill", c < .5 ? C.BRASS : C.STEEL); }
-    if (tongue) {
-      const tx = 74, ty = 31 + Math.sin(t * 2) * 1.2, shoot = cyc > 5.9 && cyc < 6.5 ? (cyc - 5.9) / .6 : 0, p = shoot ? Math.sin(shoot * Math.PI) : 0;
-      token.setAttribute("opacity", cyc > 4.2 && cyc < 6.45 ? 1 : 0);
-      const kx = cyc < 6.2 ? (cyc < 5 ? tx + (5 - cyc) * 8 : tx) : 59.5 + (tx - 59.5) * p, ky = cyc < 6.2 ? ty : 29.6 + (ty - 29.6) * p;
-      token.setAttribute("transform", `translate(${f2(kx)} ${f2(ky)}) rotate(${f2(t * 90)})`);
-      tg.setAttribute("opacity", p > .02 ? 1 : 0);
-      const ex = 59.5 + (tx - 59.5) * p, ey = 29.6 + (ty - 29.6) * p;
-      tLine.setAttribute("x2", f2(ex)); tLine.setAttribute("y2", f2(ey)); tTip.setAttribute("cx", f2(ex)); tTip.setAttribute("cy", f2(ey));
-    }
-  }, host || svg, 1);
-  return g;
-}
 // The logo: the Ardea heron in its ring (logo.js), always clean. On paper pages pass { tone: "orangePaper" }.
 export function mark(cls, { tone = "orange", animate = true } = {}) {
   const svg = svgEl("0 0 10 10");
@@ -538,7 +482,7 @@ export function curveChart(svg) {
 }
 
 /* ---------- emblems for empty states in the terminal ---------- */
-// The gold chameleon mark (or, for "chart", a line that keeps drawing itself).
+// The Ardea heron mark (or, for "chart", a line that keeps drawing itself).
 export function emblem(kind = "stream") {
   const svg = svgEl("0 0 200 120");
   waves(svg, { x0: 0, y0: 10, x1: 200, y1: 112, gap: 9, amp: 3, period: 60, opacity: .14, host: svg, speed: 5 });
@@ -550,7 +494,7 @@ export function emblem(kind = "stream") {
     animate(t => { const L = ln.getTotalLength?.() || 300, p = Math.min(1, (t % 4) / 2.6); ln.setAttribute("stroke-dasharray", `${f2(L)} ${f2(L)}`); ln.setAttribute("stroke-dashoffset", f2(L * (1 - p))); const pt = ln.getPointAtLength ? ln.getPointAtLength(p * L) : { x: 170, y: 30 }; dot.setAttribute("cx", f2(pt.x)); dot.setAttribute("cy", f2(pt.y)); }, svg, 3);
     return svg;
   }
-  // the chameleon, blending into the page while there is nothing to show
+  // the heron, standing still while there is nothing to show
   const m = el("svg", { x: 62, y: 14, width: 76, height: 84, overflow: "visible" }, svg);
   logoMark(m, { sheen: false });
   return svg;
