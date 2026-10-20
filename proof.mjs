@@ -77,6 +77,8 @@ export function startProof({ env = process.env, gateway, log = console.log } = {
     const schedule = () => { const ms = msUntil(state.utcHour); state.next = new Date(Date.now() + ms).toISOString(); setTimeout(() => { run().finally(schedule); }, ms); };
     schedule();
     log(`proof: wallets ${state.a} and ${state.b}, ${state.amountSol} SOL daily at ${state.utcHour}:00 UTC`);
+    // one extra route right after this start, on top of the schedule; remove the variable afterwards
+    if (env.PROOF_RUN_NOW) { log("proof: PROOF_RUN_NOW is set, running one route now"); run(); }
   })().catch(e => { state.enabled = false; state.error = String(e.message || e); log(`proof: off (${state.error})`); });
   return state;
 }
