@@ -163,6 +163,8 @@ tr.pick:hover td{background:var(--ink-2)}
 .seg{display:inline-flex;background:var(--ink-2);border-radius:4px;padding:3px;gap:2px}
 .seg button{border:0;background:none;border-radius:4px;padding:5px 11px;font:500 .72rem var(--font-mono);cursor:pointer;color:var(--mute-ink)}
 .seg button[aria-pressed="true"]{background:var(--paper);color:var(--ink)}
+#fromseg button{display:inline-flex;align-items:center;gap:5px}
+.armpick{display:flex;flex-wrap:wrap;margin:-2px 0 10px}.armpick[hidden]{display:none}.armpick a{font:500 .72rem var(--font-mono);color:var(--brand,#FF6600);padding:5px 8px;text-decoration:none}
 .tdempty{padding:18px 12px;font:.74rem var(--font-mono);color:var(--mute-ink)}
 
 /* token page */
@@ -691,7 +693,7 @@ body{padding-left:78px}
     <ul class="results" id="results" role="listbox" hidden></ul>
   </div>
   <div class="right">
-    <a class="chip armchip" id="armchip" href="#/" hidden title="Armed wallets ready to fire"></a>
+    <a class="chip armchip" id="armchip" href="#/" hidden title="Armed wallets ready to trade"></a>
     <button class="chip" id="autochip" type="button" hidden></button>
     <span class="chip solchip" id="solprice" title="SOL price">SOL —</span>
     <label class="qb-amt" title="Quick-buy amount for the bolt buttons"><span class="qb-ic"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M9 1.8 3.6 9h4l-.8 5.2L12.4 7h-4z"/></svg></span><input id="qbamt" inputmode="decimal" aria-label="Quick-buy amount in SOL"><span>SOL</span></label>
@@ -707,12 +709,12 @@ body{padding-left:78px}
       <p class="arm-eyebrow">Arm a wallet · funded through Monero</p>
       <p class="arm-route"><span class="route-chip" aria-label="SOL to XMR to SOL"><span data-glyph="solana" class="bl"></span>SOL<i>→</i><span data-glyph="monero" class="bl"></span>XMR<i>→</i><span data-glyph="solana" class="bl"></span>SOL</span></p>
       <h1>Arm a clean wallet. <em>Fire private buys instantly.</em></h1>
-      <p class="arm-lede">Fund fresh wallets through Monero ahead of time. When you spot a coin, an armed wallet buys it in one click: no route to wait for, and because the funding happened earlier, the buy's timing and amount don't line up with your deposit. With Private mode on, every buy and every <svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M9 1.8 3.6 9h4l-.8 5.2L12.4 7h-4z"/></svg> quick-buy fires the next armed wallet.</p>
+      <p class="arm-lede">Fund fresh wallets through Monero ahead of time. When you spot a coin, an armed wallet buys it in one click: no route to wait for, and because the funding happened earlier, the buy's timing and amount don't line up with your deposit. Armed wallets are trading wallets in the terminal: pick <b>Armed</b> under Trade from to buy any amount, sell, quick-buy and set limit orders from them, signed in this tab with no popups and no fee. Once one holds SOL, the terminal trades from it first.</p>
       <div id="arm-body"></div>
       <ol class="arm-how">
         <li><b>Arm</b>Pick a total and how many wallets. You approve once; each wallet gets its own Monero route, sent at random intervals.</li>
         <li><b>Wait once</b>SOL becomes XMR, crosses Monero, and an unrelated exchange pays each wallet. 10–40 minutes, in the background.</li>
-        <li><b>Fire</b>Any buy fires the oldest armed wallet with its whole balance, signed in this tab. Disarm any time: it returns through Monero.</li>
+        <li><b>Trade</b>Pick Armed under Trade from: buy any amount, sell, quick-buy and set limit orders, signed in this tab with no fee. Disarm any time: it returns through Monero.</li>
       </ol>
     </div>
   </section>
@@ -792,7 +794,8 @@ body{padding-left:78px}
     <aside class="tok-side">
       <div class="panel trade" aria-label="Trade">
         <div class="seg" role="group" aria-label="Side"><button type="button" class="b" id="side-buy" aria-pressed="true">Buy</button><button type="button" class="s" id="side-sell" aria-pressed="false">Sell</button></div>
-        <div class="from"><span>Trade from</span><div class="seg" id="fromseg" role="group" aria-label="Trading wallet"><button type="button" data-w="main" aria-pressed="true">Main</button><button type="button" data-w="instant" aria-pressed="false"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M9 1.8 3.6 9h4l-.8 5.2L12.4 7h-4z"/></svg>Instant</button></div></div>
+        <div class="from"><span>Trade from</span><div class="seg" id="fromseg" role="group" aria-label="Trading wallet"><button type="button" data-w="armed" aria-pressed="false" title="An armed wallet: funded through Monero, signs in this tab, no fee"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.6"/><circle cx="8" cy="8" r="2.6"/><path d="M8 .9v2.4M8 12.7v2.4M.9 8h2.4M12.7 8h2.4"/></svg>Armed</button><button type="button" data-w="main" aria-pressed="true">Main</button><button type="button" data-w="instant" aria-pressed="false"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M9 1.8 3.6 9h4l-.8 5.2L12.4 7h-4z"/></svg>Instant</button></div></div>
+        <div class="seg armpick" id="armpick" role="group" aria-label="Armed wallet" hidden></div>
         <div class="from"><label for="amt" id="amt-label">Amount</label><button type="button" class="btn small" id="bal">Bal —</button></div>
         <div class="amount"><input id="amt" inputmode="decimal" placeholder="0.0" autocomplete="off"><span class="unit" id="amt-unit">SOL</span></div>
         <div class="quick" id="quick"></div>

@@ -63,6 +63,8 @@ em{font-style:italic;color:var(--brass)}
 .btn .arr{font-family:var(--mono);font-weight:400}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .links .btn{padding:9px 14px;margin-left:8px;color:var(--ink)}
+.links .btn.term{background:transparent;border-color:rgba(255,255,255,.22);color:var(--ivory)}.links .btn.term:hover{border-color:var(--brass);color:var(--ivory)}
+@media (max-width:520px){.links .btn.term .long,.links a:not(.btn):not([href="/proof"]){display:none}.links .btn{margin-left:6px;padding:8px 10px}}
 @media (max-width:980px){.links a.sec{display:none}}
 @media (max-width:420px){.brand .word{font-size:1.35rem}.links .btn{padding:8px 11px;font-size:.8rem}}
 
@@ -299,12 +301,12 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 
     <nav class="links" aria-label="Sections">
       <a class="sec" href="#record">The record</a>
       <a class="sec" href="#arm">Arm a wallet</a>
-      <a class="sec" href="#desk">Terminal</a>
       <a class="sec" href="#token">Token</a>
       <a href="/proof">Proof</a>
       <a href="./docs.html">Docs</a>
       <a class="x" href="https://github.com/JermWang/ArdeaFinance" target="_blank" rel="noopener" aria-label="Ardea source code on GitHub" title="Source code on GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.65.5.5 5.65.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.87-1.37-3.87-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg></a>
       <a class="x" href="#" data-x hidden target="_blank" rel="noopener" aria-label="Ardea on X" title="Ardea on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+      <a class="btn term" href="./app.html#/pulse"><span class="long">Open </span>Terminal</a>
       <a class="btn brass" href="./app.html">Arm a wallet</a>
     </nav>
   </div>
@@ -322,6 +324,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 
         <div class="ctas">
           <a class="btn brass" href="./app.html">Arm a wallet <span class="arr">→</span></a>
           <a class="btn" href="#arm">How it works</a>
+          <a class="btn" href="./app.html#/pulse">Open the terminal</a>
         </div>
         <div class="facts">
           <div><b>Armed ahead</b><span>Funded through Monero, 10–40 min before you need it</span></div>
@@ -345,7 +348,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 
       <div class="cols">
         <div class="col"><span data-glyph="stealth"></span><h3>Armed ahead</h3><p>Arm one to five wallets in one approval. Each gets its own Monero route, sent at random intervals, at uneven sizes.</p></div>
         <div class="col"><span data-glyph="lock"></span><h3>A real Monero hop</h3><p>Every route is forced through Monero, where ring signatures, stealth addresses and RingCT hide sender, receiver and amount. Houdini Swap runs the route; Ardea never holds your funds or XMR.</p></div>
-        <div class="col"><span data-glyph="bolt"></span><h3>Fires instantly</h3><p>With Private mode on, any buy or ⚡ quick-buy fires the oldest armed wallet with its whole balance, signed in your tab. No popups, no wait.</p></div>
+        <div class="col"><span data-glyph="bolt"></span><h3>Trades instantly</h3><p>Armed wallets are trading wallets in the terminal: buy any amount, sell, ⚡ quick-buy and set limit orders from them, signed in your tab. No popups, no wait, no fee.</p></div>
         <div class="col"><span data-glyph="clock"></span><h3>Out of step</h3><p>The funding happened earlier and in different amounts, so the buy's timing and size don't line up with your deposit, the match trackers look for.</p></div>
       </div>
       <div class="how">
@@ -354,7 +357,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 
           <li><b>Arm.</b> Pick a total and how many wallets. For each, the terminal opens a SOL → XMR → SOL route with Houdini Swap, forced through Monero, and checks the order: right wallet, right amount, a private route, or it refuses.</li>
           <li><b>Approve once.</b> One wallet prompt covers every funding transfer: plain transfers to one-time addresses, nothing else. Ardea's <span data-cfg="fee">0.5%</span> fee is taken inside the route. They go out at random intervals. You see what will arrive before you sign.</li>
           <li><b>It crosses Monero.</b> One exchange swaps the SOL to XMR, the XMR moves on Monero, and an unrelated exchange pays each wallet from its own funds, in 10–40 minutes, in the background. If no Monero route is available, nothing is sent.</li>
-          <li><b>Fire.</b> Any buy fires the next armed wallet through Jupiter, instantly. Sell from it whenever; disarming returns its SOL to you through Monero.</li>
+          <li><b>Trade.</b> Pick Armed under Trade from and buy or sell through Jupiter, instantly. Disarming returns its SOL to you through Monero.</li>
         </ol>
       </div>
       <figure class="route">
@@ -432,7 +435,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 
 <footer>
   <div class="wrap">
     <p class="big">A wallet should only show <em>what you choose to sign.</em></p>
-    <nav aria-label="Footer"><a href="./app.html">Terminal</a><a href="./docs.html">Docs</a><a href="https://github.com/JermWang/ArdeaFinance" target="_blank" rel="noopener">GitHub</a><a href="#" data-x hidden target="_blank" rel="noopener">X</a><a href="#arm">Arm a wallet</a></nav>
+    <nav aria-label="Footer"><a href="./app.html#/pulse">Terminal</a><a href="/proof">Proof</a><a href="./docs.html">Docs</a><a href="https://github.com/JermWang/ArdeaFinance" target="_blank" rel="noopener">GitHub</a><a href="#" data-x hidden target="_blank" rel="noopener">X</a><a href="#arm">Arm a wallet</a></nav>
     <div class="fine">
       <a class="brand" href="#top" aria-label="Ardea home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
       <span>Non-custodial software. Privacy on a public chain is never perfect; read the limits in the docs.</span>
