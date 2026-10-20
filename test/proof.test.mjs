@@ -31,7 +31,7 @@ test("runs land on the fixed UTC hour, never immediately after a restart", () =>
 
 test("the public state never includes a key", () => {
   const s = publicState({ enabled: true, a: "A", b: "B", amountSol: 0.3, utcHour: 14, running: false, next: null, last: null, secret: "x" });
-  assert.deepEqual(Object.keys(s).sort(), ["amountSol", "enabled", "everyHours", "history", "last", "next", "routes", "running", "utcHour", "wallets"]);
+  assert.deepEqual(Object.keys(s).sort(), ["amountSol", "armed", "enabled", "everyHours", "history", "last", "mode", "next", "routes", "running", "step", "utcHour", "wallets"]);
   assert.ok(!JSON.stringify(s).includes("secret"));
 });
 
@@ -62,4 +62,17 @@ test("the proof page is plain HTML with every route matched, and escapes what it
   assert.match(html, /81 min/);
   assert.match(html, /every 6 hours/);
   assert.ok(!html.includes("<x>") && html.includes("&lt;x&gt;"));
+});
+
+test("the proof page names armed wallets and pairs their arm and disarm routes", async () => {
+  const { renderProofPage } = await import("../proofpage.mjs");
+  const html = renderProofPage({ mode: "arm", wallets: ["AAAA1111AAAA", "BBBB2222BBBB"], armed: [{ index: 0, address: "ARMD0000ARMD" }], routes: [
+    { routeId: "in1", fromAddress: "AAAA1111AAAA", toAddress: "ARMD0000ARMD", delivered: true, startedAt: "2026-10-20T18:00:00Z", endedAt: "2026-10-20T18:15:00Z" },
+    { routeId: "out1", fromAddress: "ARMD0000ARMD", toAddress: "BBBB2222BBBB", delivered: false, startedAt: "2026-10-20T18:17:00Z" }
+  ] });
+  assert.match(html, /Arm a wallet, on-chain/);
+  assert.match(html, /Proof A → Armed wallet #0/);
+  assert.match(html, /Armed wallet #0 → Proof B/);
+  assert.match(html, /in1<\/a> · delivered/);
+  assert.match(html, /out1<\/a> · crossing now/);
 });

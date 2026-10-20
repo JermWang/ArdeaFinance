@@ -11,11 +11,13 @@ const REPO = "https://github.com/JermWang/ardea";
 
 export function renderProofPage(st, { now = new Date() } = {}) {
   const routes = st?.routes || [], done = routes.filter(r => r.delivered), [A, B] = st?.wallets || [];
+  const armed = st?.armed || [], names = new Map([[A, "Proof A"], [B, "Proof B"], ...armed.map(x => [x.address, `Armed wallet #${x.index}`])]);
   const label = w => w === "a" ? "Proof A" : w === "b" ? "Proof B" : "—";
+  const who = (addr, key) => names.get(addr) || (addr ? short(addr) : label(key));
   const rows = routes.map(r => `<tr>
     <td><a href="/track.html#${esc(r.routeId)}">${esc(r.routeId)}</a></td>
     <td>${when(r.startedAt)}</td>
-    <td>${esc(label(r.from))} → ${esc(label(r.to))}</td>
+    <td>${esc(who(r.fromAddress, r.from))} → ${esc(who(r.toAddress, r.to))}</td>
     <td>${esc(r.amountSol ?? "—")} → ${esc(r.amountOutSol ?? "—")} SOL</td>
     <td>${r.delivered ? `${mins(r) ?? "—"} min` : "crossing now"}</td>
     <td>${tx(r.fundingSig)}<br><small>to deposit ${acct(r.depositAddress)}</small></td>
@@ -47,7 +49,7 @@ ol li,ul li{margin:.4em 0}code{font:.85em ui-monospace,Consolas,monospace;color:
 <main>
 <p class="k">Proof · generated ${when(now.toISOString())}</p>
 <h1>Real Monero routes, checkable without trusting us.</h1>
-<p>Ardea runs two proof wallets of its own and sends SOL between them ${schedule}, through the same code path a private buy uses: a Houdini Swap private send with Monero forced as the bridge (<code>useXmr=true</code>, see <a href="${REPO}/blob/main/stealth.js">stealth.js</a>). Every completed route below is matched to Houdini's own record of it and to the two Solana transactions it produced.</p>
+<p>Ardea runs two proof wallets of its own and ${st?.mode === "arm" ? `runs the Arm a wallet flow with them ${schedule}: arm a brand-new wallet, then disarm it,` : `sends SOL between them ${schedule},`} through the same code path a private buy uses: a Houdini Swap private send with Monero forced as the bridge (<code>useXmr=true</code>, see <a href="${REPO}/blob/main/stealth.js">stealth.js</a>). Every completed route below is matched to Houdini's own record of it and to the two Solana transactions it produced.</p>
 <div class="stats">
   <div><b>${done.length}</b><span>completed routes</span></div>
   <div><b>${routes.length - done.length}</b><span>crossing now</span></div>
@@ -58,6 +60,14 @@ ol li,ul li{margin:.4em 0}code{font:.85em ui-monospace,Consolas,monospace;color:
 
 <h2>Routes</h2>
 ${routes.length ? `<div class="wrap"><table><thead><tr><th>Houdini route id</th><th>Started</th><th>Direction</th><th>SOL in → out</th><th>Took</th><th>Funding tx</th><th>Delivery tx</th><th>Record</th></tr></thead><tbody>${rows}</tbody></table></div>` : "<p>No proof routes in the last 48 hours yet.</p>"}
+
+${armed.length ? `<h2>Arm a wallet, on-chain</h2>
+<p>Each arm cycle runs the product's own flow with Ardea's wallets: a brand-new wallet is <b>armed</b> through Monero (paid by an exchange, with no link to the proof wallet that funded it), then <b>disarmed</b> back through Monero to the other proof wallet.</p>
+<div class="wrap"><table><thead><tr><th>Armed wallet</th><th>Armed by route</th><th>Disarmed by route</th></tr></thead><tbody>${armed.slice().reverse().map(x => {
+    const inR = routes.find(r => r.toAddress === x.address), outR = routes.find(r => r.fromAddress === x.address);
+    const cell = r => r ? `<a href="/track.html#${esc(r.routeId)}">${esc(r.routeId)}</a> · ${r.delivered ? "delivered" : "crossing now"}` : "—";
+    return `<tr><td>#${esc(x.index)} ${acct(x.address)}</td><td>${cell(inR)}</td><td>${cell(outR)}</td></tr>`;
+  }).join("")}</tbody></table></div>` : ""}
 
 <h2>How to check a route yourself</h2>
 <ol>
