@@ -329,8 +329,9 @@ export function schematic(svg, { nodes, links = [], sequence, tags = [], step = 
 // A transaction as a printed ledger slip: its instructions print in one by one, top to bottom.
 export function ledger(svg, { title = "ONE TRANSACTION", rows, w = 320 }) {
   const rh = 30, top = 46, h = top + rows.length * rh + 34;
-  const zig = Array.from({ length: Math.round(w / 12) + 1 }, (_, i) => `L${f2(Math.min(w, i * 12))} ${h + (i % 2 ? 6 : 0)}`).join("");
-  el("path", { d: `M0 8Q0 0 8 0H${w - 8}Q${w} 0 ${w} 8V${h}${zig.replace(/^L[^L]*/, "")}L0 ${h}Z`, fill: C.BG2, stroke: C.LINE }, svg);
+  // torn receipt edge: from the bottom-right corner, zigzag leftwards to the bottom-left, then up the left side
+  const teeth = Math.round(w / 12), zig = Array.from({ length: teeth }, (_, i) => `L${f2(w - (i + 1) * w / teeth)} ${h + (i % 2 ? 0 : 6)}`).join("");
+  el("path", { d: `M0 8Q0 0 8 0H${w - 8}Q${w} 0 ${w} 8V${h}${zig}Z`, fill: C.BG2, stroke: C.LINE, "stroke-linejoin": "round" }, svg);
   text(svg, 18, 26, title, { "font-size": 10, "font-weight": 600, fill: C.IVORY, "letter-spacing": ".16em" });
   text(svg, w - 18, 26, "v0 · SOLANA", { "font-size": 9, fill: C.MUTE, "text-anchor": "end", "letter-spacing": ".1em" });
   el("line", { x1: 18, y1: 36, x2: w - 18, y2: 36, stroke: C.LINE, "stroke-dasharray": "2 3" }, svg);
