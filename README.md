@@ -1,5 +1,7 @@
 # Ardea
 
+[![test](https://github.com/JermWang/ardea/actions/workflows/test.yml/badge.svg)](https://github.com/JermWang/ardea/actions/workflows/test.yml)
+
 A Solana trading terminal whose Private mode funds every buy through Monero.
 
 Ardea is built on the Privatus codebase (itself descended from Ghostprint) by the same team, with a new name, look and

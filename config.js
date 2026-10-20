@@ -44,7 +44,7 @@ export const TOKEN_CA = ""; // set at launch
 // Solscan. Add them after a real private buy and exit, e.g. { step: "Funding", note: "...", sig: "5abc…" }.
 export const PROOF_TXS = [];
 // The public source repository, linked from the docs' Proof section once it exists ("" hides the link).
-export const SOURCE_REPO = "";
+export const SOURCE_REPO = "https://github.com/JermWang/ardea";
 
 // The project's X account, e.g. "https://x.com/ardea". Empty hides every X link on the site until it exists.
 export const X_URL = "";
