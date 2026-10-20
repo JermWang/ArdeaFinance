@@ -580,9 +580,14 @@ const CELL_LABEL = { holders: "Holders", top10: "Top 10", dev: "Dev", bs: "B / S
 function buildCard(t) {
   const a = make("a", "pcard"); a.href = `#/token/${t.mint}`; a.dataset.mint = t.mint;
   const av = avatar(); icon(av.querySelector("img"), t.image, t.mint);
-  // square PFP with the bonding curve as its own labelled bar underneath
+  // round avatar inside a ring that fills with bonding-curve progress, the percentage under it
   const pfp = make("div", "pc-pfp"), curve = make("div", "pc-curve"), bar = make("span", "cbar");
-  bar.append(make("i")); curve.append(bar, make("b")); pfp.append(av, curve);
+  bar.append(make("i")); curve.append(bar, make("b"));
+  const NS = "http://www.w3.org/2000/svg", ring = document.createElementNS(NS, "svg");
+  ring.setAttribute("viewBox", "0 0 80 80"); ring.setAttribute("class", "pc-ring"); ring.setAttribute("aria-hidden", "true");
+  for (const c of ["trk", "val"]) { const k = document.createElementNS(NS, "circle"); k.setAttribute("class", c); k.setAttribute("cx", 40); k.setAttribute("cy", 40); k.setAttribute("r", 37); k.setAttribute("pathLength", 100); ring.append(k); }
+  const disc = make("div", "pc-disc"); disc.append(av, ring);
+  pfp.append(disc, curve);
   const main = make("div", "pc-main"), top = make("div", "pc-top"), row = make("div", "pc-row"), grid = make("div", "pc-grid"), links = make("div", "pc-links");
   top.append(make("b"), make("span", "nm"), make("span", "age"), links);
   const spark = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -643,6 +648,8 @@ function updateCard(el, t) {
   const migrated = column === "migrated" || t.complete || t.graduatedAt || t.migratedAt, cEl = el.querySelector(".pc-curve");
   const cp = migrated ? 100 : curveLive ? Math.max(0, Math.min(100, t.progress)) : null;
   cEl.hidden = cp == null;
+  const ringEl = el.querySelector(".pc-ring");
+  if (ringEl) { ringEl.querySelector(".val").style.strokeDasharray = `${cp ?? 0} 100`; ringEl.dataset.state = cp == null ? "none" : migrated ? "done" : cp >= 80 ? "hot" : "live"; }
   if (cp != null) {
     cEl.className = `pc-curve${migrated ? " done" : cp >= 80 ? " hot" : ""}`;
     cEl.querySelector("i").style.width = `${cp}%`;

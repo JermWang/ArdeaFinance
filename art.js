@@ -130,11 +130,12 @@ export const GLYPHS = {
 GLYPHS.stealth.dash = "2.2 2.4";
 export function glyphSVG(kind, cls) {
   const gl = GLYPHS[kind] || GLYPHS.wallet;
-  const svg = el("svg", { viewBox: "0 0 24 24", "aria-hidden": "true", fill: "none", stroke: "currentColor", "stroke-width": 1.5, "stroke-linecap": "round", "stroke-linejoin": "round" });
+  // duotone: a bold rounded outline, and the detail as a soft orange fill with an orange edge
+  const svg = el("svg", { viewBox: "0 0 24 24", "aria-hidden": "true", fill: "none", stroke: "currentColor", "stroke-width": 2, "stroke-linecap": "round", "stroke-linejoin": "round" });
   if (cls) svg.setAttribute("class", cls);
-  el("path", gl.dash ? { d: gl.d, "stroke-dasharray": gl.dash } : { d: gl.d }, svg);
   const [tag, attrs] = gl.accent;
-  el(tag, tag === "circle" ? { ...attrs, fill: C.BRASS, stroke: "none" } : { ...attrs, stroke: C.BRASS }, svg);
+  el(tag, tag === "circle" ? { ...attrs, r: f2(attrs.r * 1.7), fill: C.BRASS, "fill-opacity": .3, stroke: "none" } : { ...attrs, fill: C.BRASS, "fill-opacity": .22, stroke: C.BRASS }, svg);
+  el("path", gl.dash ? { d: gl.d, "stroke-dasharray": gl.dash } : { d: gl.d }, svg);
   return svg;
 }
 // Draw a glyph at (x, y), `size` units square, inside another SVG.
