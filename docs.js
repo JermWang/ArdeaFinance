@@ -94,6 +94,8 @@ import { X_URL } from "./config.js";
           rows.push({ w, sig: s.signature, time: (s.blockTime || 0) * 1000, delta, other });
         }
       }
+      // Proof A doubles as the treasury, so it also receives small fee payments; only route-sized legs (≥ 0.05 SOL) are shown
+      for (let i = rows.length - 1; i >= 0; i--) if (Math.abs(rows[i].delta) < 0.05) rows.splice(i, 1);
       rows.sort((a, b) => b.time - a.time);
       const direct = rows.filter(r => r.other === (r.w === A ? B : A)).length;
       live.textContent = "";
