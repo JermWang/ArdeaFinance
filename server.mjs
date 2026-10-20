@@ -110,12 +110,27 @@ async function serveEnv(req, res) {
   res.end(req.method === "HEAD" ? undefined : body);
 }
 
+// Continuous proof (proof.mjs): loaded only when the team's proof wallet key is set. /proof.json shows the two wallet
+// addresses and the schedule so the docs can read their history from the chain; it never shows the key.
+let proof = { enabled: false }, proofPublic = s => ({ enabled: false, wallets: [] });
+if (process.env.PROOF_WALLET_SECRET) {
+  import("./proof.mjs").then(({ startProof, publicState }) => {
+    const origin = (process.env.ALLOWED_ORIGINS || "").split(",")[0].trim();
+    const gateway = (url, init = {}) => worker.fetch(new Request(url, { ...init, headers: { ...(init.headers || {}), origin, "cf-connecting-ip": "0.0.0.0", "user-agent": "ardea-proof" } }), process.env, { waitUntil: p => Promise.resolve(p).catch(() => {}) });
+    proof = startProof({ gateway }); proofPublic = publicState;
+  }).catch(e => console.log(`proof: off (${e.message})`));
+}
+function serveProof(req, res) {
+  res.writeHead(200, { "content-type": "application/json", "cache-control": "no-cache", "access-control-allow-origin": "*" });
+  res.end(req.method === "HEAD" ? undefined : JSON.stringify(proofPublic(proof)));
+}
+
 function stat(file) { try { return statSync(file); } catch (_) { return null; } }
 function notFound(res) { res.writeHead(404, { "content-type": "text/plain; charset=utf-8" }); res.end("Not found"); }
 
 const server = http.createServer((req, res) => {
   const { pathname } = new URL(req.url, "http://x");
-  Promise.resolve().then(() => pathname === "/env.js" ? serveEnv(req, res) : PROXY_PATH.test(pathname) ? proxy(req, res) : serveStatic(req, res)).catch(() => {
+  Promise.resolve().then(() => pathname === "/env.js" ? serveEnv(req, res) : pathname === "/proof.json" ? serveProof(req, res) : PROXY_PATH.test(pathname) ? proxy(req, res) : serveStatic(req, res)).catch(() => {
     if (!res.headersSent) res.writeHead(502, { "content-type": "application/json" });
     res.end(JSON.stringify({ error: "upstream error" }));
   });

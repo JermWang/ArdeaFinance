@@ -216,6 +216,7 @@ h2{font:400 clamp(2.2rem,4.6vw,3.7rem)/1.02 var(--serif);letter-spacing:-.01em;m
 .tier+.tier{border-left:1px solid var(--line)}
 .tier svg{width:22px;height:22px;color:var(--ivory)}
 .tier .soon{float:right;font:600 .6rem var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--brass);border:1px solid var(--line-2);border-radius:3px;padding:2px 6px}
+.tier .soon.live{color:var(--up);border-color:rgba(67,209,158,.4)}
 .tier h3{margin:12px 0 6px;font:600 .98rem var(--sans)}
 .tier p{margin:0;color:var(--mute);font-size:.86rem;line-height:1.5}
 @media (max-width:900px){.tiers{grid-template-columns:repeat(2,minmax(0,1fr))}.tier:nth-child(3){border-left:0}.tier:nth-child(n+3){border-top:1px solid var(--line)}}
@@ -413,10 +414,10 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 
           <p class="eyebrow">The token</p>
           <h2>Every use has <em>a job to do.</em></h2>
         </div>
-        <p>Every terminal trade and private buy pays a <span data-cfg="fee">0.5%</span> fee in SOL. These are the planned ways the token ties that fee to the people who trade. None is live yet; each will be announced on X when it ships.</p>
+        <p>Every terminal trade and private buy pays a <span data-cfg="fee">0.5%</span> fee in SOL. The token ties that fee to the people who trade. Fee tiers are built into the terminal and switch on at launch; the rest are planned and will be announced on X when they ship.</p>
       </div>
       <div class="tiers">
-        <div class="tier"><span data-glyph="stairs"></span><span class="soon">Roadmap</span><h3>Fee tiers</h3><p>Hold more, pay less than the base fee on every trade.</p></div>
+        <div class="tier"><span data-glyph="stairs"></span><span class="soon live">Live at launch</span><h3>Fee tiers</h3><p>Hold 0.1% of supply: 0.4% fee. 0.5%: 0.3%. 1%: 0.25%. Read from the chain on every trade and private buy.</p></div>
         <div class="tier"><span data-glyph="flame"></span><span class="soon">Roadmap</span><h3>Buyback from fees</h3><p>A share of trading fees, earned in SOL, buys the token back.</p></div>
         <div class="tier"><span data-glyph="stealth"></span><span class="soon">Roadmap</span><h3>Private limits</h3><p>Holders get higher Private mode limits per buy.</p></div>
         <div class="tier"><span data-glyph="link"></span><span class="soon">Roadmap</span><h3>Referrals</h3><p>Bring traders and earn a share of their fees, paid in the token.</p></div>

@@ -9,7 +9,8 @@ import { trace, DEFAULT_RPC, short, isAddress, base58Encode } from "./trace.js";
 import { createBoard, fromPumpPortal, fromJupiter, fromStonk, STONK, pnl, isPumpMint, mergeHistory, pushSample, momentum } from "./market.js";
 import { pumpPortal, stonkFun, tokenTrades, readCurves, metadata, holders, recentSwaps, walletHistory, onchainMeta, imageSources, identicon, setMediaProxy } from "./feeds.js";
 import { renderGlyphs, emblem, glyphSVG } from "./art.js";
-import { X_URL } from "./config.js";
+import { X_URL, TOKEN_CA, HOLDER_TIERS } from "./config.js";
+import { tierFor } from "./tiers.js";
 
 const web3 = window.solanaWeb3;
 const $ = id => document.getElementById(id);
@@ -140,7 +141,24 @@ const jup = jupiter({ base: PROXY ? `${PROXY}/jup` : JUP_BASE, apiKey: PROXY ? "
 const hd = houdini({ base: PROXY ? `${PROXY}/houdini` : "" });
 const jitoUrl = PROXY ? `${PROXY}/jito` : JITO_URL;
 const trig = triggerApi(jup);
-const S = { solUsd: null, wallet: null, seed: null, instant: null, sol: null, instantSol: null, busy: false, route: null };
+const S = { solUsd: null, wallet: null, seed: null, instant: null, sol: null, instantSol: null, busy: false, route: null, fee: { bps: FEE_BPS, pct: 0, tier: 0 } };
+
+/* ---------- holder fee tiers ---------- */
+// Holding the Ardea token lowers the fee on every trade and private buy (HOLDER_TIERS in config.js). The holding is
+// your main wallet plus your instant wallet, read from the chain; the server's /env.js can supply the mint at launch.
+const feeBps = () => S.fee.bps;
+let tokenCa = isAddress(TOKEN_CA || "") ? TOKEN_CA : "", tokenSupply = null;
+import(PROXY ? `${PROXY}/env.js` : "./env.js").then(m => { if (isAddress(m.TOKEN_CA || "")) { tokenCa = m.TOKEN_CA; refreshTier(); } }).catch(() => {});
+async function refreshTier() {
+  if (!tokenCa || !S.wallet || !HOLDER_TIERS.length) { S.fee = { bps: FEE_BPS, pct: 0, tier: 0 }; return; }
+  try {
+    const mint = new web3.PublicKey(tokenCa), owners = [S.wallet.pk, S.instant?.pk].filter(Boolean);
+    if (tokenSupply == null) tokenSupply = BigInt((await connection.getTokenSupply(mint)).value.amount);
+    let held = 0n;
+    for (const o of owners) for (const a of (await connection.getParsedTokenAccountsByOwner(new web3.PublicKey(o), { mint })).value) held += BigInt(a.account.data.parsed.info.tokenAmount.amount);
+    S.fee = tierFor(held, tokenSupply, HOLDER_TIERS, FEE_BPS);
+  } catch (_) { /* keep the last known fee; an RPC hiccup never lowers or raises it on its own */ }
+}
 
 // Polling and streams run only while someone can see the terminal. A loop that wakes in a hidden tab parks
 // instead of rescheduling, and coming back to the tab restarts every parked loop at once (see the
@@ -235,6 +253,7 @@ async function refreshBalances() {
     S.sol = BigInt(await connection.getBalance(new web3.PublicKey(S.wallet.pk)));
     if (S.instant) S.instantSol = BigInt(await connection.getBalance(S.instant.kp.publicKey));
   } catch (_) {}
+  await refreshTier();
   renderWalletBtn();
   if (S.route === "token") { refreshTokenBal(); renderTradePanel(); }
 }
@@ -308,7 +327,7 @@ async function executeTrade({ side, mint, amountRaw, from = settings.from, onSta
   }
   onStatus("Routing through Jupiter…");
   const tip = BigInt(Math.round((p.tipSol || 0) * 1e9));
-  const prep = await prepareSwap({ web3, jup, connection, side, mint, amountRaw, user: signer.pk, treasury: TREASURY, feeBps: FEE_BPS, slippageBps: p.slippageBps, priorityMaxLamports: Math.round(p.maxSol * 1e9), priorityLevel: p.priority, tipLamports: tip });
+  const prep = await prepareSwap({ web3, jup, connection, side, mint, amountRaw, user: signer.pk, treasury: TREASURY, feeBps: feeBps(), slippageBps: p.slippageBps, priorityMaxLamports: Math.round(p.maxSol * 1e9), priorityLevel: p.priority, tipLamports: tip });
   onStatus(signer.local ? "Sending…" : "Approve in your wallet…");
   const jito = tip >= JITO_MIN_TIP ? jitoUrl : null;
   const sig = await signSend(prep.tx, signer, prep.lastValidBlockHeight, s => s.state === "sent" && onStatus(`Sent${jito ? (p.mev ? " privately via Jito" : " via Jito + RPC") : ""}. Confirming…`), { jito, mevProtect: !!(jito && p.mev) });
@@ -1006,8 +1025,8 @@ function updateGo() {
   go.className = `btn go ${needConnect || !p ? (T.side === "buy" ? "buy" : "primary") : ""}`;
   const pr = preset();
   text($("fine"), stealthOn()
-    ? `Private mode: your wallet signs one transaction, the amount to a one-time Monero route address plus the ${FEE_BPS / 100}% fee to the treasury. The SOL crosses Monero through two unrelated exchanges (10–40 min, their fees included in the quote) and lands in a fresh stealth wallet, which buys. Houdini sees both ends, and a close observer can still try to match amounts and timing.`
-    : `${FEE_BPS / 100}% fee in SOL · P${settings.preset + 1}: ${pr.slippageBps / 100}% slippage, ${pr.priority} priority up to ${pr.maxSol} SOL${pr.tipSol ? ` · Jito tip ${pr.tipSol} SOL${pr.mev ? " (MEV-protected)" : ""}` : ""} · ${inst ? "signed instantly by your instant wallet" : "you approve every trade in your wallet"}`);
+    ? `Private mode: your wallet signs one transaction, the amount to a one-time Monero route address plus the ${feeBps() / 100}%${S.fee.tier ? ` (holder tier ${S.fee.tier})` : ""} fee to the treasury. The SOL crosses Monero through two unrelated exchanges (10–40 min, their fees included in the quote) and lands in a fresh stealth wallet, which buys. Houdini sees both ends, and a close observer can still try to match amounts and timing.`
+    : `${feeBps() / 100}% fee in SOL${S.fee.tier ? ` (holder tier ${S.fee.tier})` : ""} · P${settings.preset + 1}: ${pr.slippageBps / 100}% slippage, ${pr.priority} priority up to ${pr.maxSol} SOL${pr.tipSol ? ` · Jito tip ${pr.tipSol} SOL${pr.mev ? " (MEV-protected)" : ""}` : ""} · ${inst ? "signed instantly by your instant wallet" : "you approve every trade in your wallet"}`);
 }
 function scheduleQuote() {
   updateGo(); clearTimeout(T.quoteTimer);
@@ -1017,19 +1036,19 @@ function scheduleQuote() {
 async function previewQuote() {
   const seq = ++T.quoteSeq, raw = amountRaw(), mint = S.tokenMint;
   if (!raw) return;
-  const buy = T.side === "buy", fee = buy ? raw * BigInt(FEE_BPS) / 10000n : 0n;
+  const buy = T.side === "buy", fee = buy ? raw * BigInt(feeBps()) / 10000n : 0n;
   const spend = buy ? raw - fee - (stealthOn() ? STEALTH_GAS_RESERVE : 0n) : raw;
   if (spend <= 0n) return;
   try {
     const qt = await jup.quote({ inputMint: buy ? SOL_MINT : mint, outputMint: buy ? mint : SOL_MINT, amount: spend, slippageBps: preset().slippageBps });
     if (seq !== T.quoteSeq || mint !== S.tokenMint) return;
-    renderQuote(qt, buy ? fee : BigInt(qt.otherAmountThreshold) * BigInt(FEE_BPS) / 10000n);
+    renderQuote(qt, buy ? fee : BigInt(qt.otherAmountThreshold) * BigInt(feeBps()) / 10000n);
   } catch (e) { if (seq === T.quoteSeq) { const box = $("quote"); box.hidden = false; box.textContent = ""; box.append(make("div", "row", errMsg(e))); } }
 }
 function renderQuote(qt, fee) {
   const buy = T.side === "buy", outDec = buy ? T.decimals : 9, outSym = buy ? symbolOf(S.tokenMint) : "SOL";
   const route = [...new Set((qt.routePlan || []).map(r => r.swapInfo?.label).filter(Boolean))].slice(0, 3).join(" → ");
-  const rows = [["You get ≈", `${fromRaw(qt.outAmount, outDec, 4)} ${outSym}`], ["Minimum", `${fromRaw(qt.otherAmountThreshold, outDec, 4)} ${outSym}`], ["Price impact", `${(Number(qt.priceImpactPct || 0) * 100).toFixed(2)}%`], ["Route", route || "—"], [`Fee ${FEE_BPS / 100}%`, `${fromRaw(fee, 9, 6)} SOL`]];
+  const rows = [["You get ≈", `${fromRaw(qt.outAmount, outDec, 4)} ${outSym}`], ["Minimum", `${fromRaw(qt.otherAmountThreshold, outDec, 4)} ${outSym}`], ["Price impact", `${(Number(qt.priceImpactPct || 0) * 100).toFixed(2)}%`], ["Route", route || "—"], [`Fee ${feeBps() / 100}%${S.fee.tier ? ` · holder tier ${S.fee.tier}` : ""}`, `${fromRaw(fee, 9, 6)} SOL`]];
   if (stealthOn()) rows.push(["Private route", "SOL → XMR → SOL via Houdini → fresh wallet"], ["Route time", "10–40 min; the stealth wallet buys when its SOL lands"], ["Route fees", "two exchange hops; the exact SOL out is shown before you sign"]);
   const box = $("quote"); box.textContent = "";
   for (const [k, v] of rows) { const r = make("div", "row"); r.append(make("span", "k", k), make("span", "", v)); box.append(r); }
@@ -1307,14 +1326,14 @@ async function stealthBuy() {
     const seed = await walletSeed();
     text(go, "Finding a fresh stealth wallet…");
     const { index, stealth } = await nextUnusedStealth(web3, seed, { isUsed: usedOnChain, start: stealthRecords().reduce((m, g) => Math.max(m, g.index + 1), 0) });
-    const gpk = stealth.publicKey.toBase58(), fee = feeOf(raw, FEE_BPS), amount = raw - fee;
+    const gpk = stealth.publicKey.toBase58(), fee = feeOf(raw, feeBps()), amount = raw - fee;
     gsteps(0); text(go, "Getting a Monero route…"); setTradeStatus("Asking Houdini for a SOL → XMR → SOL route to a fresh stealth wallet…");
     const route = await routeQuote({ hd, token: await routeToken(), amount, from: main, to: gpk });
     const eta = route.etaMin ? `about ${route.etaMin} min` : "10–40 min";
     rec = { index, address: gpk, mint, symbol: sym, sol: Number(raw) / 1e9, state: "funding", routeId: route.id, depositAddress: route.depositAddress, amountOut: String(route.amountOut), createdAt: Date.now() };
     saveStealth(rec);
     text(go, "Approve in wallet…");
-    setTradeStatus(`Approve one transaction: ${fromRaw(amount, 9, 4)} SOL to a one-time Monero route address and the ${FEE_BPS / 100}% fee (${fromRaw(fee, 9, 4)} SOL) to the treasury. Stealth wallet #${index} receives ≈${fromRaw(route.amountOut, 9, 4)} SOL in ${eta}, then buys ${sym}.`);
+    setTradeStatus(`Approve one transaction: ${fromRaw(amount, 9, 4)} SOL to a one-time Monero route address and the ${feeBps() / 100}% fee (${fromRaw(fee, 9, 4)} SOL) to the treasury. Stealth wallet #${index} receives ≈${fromRaw(route.amountOut, 9, 4)} SOL in ${eta}, then buys ${sym}.`);
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
     const tx = fundingTx(web3, { from: main, depositAddress: route.depositAddress, amount, fee, treasury: TREASURY, blockhash });
     await preflight(connection, tx);

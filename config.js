@@ -48,3 +48,7 @@ export const SOURCE_REPO = "";
 
 // The project's X account, e.g. "https://x.com/ardea". Empty hides every X link on the site until it exists.
 export const X_URL = "";
+
+// Holder fee tiers: holding the token (main wallet plus instant wallet) lowers the fee on every trade and private buy.
+// pct is the share of total supply held, in %; bps the fee at that level. Live as soon as TOKEN_CA is set.
+export const HOLDER_TIERS = [{ pct: 0.1, bps: 40 }, { pct: 0.5, bps: 30 }, { pct: 1, bps: 25 }];

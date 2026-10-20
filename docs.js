@@ -71,6 +71,49 @@ import { X_URL } from "./config.js";
     if (!PROOF_TXS.length) { const tr = tb.insertRow(), td = tr.insertCell(); td.colSpan = 3; td.textContent = "The first public private-mode transactions are being added here; until then, the live route check above and the code below are verifiable."; }
     for (const t of PROOF_TXS) { const tr = tb.insertRow(); tr.insertCell().textContent = t.step; tr.insertCell().textContent = t.note || ""; const a = document.createElement("a"); a.href = `https://solscan.io/tx/${t.sig}`; a.target = "_blank"; a.rel = "noopener"; a.textContent = `${t.sig.slice(0, 8)}…${t.sig.slice(-6)}`; tr.insertCell().append(a); }
   }
+  // continuous proof: the server only says which two wallets; their history comes straight from the chain
+  const live = document.getElementById("proof-live");
+  if (live) (async () => {
+    const base = (PROXY_URL || "").replace(/\/$/, "");
+    const rpc = async (method, params) => (await (await fetch(`${base}/rpc`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }) })).json()).result;
+    const say = t => { live.textContent = ""; const p = document.createElement("p"); p.textContent = t; live.append(p); };
+    try {
+      const st = await (await fetch(`${base}/proof.json`)).json();
+      if (!st.enabled || st.wallets.length !== 2) return say("The daily proof route isn't running yet. It starts before launch; this table fills in from the chain once it does.");
+      const [A, B] = st.wallets, name = w => w === A ? "Proof A" : "Proof B", rows = [];
+      for (const w of [A, B]) {
+        const sigs = (await rpc("getSignaturesForAddress", [w, { limit: 12 }])) || [];
+        for (const s of sigs) {
+          const tx = await rpc("getTransaction", [s.signature, { encoding: "jsonParsed", maxSupportedTransactionVersion: 0 }]);
+          if (!tx || tx.meta?.err) continue;
+          const keys = tx.transaction.message.accountKeys.map(k => k.pubkey || k), i = keys.indexOf(w);
+          const delta = (tx.meta.postBalances[i] - tx.meta.preBalances[i]) / 1e9;
+          // the other side: whichever account moved the most SOL the opposite way
+          let other = "", best = 0;
+          keys.forEach((k, j) => { const d = tx.meta.postBalances[j] - tx.meta.preBalances[j]; if (j !== i && Math.sign(d) === -Math.sign(delta) && Math.abs(d) > best) { best = Math.abs(d); other = k; } });
+          rows.push({ w, sig: s.signature, time: (s.blockTime || 0) * 1000, delta, other });
+        }
+      }
+      rows.sort((a, b) => b.time - a.time);
+      const direct = rows.filter(r => r.other === (r.w === A ? B : A)).length;
+      live.textContent = "";
+      const head = document.createElement("p");
+      head.innerHTML = `<b>Proof A</b> <a target="_blank" rel="noopener" href="https://solscan.io/account/${A}">${A.slice(0, 6)}…${A.slice(-4)}</a> · <b>Proof B</b> <a target="_blank" rel="noopener" href="https://solscan.io/account/${B}">${B.slice(0, 6)}…${B.slice(-4)}</a> · ${st.amountSol} SOL daily at ${st.utcHour}:00 UTC · <b>direct transfers between them: ${direct}</b>`;
+      const t = document.createElement("table"), tb = t.createTBody();
+      t.createTHead().innerHTML = "<tr><th>When (UTC)</th><th>Wallet</th><th>SOL</th><th>Other side</th><th>Transaction</th></tr>";
+      for (const r of rows.slice(0, 16)) {
+        const tr = tb.insertRow();
+        tr.insertCell().textContent = r.time ? new Date(r.time).toISOString().slice(0, 16).replace("T", " ") : "—";
+        tr.insertCell().textContent = name(r.w);
+        tr.insertCell().textContent = `${r.delta > 0 ? "+" : ""}${r.delta.toFixed(4)}`;
+        tr.insertCell().textContent = r.other === A || r.other === B ? name(r.other) : r.other ? `${r.other.slice(0, 6)}…${r.other.slice(-4)}` : "—";
+        const a = document.createElement("a"); a.href = `https://solscan.io/tx/${r.sig}`; a.target = "_blank"; a.rel = "noopener"; a.textContent = `${r.sig.slice(0, 8)}…`; tr.insertCell().append(a);
+      }
+      const wrap = document.createElement("div"); wrap.className = "tbl"; wrap.append(t);
+      live.append(head, rows.length ? wrap : Object.assign(document.createElement("p"), { textContent: "No transactions yet: the first route runs at the next scheduled hour." }));
+    } catch (e) { say(`Couldn't read the proof wallets right now (${e.message}).`); }
+  })();
+
   const repo = document.getElementById("proof-repo");
   if (repo && SOURCE_REPO) { repo.append(" The full source is public on "); const a = document.createElement("a"); a.href = SOURCE_REPO; a.target = "_blank"; a.rel = "noopener"; a.textContent = "GitHub"; repo.append(a, "."); }
 }
