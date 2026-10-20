@@ -76,7 +76,7 @@ buy uses. Each completed route is matched to Houdini's own record and to the Sol
 | Houdini route | Direction | SOL in → out | Took | Funding tx | Delivery tx |
 |---|---|---|---|---|---|
 | `4QF9jP9Zuz7LkMtPfXRivC` | Proof A → Proof B | 0.3 → 0.2975 | 81 min | [3LkACAvZ…](https://solscan.io/tx/3LkACAvZPxHE2vRzjqgWzkZCvBKhK3wFBKjqhfEFej3i9Lxo2AZepp7SAQLcoWymhQqdBcXVXxXpqDQa5FgzVNQA) | [4mD881oW…](https://solscan.io/tx/4mD881oW7k7KX6SpRS3ZQKM2kN4JLPC3qYwMgeUrG7ABpFGcSRovgYNj9roCR7QNksgP4zMoJdv2FjdxVdUd7NU) |
-| `pgAKKLNz88tJ4vCn33simc` | Proof B → Proof A | 0.2875 → 0.2723 | about 5 min | [LrUKVmwX…](https://solscan.io/tx/LrUKVmwXXwhz) | [2kpNyg8F…](https://solscan.io/tx/2kpNyg8FkvKwvUfpF2LEM4mZnHH8C8Et4gMVzJC6GrwWz3vFnNUdokEMz76xisqWLx38cdrfA7mMCoMbQdKZNAMu) |
+| `pgAKKLNz88tJ4vCn33simc` | Proof B → Proof A | 0.2875 → 0.2723 | 6 min | [LrUKVmwX…](https://solscan.io/tx/LrUKVmwXXwhzokx388F1MQTQxQuhBAjZh7LLzAebatxDPzyHj4R1YrZJMfitGuz1DZC5WmgG9CKnrQhMUSD1BLm) | [2kpNyg8F…](https://solscan.io/tx/2kpNyg8FkvKwvUfpF2LEM4mZnHH8C8Et4gMVzJC6GrwWz3vFnNUdokEMz76xisqWLx38cdrfA7mMCoMbQdKZNAMu) |
 
 **The full, always-current list is at [ardeafinance.xyz/proof](https://ardeafinance.xyz/proof)** (plain HTML) and
 [`/proof.json`](https://ardeafinance.xyz/proof.json).
