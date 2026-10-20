@@ -4,7 +4,7 @@
 import { RPC_URL, TREASURY, FEE_BPS, JUP_BASE, JUP_API_KEY, DEFAULT_SLIPPAGE_BPS, PRIORITY_MAX_LAMPORTS, STEALTH_MAX_SOL, STEALTH_GAS_RESERVE, PROXY_URL } from "./config.js";
 import { jupiter, prepareSwap, sendAndConfirm, preflight, confirmSent, toRaw, fromRaw, SOL_MINT, SwapError, JITO_URL, JITO_MIN_TIP } from "./swap.js";
 import { triggerApi, limitAmounts, signAndExecute, describeOrder, evaluateRule, newRule, ruleTarget } from "./orders.js";
-import { STEALTH_MESSAGE, StealthError, deriveStealth, deriveInstant, nextUnusedStealth, scanStealths, seedFingerprint, houdini, SOL_QUERY, solTokenId, routeQuote, fastestFair, legMarkup, lamportsToSol, fundingTx, exitTx, exitAmount, waitForRoute, jitter, feeOf } from "./stealth.js";
+import { STEALTH_MESSAGE, StealthError, deriveStealth, deriveInstant, nextUnusedStealth, scanStealths, seedFingerprint, houdini, SOL_QUERY, solTokenId, routeQuote, fastestFair, legMarkup, lamportsToSol, FEE_SPEED_MIN, fundingTx, exitTx, exitAmount, waitForRoute, jitter, feeOf } from "./stealth.js";
 import { trace, DEFAULT_RPC, short, isAddress, base58Encode } from "./trace.js";
 import { createBoard, fromPumpPortal, fromJupiter, fromStonk, STONK, pnl, isPumpMint, mergeHistory, pushSample, momentum } from "./market.js";
 import { pumpPortal, stonkFun, tokenTrades, readCurves, metadata, holders, recentSwaps, walletHistory, onchainMeta, imageSources, identicon, setMediaProxy } from "./feeds.js";
@@ -1520,11 +1520,13 @@ function renderArm() {
       for (const [i, size] of armSizes(raw, n).entries()) {
         const amount = lamportsToSol(size), mk = legMarkup(feeBps());
         const ok = q => q && q.quoteId && !q.error && (!q.type || q.type === "private") && Number(q.amountOut) > 0;
-        let qs = ((await hd.quote({ token, amount, useXmr: true, markup: mk })) || {}).quotes || [], usable = qs.filter(q => ok(q) && q.markupSupported !== false), waived = false;
-        if (!usable.length) { qs = ((await hd.quote({ token, amount, useXmr: true, markup: 0 })) || {}).quotes || []; usable = qs.filter(ok); waived = true; }
-        if (!usable.length) { const lim = qs.find(q => q && q.min); lines.push(`Wallet ${i + 1}: ${amount} SOL, no Monero route right now${lim?.min ? ` (minimum ${lim.min} SOL)` : ""}`); continue; }
-        const q = fastestFair(usable);
-        lines.push(`Wallet ${i + 1}: ${amount} SOL → ≈${Number(q.amountOut).toFixed(4)} SOL in about ${Math.round(q.duration) || "10–40"} min (${usable.length} private route${usable.length > 1 ? "s" : ""}, Monero forced${waived ? ", fee waived" : ""})`);
+        // the same choice arming makes (routeQuote): the fee-carrying route unless it's FEE_SPEED_MIN+ slower than the fastest
+        const [fq, nq] = await Promise.all([hd.quote({ token, amount, useXmr: true, markup: mk }), hd.quote({ token, amount, useXmr: true, markup: 0 })]);
+        const feeU = (fq?.quotes || []).filter(q => ok(q) && q.markupSupported !== false), freeU = (nq?.quotes || []).filter(ok);
+        const fp = feeU.length ? fastestFair(feeU) : null, np = freeU.length ? fastestFair(freeU) : null, dur = q => Number(q?.duration) || 999;
+        const useFee = fp && (!np || dur(fp) <= dur(np) + FEE_SPEED_MIN), q = useFee ? fp : np, usable = useFee ? feeU : freeU, waived = !useFee;
+        if (!q) { const lim = [...(fq?.quotes || []), ...(nq?.quotes || [])].find(x => x && x.min); lines.push(`Wallet ${i + 1}: ${amount} SOL, no Monero route right now${lim?.min ? ` (minimum ${lim.min} SOL)` : ""}`); continue; }
+        lines.push(`Wallet ${i + 1}: ${amount} SOL → ≈${Number(q.amountOut).toFixed(4)} SOL in about ${Math.round(q.duration) || "10–40"} min (${usable.length} private route${usable.length > 1 ? "s" : ""}, Monero forced${waived ? ", Ardea fee waived for speed" : ""})`);
         if (i < n - 1) await sleep(400);
       }
       text(st, `Live from Houdini, SOL → XMR → SOL, no order opened:\n${lines.join("\n")}`);
