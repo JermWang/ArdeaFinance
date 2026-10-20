@@ -1,4 +1,4 @@
-// An in-memory Solana chain that answers the RPC calls trace.js makes, in jsonParsed shape.
+// An in-memory Solana chain for the tests, answering the RPC calls trace.js makes, in jsonParsed shape.
 import { base58Encode, KNOWN } from "../trace.js";
 
 const SYS = "11111111111111111111111111111111";

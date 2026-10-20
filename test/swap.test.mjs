@@ -1,3 +1,4 @@
+// Tests for swap.js: Jupiter quotes and swap transactions, the fee split on buys and sells, Jito tips and confirmation.
 import test from "node:test";
 import assert from "node:assert/strict";
 import web3 from "@solana/web3.js";

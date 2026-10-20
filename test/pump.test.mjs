@@ -1,3 +1,4 @@
+// Tests for pump.js: decoding pump.fun bonding-curve accounts and trade events from raw chain data.
 import test from "node:test";
 import assert from "node:assert/strict";
 import web3 from "@solana/web3.js";

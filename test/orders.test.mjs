@@ -1,3 +1,5 @@
+// Tests for orders.js: Jupiter Trigger limit orders (amounts, signing) and the autopilot rules (stop-loss, trailing
+// stop, take-profit, migration sniper).
 import test from "node:test";
 import assert from "node:assert/strict";
 import web3 from "@solana/web3.js";

@@ -1,4 +1,4 @@
-// Fake Jupiter responses shaped like /swap/v1/quote and /swap/v1/swap-instructions.
+// Fake Jupiter API for the tests: responses shaped like /swap/v1/quote and /swap/v1/swap-instructions.
 const MEMO = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
 const CB = "ComputeBudget111111111111111111111111111111";
 const b64 = bytes => Buffer.from(bytes).toString("base64");

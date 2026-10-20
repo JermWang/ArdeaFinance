@@ -1,4 +1,5 @@
 # Pack PNG files into one .ico (PNG-compressed entries, supported by every current browser).
+# Used for favicon.ico: render favicon.svg at 16, 32 and 48 px, then: python ico.py favicon.ico 16.png 32.png 48.png
 import struct, sys
 out, pngs = sys.argv[1], sys.argv[2:]
 data = [open(p, "rb").read() for p in pngs]

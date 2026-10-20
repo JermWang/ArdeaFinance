@@ -1,3 +1,5 @@
+// Tests for trace.js, the Trail audit: funding source, exchange links, linked wallets, address poisoning and signing
+// hours, run against the in-memory chain in mockchain.mjs.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { trace, collect, analyze, rpcClient, activityHours, isAddress, readTx } from "../trace.js";
