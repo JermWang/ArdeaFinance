@@ -100,7 +100,7 @@ import { X_URL } from "./config.js";
       const direct = rows.filter(r => r.other === (r.w === A ? B : A)).length;
       live.textContent = "";
       const head = document.createElement("p");
-      head.innerHTML = `<b>Proof A</b> <a target="_blank" rel="noopener" href="https://solscan.io/account/${A}">${A.slice(0, 6)}…${A.slice(-4)}</a> · <b>Proof B</b> <a target="_blank" rel="noopener" href="https://solscan.io/account/${B}">${B.slice(0, 6)}…${B.slice(-4)}</a> · ${st.amountSol} SOL daily at ${st.utcHour}:00 UTC · <b>direct transfers between them: ${direct}</b>${st.last?.routeId ? ` · <a href="./track.html#${encodeURIComponent(st.last.routeId)}">track the latest route live</a>` : ""}`;
+      head.innerHTML = `<b>Proof A</b> <a target="_blank" rel="noopener" href="https://solscan.io/account/${A}">${A.slice(0, 6)}…${A.slice(-4)}</a> · <b>Proof B</b> <a target="_blank" rel="noopener" href="https://solscan.io/account/${B}">${B.slice(0, 6)}…${B.slice(-4)}</a> · ${st.amountSol} SOL ${st.everyHours ? `every ${st.everyHours} h` : `daily at ${st.utcHour}:00 UTC`} · <b>direct transfers between them: ${direct}</b>${st.last?.routeId ? ` · <a href="./track.html#${encodeURIComponent(st.last.routeId)}">track the latest route live</a>` : ""}`;
       const t = document.createElement("table"), tb = t.createTBody();
       t.createTHead().innerHTML = "<tr><th>When (UTC)</th><th>Wallet</th><th>SOL</th><th>Other side</th><th>Transaction</th></tr>";
       for (const r of rows.slice(0, 16)) {

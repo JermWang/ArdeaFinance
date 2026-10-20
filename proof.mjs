@@ -43,7 +43,7 @@ export function msUntil(hour, now = Date.now()) {
 }
 
 export function startProof({ env = process.env, gateway, log = console.log } = {}) {
-  const state = { enabled: !!env.PROOF_WALLET_SECRET, a: null, b: null, amountSol: Number(env.PROOF_AMOUNT_SOL) || 0.3, utcHour: Number.isInteger(+env.PROOF_UTC_HOUR) ? +env.PROOF_UTC_HOUR : 14, running: false, last: null, next: null, history: [] };
+  const state = { enabled: !!env.PROOF_WALLET_SECRET, a: null, b: null, amountSol: Number(env.PROOF_AMOUNT_SOL) || 0.3, utcHour: Number.isInteger(+env.PROOF_UTC_HOUR) ? +env.PROOF_UTC_HOUR : 14, everyHours: Number(env.PROOF_INTERVAL_HOURS) > 0 ? Number(env.PROOF_INTERVAL_HOURS) : 0, running: false, last: null, next: null, history: [] };
   if (!state.enabled) return state;
   (async () => {
     const { a, b } = await proofWallets(env.PROOF_WALLET_SECRET);
@@ -75,9 +75,10 @@ export function startProof({ env = process.env, gateway, log = console.log } = {
       } catch (e) { rec.error = String(e.message || e).slice(0, 200); log(`proof: ${rec.error}`); }
       finally { rec.endedAt = new Date().toISOString(); state.last = rec; state.running = false; state.history = [rec, ...state.history].slice(0, 10); }
     };
-    const schedule = () => { const ms = msUntil(state.utcHour); state.next = new Date(Date.now() + ms).toISOString(); setTimeout(() => { run().finally(schedule); }, ms); };
+    // Daily at utcHour, or with PROOF_INTERVAL_HOURS every N hours, counted from when the last route finished.
+    const schedule = () => { const ms = state.everyHours ? state.everyHours * 3600_000 : msUntil(state.utcHour); state.next = new Date(Date.now() + ms).toISOString(); setTimeout(() => { run().finally(schedule); }, ms); };
     schedule();
-    log(`proof: wallets ${state.a} and ${state.b}, ${state.amountSol} SOL daily at ${state.utcHour}:00 UTC`);
+    log(`proof: wallets ${state.a} and ${state.b}, ${state.amountSol} SOL ${state.everyHours ? `every ${state.everyHours} h` : `daily at ${state.utcHour}:00 UTC`}`);
     // one extra route right after this start, on top of the schedule; remove the variable afterwards
     if (env.PROOF_RUN_NOW) { log("proof: PROOF_RUN_NOW is set, running one route now"); run(); }
   })().catch(e => { state.enabled = false; state.error = String(e.message || e); log(`proof: off (${state.error})`); });
@@ -87,4 +88,4 @@ export function startProof({ env = process.env, gateway, log = console.log } = {
 // What /proof.json shows: the two addresses and the schedule. Never the key.
 // Proof routes run between Ardea's own public wallets, so their route ids are safe to publish: anyone can track them.
 const runView = r => r && { startedAt: r.startedAt, endedAt: r.endedAt, from: r.from, to: r.to, amountSol: r.amountSol, amountOutSol: r.amountOutSol, routeId: r.routeId, fundingSig: r.fundingSig, delivered: !!r.delivered, error: r.error };
-export const publicState = s => ({ enabled: s.enabled, wallets: s.a ? [s.a, s.b] : [], amountSol: s.amountSol, utcHour: s.utcHour, running: s.running, next: s.next, last: runView(s.last), history: (s.history || []).map(runView) });
+export const publicState = s => ({ enabled: s.enabled, wallets: s.a ? [s.a, s.b] : [], amountSol: s.amountSol, utcHour: s.utcHour, everyHours: s.everyHours || 0, running: s.running, next: s.next, last: runView(s.last), history: (s.history || []).map(runView) });
