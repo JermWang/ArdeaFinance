@@ -43,7 +43,10 @@ export const TOKEN_CA = ""; // set at launch
 
 // Public proof of Private mode working: real transaction signatures shown in the docs' Proof section, each linked to
 // Solscan. Add them after a real private buy and exit, e.g. { step: "Funding", note: "...", sig: "5abc…" }.
-export const PROOF_TXS = [];
+export const PROOF_TXS = [
+  { step: "Proof route 1 · funding", note: "Proof wallet A pays 0.3 SOL to a one-time Houdini deposit address (route 4QF9jP9Zuz7LkMtPfXRivC, forced through Monero).", sig: "3LkACAvZPxHE2vRzjqgWzkZCvBKhK3wFBKjqhfEFej3i9Lxo2AZepp7SAQLcoWymhQqdBcXVXxXpqDQa5FgzVNQA" },
+  { step: "Proof route 1 · delivery", note: "81 minutes later proof wallet B receives 0.2975 SOL from an exchange wallet (5ndLnE…HEPs), not from proof wallet A.", sig: "4mD881oW7k7KX6SpRS3ZQKM2kN4JLPC3qYwMgeUrG7ABpFGcSRovgYNj9roCR7QNksgP4zMoJdv2FjdxVdUd7NU" }
+];
 // The public source repository, linked from the docs' Proof section once it exists ("" hides the link).
 export const SOURCE_REPO = "https://github.com/JermWang/ardea";
 
