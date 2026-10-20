@@ -101,6 +101,8 @@ const svgIcon = (name, cls) => { const e = document.createElementNS("http://www.
 // An icon followed by a text label, replacing whatever the element held.
 const iconLabel = (el, name, label, cls) => { el.textContent = ""; el.append(svgIcon(name, cls)); if (label !== "" && label != null) el.append(make("span", "", label)); return el; };
 const extLink = (href, label, cls) => { const a = link(href, "", cls); if (label) a.append(label); a.append(svgIcon("ext", "ext")); a.setAttribute("aria-label", `${label || "Open"} (opens in a new tab)`); return a; };
+// Public tracking links for a record's Monero routes (track.html#<route id>): the arming or buy route, and the exit.
+const trackLinks = rec => [rec?.routeId && ["Track route", rec.routeId], rec?.exitRouteId && ["Track return", rec.exitRouteId]].filter(Boolean).map(([label, id]) => extLink(`./track.html#${encodeURIComponent(id)}`, label, "track-link"));
 const qbLabel = (b, v) => { iconLabel(b, "bolt", v); b.setAttribute("aria-label", `Quick buy ${v} SOL`); return b; };
 const solscan = (kind, id) => `https://solscan.io/${kind}/${id}`;
 const rejected = e => e && (e.code === 4001 || /reject|cancel|denied|declined/i.test(e.message || ""));
@@ -1361,7 +1363,7 @@ async function stealthBuy() {
     rec = { ...rec, state: "routing", fundingSig: sig };
     saveStealth(rec);
     gsteps(1);
-    setTradeStatus(`Sent. The Monero route takes ${eta} and runs in the background, so keep trading. Stealth wallet #${index} buys ${sym} when its SOL lands; progress is in Portfolio.`, "ok", sig);
+    setTradeStatus(`Sent. The Monero route takes ${eta} and runs in the background, so keep trading. Stealth wallet #${index} buys ${sym} when its SOL lands. Track it live at /track.html#${route.id} (also in Portfolio).`, "ok", sig);
     amt.value = ""; $("quote").hidden = true;
     refreshBalances();
     finishPrivateBuy(rec);
@@ -1535,6 +1537,7 @@ function renderArm() {
     const bal = armBalances[r.address];
     meta.append(make("b", "", `Wallet #${r.index}`), " ", extLink(`https://solscan.io/account/${r.address}`, short(r.address)), ` · ${label}${bal != null ? ` · ${fromRaw(bal, 9, 4)} SOL` : ""}`);
     if (r.error) meta.append(make("span", "neg", ` · ${r.error}`));
+    for (const a of trackLinks(r)) meta.append(" · ", a);
     if (["armed", "holding", "partial"].includes(r.state)) {
       const b = make("button", "btn small", r.state === "armed" ? "Disarm" : "Sell all & return"); b.type = "button";
       b.addEventListener("click", () => stealthExit(r.index, row).then(refreshArmViews));
@@ -1605,6 +1608,7 @@ async function renderStealths(gap = 5) {
     for (const t of r.held) meta.append(` · ${num(Number(t.tokenAmount.uiAmountString || t.tokenAmount.uiAmount))} ${symbolOf(t.mint)}`);
     if (r.rec) meta.append(` · ${r.rec.state}${r.rec.route ? ` (${r.rec.route})` : ""}`);
     if (r.rec && r.rec.error) meta.append(make("span", "neg", ` · ${r.rec.error}`));
+    for (const a of trackLinks(r.rec)) meta.append(" · ", a);
     if (r.rec && r.rec.state === "routing" && r.rec.routeId) finishPrivateBuy(r.rec);
     if (r.rec && r.rec.state === "funded" && r.rec.mint && !finishing.has(r.i)) {
       const buy = make("button", "btn small primary", `Buy ${r.rec.symbol || symbolOf(r.rec.mint)}`); buy.type = "button";

@@ -43,7 +43,7 @@ export function msUntil(hour, now = Date.now()) {
 }
 
 export function startProof({ env = process.env, gateway, log = console.log } = {}) {
-  const state = { enabled: !!env.PROOF_WALLET_SECRET, a: null, b: null, amountSol: Number(env.PROOF_AMOUNT_SOL) || 0.3, utcHour: Number.isInteger(+env.PROOF_UTC_HOUR) ? +env.PROOF_UTC_HOUR : 14, running: false, last: null, next: null };
+  const state = { enabled: !!env.PROOF_WALLET_SECRET, a: null, b: null, amountSol: Number(env.PROOF_AMOUNT_SOL) || 0.3, utcHour: Number.isInteger(+env.PROOF_UTC_HOUR) ? +env.PROOF_UTC_HOUR : 14, running: false, last: null, next: null, history: [] };
   if (!state.enabled) return state;
   (async () => {
     const { a, b } = await proofWallets(env.PROOF_WALLET_SECRET);
@@ -60,8 +60,9 @@ export function startProof({ env = process.env, gateway, log = console.log } = {
         const leg = nextLeg(balA, balB, solToLamports(state.amountSol));
         if (!leg) throw new Error("proof wallets are empty");
         const from = keys[leg.from], to = keys[leg.to];
-        Object.assign(rec, { from: leg.from, amountSol: lamportsToSol(leg.amount) });
+        Object.assign(rec, { from: leg.from, to: leg.to, amountSol: lamportsToSol(leg.amount) });
         const route = await routeQuote({ hd, token: solTokenId(await hd.tokens(SOL_QUERY)), amount: leg.amount, from: from.publicKey.toBase58(), to: to.publicKey.toBase58() });
+        rec.routeId = route.id; state.last = rec;
         const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
         const tx = fundingTx(web3, { from: from.publicKey.toBase58(), depositAddress: route.depositAddress, amount: leg.amount, blockhash });
         tx.sign([from]);
@@ -72,7 +73,7 @@ export function startProof({ env = process.env, gateway, log = console.log } = {
         rec.delivered = true; rec.amountOutSol = lamportsToSol(route.amountOut);
         log(`proof: delivered ≈${rec.amountOutSol} SOL to ${leg.to}`);
       } catch (e) { rec.error = String(e.message || e).slice(0, 200); log(`proof: ${rec.error}`); }
-      finally { rec.endedAt = new Date().toISOString(); state.last = rec; state.running = false; }
+      finally { rec.endedAt = new Date().toISOString(); state.last = rec; state.running = false; state.history = [rec, ...state.history].slice(0, 10); }
     };
     const schedule = () => { const ms = msUntil(state.utcHour); state.next = new Date(Date.now() + ms).toISOString(); setTimeout(() => { run().finally(schedule); }, ms); };
     schedule();
@@ -84,4 +85,6 @@ export function startProof({ env = process.env, gateway, log = console.log } = {
 }
 
 // What /proof.json shows: the two addresses and the schedule. Never the key.
-export const publicState = s => ({ enabled: s.enabled, wallets: s.a ? [s.a, s.b] : [], amountSol: s.amountSol, utcHour: s.utcHour, running: s.running, next: s.next, last: s.last && { startedAt: s.last.startedAt, endedAt: s.last.endedAt, amountSol: s.last.amountSol, fundingSig: s.last.fundingSig, delivered: !!s.last.delivered, error: s.last.error } });
+// Proof routes run between Ardea's own public wallets, so their route ids are safe to publish: anyone can track them.
+const runView = r => r && { startedAt: r.startedAt, endedAt: r.endedAt, from: r.from, to: r.to, amountSol: r.amountSol, amountOutSol: r.amountOutSol, routeId: r.routeId, fundingSig: r.fundingSig, delivered: !!r.delivered, error: r.error };
+export const publicState = s => ({ enabled: s.enabled, wallets: s.a ? [s.a, s.b] : [], amountSol: s.amountSol, utcHour: s.utcHour, running: s.running, next: s.next, last: runView(s.last), history: (s.history || []).map(runView) });

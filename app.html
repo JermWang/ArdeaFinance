@@ -659,6 +659,8 @@ body{padding-left:78px}
 .arm-how li b{display:block;color:var(--paper);font:500 1.15rem var(--serif);margin-bottom:4px}
 .arm-how li b::before{content:counter(a) ". ";color:var(--accent)}
 @media (max-width:760px){.arm{padding:22px 16px 40px}.arm-form{grid-template-columns:minmax(0,1fr) 120px}.arm-go{grid-column:1/-1}.arm-how{grid-template-columns:minmax(0,1fr)}.arm-stats{gap:28px}}
+.nav a.track-nav{--ic:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M5 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM19 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM7 17h5a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h8'/></svg>")}
+.track-link{color:var(--accent)}
 </style>
 </head>
 <body>
@@ -670,6 +672,7 @@ body{padding-left:78px}
     <a href="#/trending" data-route="trending">Trending</a>
     <a href="#/tracker" data-route="tracker">Tracker</a>
     <a href="#/portfolio" data-route="portfolio">Portfolio</a>
+    <a href="./track.html" class="track-nav">Track</a>
     <a href="./docs.html" class="docs-link">Docs</a>
     <a class="x-link" href="https://github.com/JermWang/ardea" target="_blank" rel="noopener" aria-label="Ardea source code on GitHub" title="Source code on GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.65.5.5 5.65.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.87-1.37-3.87-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg></a>
       <a class="x-link" href="#" data-x hidden target="_blank" rel="noopener" aria-label="Ardea on X" title="Ardea on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>

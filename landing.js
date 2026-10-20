@@ -247,6 +247,32 @@ const ca = $("ca");
   });
 })();
 
+/* ---------- live proof strip ---------- */
+// Ardea's own daily proof route, from /proof.json: whether one is crossing Monero now, how the last one went, and
+// public links to track it and to the two proof wallets on Solscan. It says nothing about any user.
+(async () => {
+  const bar = $("ticker"), track = $("tk-track");
+  if (!bar) return;
+  const top = document.querySelector(".top");
+  if (top) document.documentElement.style.setProperty("--top-h", `${top.offsetHeight}px`);
+  let st;
+  try { st = await (await fetch(`${(PROXY_URL || "").replace(/\/$/, "")}/proof.json`)).json(); } catch (_) { return; }
+  if (!st || !st.enabled || st.wallets?.length !== 2) return;
+  const short = a => `${a.slice(0, 4)}…${a.slice(-4)}`, items = [];
+  const item = (...parts) => { const s = document.createElement("span"); s.className = "tk-item"; s.append(document.createElement("i"), ...parts); items.push(s); };
+  const a = (href, label) => { const l = document.createElement("a"); l.href = href; l.textContent = label; if (/^https?:/.test(href)) { l.target = "_blank"; l.rel = "noopener"; } return l; };
+  const b = t => { const e = document.createElement("b"); e.textContent = t; return e; };
+  const r = st.last;
+  if (r && r.routeId && !r.delivered && !r.error) item("Proof route crossing Monero now · ", b(`${r.amountSol} SOL`), " · ", a(`./track.html#${r.routeId}`, "track it live →"));
+  else if (r && r.delivered) item("Last proof route delivered · ", b(`${r.amountSol} → ≈${r.amountOutSol} SOL`), " through Monero", r.routeId ? " · " : "", ...(r.routeId ? [a(`./track.html#${r.routeId}`, "see the route →")] : []));
+  item("Proof wallets ", a(`https://solscan.io/account/${st.wallets[0]}`, short(st.wallets[0])), " ⇄ ", a(`https://solscan.io/account/${st.wallets[1]}`, short(st.wallets[1])), " · never a direct transfer between them");
+  item("A real Monero route every day at ", b(`${String(st.utcHour).padStart(2, "0")}:00 UTC`), " · ", a("./docs.html#proof", "all proof →"));
+  item("Track any Ardea route from its link · ", a("./track.html", "route tracker →"));
+  // twice, so the scroll loops without a gap
+  track.append(...items, ...items.map(n => n.cloneNode(true)));
+  bar.hidden = false;
+})();
+
 /* ---------- background particles ---------- */
 // A few dozen tiny orange specks drifting slowly upward behind the page, each fading in and out on its own beat.
 // One fixed canvas, about 1 per 30,000 px² of screen; off with reduced motion, paused while the tab is hidden.
