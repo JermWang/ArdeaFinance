@@ -5,6 +5,9 @@ import { renderGlyphs } from "./art.js";
 import { PROXY_URL } from "./config.js";
 import { houdini, lamportsToSol, solToLamports } from "./stealth.js";
 import { STEPS, stepIndex, headline, isRouteId, elapsedMin } from "./trackview.js";
+import { solanaSvg, moneroSvg } from "./brandlogos.js";
+// which chain each step happens on
+const CHAIN = { open: "solana", deposit: "solana", toxmr: "monero", monero: "monero", tosol: "solana", paid: "solana" };
 
 renderGlyphs(document);
 const hd = houdini({ base: `${(PROXY_URL || "").replace(/\/$/, "")}/houdini` });
@@ -34,7 +37,7 @@ function render(o, id) {
   if (o.rerouted) m("Note", "rerouted, amounts may differ");
   out.append(meta);
   const ol = make("ol", "steps");
-  STEPS.forEach((s, i) => { const li = make("li", at === -1 ? "" : i < at ? "done" : i === at ? "active" : ""); li.append(make("i", "dot"), make("b", "", s.label), make("span", "", s.note)); ol.append(li); });
+  STEPS.forEach((s, i) => { const li = make("li", at === -1 ? "" : i < at ? "done" : i === at ? "active" : ""), b = make("b"); b.innerHTML = CHAIN[s.key] === "monero" ? moneroSvg(14) : solanaSvg(14); b.append(" ", s.label); li.append(make("i", "dot"), b, make("span", "", s.note)); ol.append(li); });
   out.append(ol);
   // transaction links, on request only
   const txs = make("div", "txs");

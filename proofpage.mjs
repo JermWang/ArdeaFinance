@@ -1,6 +1,7 @@
 // /proof: the proof page, rendered on the server as plain HTML so it reads the same with or without JavaScript, for
 // people and for automated checkers alike. Everything on it comes from Houdini's own records of the proof routes and
 // from the Solana chain; each fact links to where it can be checked independently.
+import { solanaSvg, moneroSvg } from "./brandlogos.js";
 const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const short = a => a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "—";
 const tx = sig => sig ? `<a href="https://solscan.io/tx/${esc(sig)}">${esc(short(sig))}</a>` : "—";
@@ -43,12 +44,13 @@ h1{font:500 clamp(2rem,4.5vw,3rem)/1.1 Georgia,serif;margin:.2em 0}h2{font:500 1
 .stats b{display:block;font:500 1.8rem Georgia,serif}.stats span{color:var(--mute);font-size:.8rem}
 table{width:100%;border-collapse:collapse;font:.82rem ui-monospace,Consolas,monospace}th,td{text-align:left;padding:10px 8px;border-top:1px solid var(--line);vertical-align:top}
 th{color:var(--mute);font-weight:500}small{color:var(--mute)}.wrap{overflow-x:auto}
-ol li,ul li{margin:.4em 0}code{font:.85em ui-monospace,Consolas,monospace;color:#FF8A3D}p,li{color:#D0D0D0}
+ol li,ul li{margin:.4em 0}.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:1px solid var(--line);border-radius:99px;font:.8rem ui-monospace,Consolas,monospace;color:var(--ink)}.chip i{font-style:normal;color:var(--mute);margin:0 4px}.brand-logo{vertical-align:-3px}code{font:.85em ui-monospace,Consolas,monospace;color:#FF8A3D}p,li{color:#D0D0D0}
 </style></head><body>
 <header><b>Ardea</b><nav><a href="/">Home</a><a href="/app.html">Terminal</a><a href="/track.html">Route tracker</a><a href="/docs.html#proof">Docs</a><a href="${REPO}">GitHub</a></nav></header>
 <main>
 <p class="k">Proof · generated ${when(now.toISOString())}</p>
 <h1>Real Monero routes, checkable without trusting us.</h1>
+<p class="chip">${solanaSvg(16)} SOL <i>→</i> ${moneroSvg(16)} XMR <i>→</i> ${solanaSvg(16)} SOL</p>
 <p>Ardea runs two proof wallets of its own and ${st?.mode === "arm" ? `runs the Arm a wallet flow with them ${schedule}: arm a brand-new wallet, then disarm it,` : `sends SOL between them ${schedule},`} through the same code path a private buy uses: a Houdini Swap private send with Monero forced as the bridge (<code>useXmr=true</code>, see <a href="${REPO}/blob/main/stealth.js">stealth.js</a>). Every completed route below is matched to Houdini's own record of it and to the two Solana transactions it produced.</p>
 <div class="stats">
   <div><b>${done.length}</b><span>completed routes</span></div>

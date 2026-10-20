@@ -3,6 +3,7 @@
 // One shared animation clock drives it all; it pauses off-screen and respects prefers-reduced-motion.
 
 import { logoMark } from "./logo.js";
+import { brandNode } from "./brandlogos.js";
 export const NS = "http://www.w3.org/2000/svg";
 export const REDUCE = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 export const C = {
@@ -129,6 +130,8 @@ export const GLYPHS = {
 };
 GLYPHS.stealth.dash = "2.2 2.4";
 export function glyphSVG(kind, cls) {
+  // the Solana and Monero marks, as published, wherever a route touches either chain
+  if (kind === "solana" || kind === "monero") { const b = brandNode(kind, 24); if (cls) b.setAttribute("class", `${cls} brand-logo`); b.setAttribute("aria-hidden", "true"); return b; }
   const gl = GLYPHS[kind] || GLYPHS.wallet;
   // duotone: a bold rounded outline, and the detail as a soft orange fill with an orange edge
   const svg = el("svg", { viewBox: "0 0 24 24", "aria-hidden": "true", fill: "none", stroke: "currentColor", "stroke-width": 2, "stroke-linecap": "round", "stroke-linejoin": "round" });
@@ -165,7 +168,10 @@ export function hero(svg) {
   const y = 420, xs = [70, 300, 530], labels = [["YOUR WALLET", "public history"], ["MONERO", "SOL → XMR → SOL"], ["ARMED WALLET", "fires in one click"]];
   const line = el("path", { d: `M${xs[0]} ${y}H${xs[2]}`, stroke: C.LINE, "stroke-width": 1.2 }, svg);
   xs.forEach((x, i) => {
-    el("circle", { cx: x, cy: y, r: i === 1 ? 7 : 5, fill: i === 0 ? C.IVORY : C.BRASS }, svg);
+    // Solana at both wallet ends, Monero in the middle
+    const sz = i === 1 ? 30 : 20, b = brandNode(i === 1 ? "monero" : "solana", sz);
+    el("circle", { cx: x, cy: y, r: sz / 2 + 7, fill: C.BG, stroke: C.LINE, "stroke-width": 1 }, svg);
+    b.setAttribute("x", f2(x - sz / 2)); b.setAttribute("y", f2(y - (i === 1 ? sz : sz * 88 / 101) / 2)); svg.appendChild(b);
     text(svg, x, y + 30, labels[i][0], { "font-size": 10.5, "font-weight": 600, fill: C.IVORY, "letter-spacing": ".14em", "text-anchor": "middle" });
     text(svg, x, y + 46, labels[i][1], { "font-size": 9.5, fill: C.MUTE, "letter-spacing": ".06em", "text-anchor": "middle" });
   });

@@ -8,6 +8,12 @@
 </p>
 
 <p align="center">
+  <img src="media/brand/solana.svg" height="18" alt="Solana"> <b>SOL</b> &nbsp;→&nbsp;
+  <img src="media/brand/monero.svg" height="18" alt="Monero"> <b>XMR</b> &nbsp;→&nbsp;
+  <img src="media/brand/solana.svg" height="18" alt="Solana"> <b>SOL</b>
+</p>
+
+<p align="center">
   <a href="https://github.com/JermWang/ardea/actions/workflows/test.yml"><img src="https://github.com/JermWang/ardea/actions/workflows/test.yml/badge.svg" alt="tests"></a>
   <a href="https://ardeafinance.xyz/proof"><img src="https://img.shields.io/badge/proof-live%20Monero%20routes-FF6600?style=flat" alt="proof"></a>
   <a href="https://ardeafinance.xyz"><img src="https://img.shields.io/badge/site-ardeafinance.xyz-141414?style=flat" alt="site"></a>
@@ -112,7 +118,7 @@ from your signature, so keep in it only what you mean to trade.
   read from the chain, holders, dev share, volume and buy/sell counts, and ⚡ one-click buys.
 - **Trending, token pages, tracker, limit orders, portfolio and PnL,** with Jupiter routing and P1–P3 presets.
 - **Instant wallet:** trade with no popups from a wallet derived from one signature; fund it directly or through Monero.
-- **Trail audit:** paste any wallet and see what trackers can already link to it.
+- **Trail audit:** in Portfolio, see what trackers can already link to your wallet.
 - **Route tracker:** `ardeafinance.xyz/track.html#<route id>` follows any route live from its link alone.
 - **Holder fee tiers:** holding the token lowers the fee (0.1% / 0.5% / 1% of supply → 0.4% / 0.3% / 0.25%).
 

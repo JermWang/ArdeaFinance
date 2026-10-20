@@ -663,6 +663,10 @@ body{padding-left:78px}
 @media (max-width:760px){.arm{padding:22px 16px 40px}.arm-form{grid-template-columns:minmax(0,1fr) 120px}.arm-go{grid-column:1/-1}.arm-how{grid-template-columns:minmax(0,1fr)}.arm-stats{gap:28px}}
 .nav a.track-nav{--ic:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M5 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM19 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM7 17h5a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h8'/></svg>")}
 .track-link{color:var(--accent)}
+.bl{display:inline-block;width:15px;height:15px;vertical-align:-2px;margin-right:5px}
+.arm-route{margin:12px 0 0}
+.route-chip{display:inline-flex;align-items:center;gap:2px;padding:6px 12px;border:1px solid var(--line);border-radius:99px;font:500 .74rem var(--font-mono);letter-spacing:.08em;color:var(--paper)}
+.route-chip i{font-style:normal;color:var(--mute-ink);margin:0 8px}
 </style>
 </head>
 <body>
@@ -701,6 +705,7 @@ body{padding-left:78px}
   <section class="view" id="v-arm" hidden>
     <div class="arm">
       <p class="arm-eyebrow">Arm a wallet · funded through Monero</p>
+      <p class="arm-route"><span class="route-chip" aria-label="SOL to XMR to SOL"><span data-glyph="solana" class="bl"></span>SOL<i>→</i><span data-glyph="monero" class="bl"></span>XMR<i>→</i><span data-glyph="solana" class="bl"></span>SOL</span></p>
       <h1>Arm a clean wallet. <em>Fire private buys instantly.</em></h1>
       <p class="arm-lede">Fund fresh wallets through Monero ahead of time. When you spot a coin, an armed wallet buys it in one click: no route to wait for, and because the funding happened earlier, the buy's timing and amount don't line up with your deposit. With Private mode on, every buy and every <svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M9 1.8 3.6 9h4l-.8 5.2L12.4 7h-4z"/></svg> quick-buy fires the next armed wallet.</p>
       <div id="arm-body"></div>

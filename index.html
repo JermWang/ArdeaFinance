@@ -283,6 +283,13 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 
 .tk-item a{color:var(--brass);text-decoration:none}.tk-item a:hover{text-decoration:underline}
 @keyframes tk{to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion:reduce){.tk-track{animation:none;padding-left:16px}}
+/* Solana and Monero marks inline with text */
+.bl{display:inline-block;width:15px;height:15px;vertical-align:-2px;margin-right:6px}
+.rail .bl{width:14px;height:14px}
+.routeline{margin:14px 0 0}
+.route-chip{display:inline-flex;align-items:center;gap:2px;padding:6px 12px;border:1px solid var(--line);border-radius:99px;font:500 .74rem var(--mono);letter-spacing:.08em;color:var(--ivory)}
+.route-chip i{font-style:normal;color:var(--mute);margin:0 8px}
+.route-chip .bl{margin-right:5px}
 </style>
 </head>
 <body>
@@ -293,7 +300,6 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 
       <a class="sec" href="#record">The record</a>
       <a class="sec" href="#arm">Arm a wallet</a>
       <a class="sec" href="#desk">Terminal</a>
-      <a class="sec" href="#audit">Trail audit</a>
       <a class="sec" href="#token">Token</a>
       <a href="/proof">Proof</a>
       <a href="./docs.html">Docs</a>
@@ -310,6 +316,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 
     <section class="hero">
       <div>
         <p class="eyebrow">Arm a wallet · routed through Monero</p>
+        <p class="routeline"><span class="route-chip" aria-label="SOL to XMR to SOL"><span data-glyph="solana" class="bl"></span>SOL<i>→</i><span data-glyph="monero" class="bl"></span>XMR<i>→</i><span data-glyph="solana" class="bl"></span>SOL</span></p>
         <h1>Arm a clean wallet. <em>Fire private buys instantly.</em></h1>
         <p class="lede">Ardea funds fresh wallets through Monero ahead of time: your SOL becomes XMR, crosses Monero, and an unrelated exchange pays each wallet. When a coin moves, an <b>armed wallet</b> buys it in one click, with no transfer from your wallet to it and no route to wait for. A full Solana trading terminal sits around it.</p>
         <div class="ctas">
@@ -328,11 +335,11 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 
     </section>
   </div>
 
-  <div class="rail"><div class="wrap"><span>Built on</span><span>Solana</span><span>Jupiter</span><span>Monero</span><span>Houdini Swap</span><span>Jito</span><span>PumpPortal</span></div></div>
+  <div class="rail"><div class="wrap"><span>Built on</span><span><span data-glyph="solana" class="bl"></span>Solana</span><span>Jupiter</span><span><span data-glyph="monero" class="bl"></span>Monero</span><span>Houdini Swap</span><span>Jito</span><span>PumpPortal</span></div></div>
 
   <div class="wrap">
     <section id="arm" class="cert" aria-labelledby="pm-h">
-      <p class="eyebrow"><span class="beta">BETA</span> Arm a wallet · routed through Monero</p>
+      <p class="eyebrow"><span class="beta">BETA</span> Arm a wallet · routed through <span data-glyph="monero" class="bl"></span>Monero</p>
       <h2 id="pm-h">Arm once. <em>Fire whenever.</em></h2>
       <p class="sub">Private routes through Monero take 10–40 minutes, too slow for a coin that's moving. So Ardea does the slow part first. You arm one to five clean wallets; each is paid through Monero by an exchange, not by you. When you want in, the next armed wallet buys instantly.</p>
       <div class="cols">
@@ -399,49 +406,6 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 
       </div>
     </section>
 
-    <section id="audit">
-      <div class="head">
-        <div>
-          <p class="eyebrow">Free tool · Trail audit</p>
-          <h2>Read your wallet <em>the way trackers do.</em></h2>
-        </div>
-        <p>Paste any wallet. Your browser reads its public history from a Solana RPC node and draws the links trackers draw. Nothing to connect, nothing to sign, and no record of what you look up. Prefer your own node? Set it under RPC node.</p>
-      </div>
-      <div class="audit">
-        <div class="desk-panel" id="tracer">
-          <div class="ph"><span class="live"><i></i>Read-only audit</span><span class="chip" id="tr-chip">Ready</span></div>
-          <form class="tr-form" id="tr-form" autocomplete="off">
-            <label class="sr" for="tr-addr">Solana wallet address</label>
-            <input id="tr-addr" name="address" placeholder="Paste a Solana wallet address" spellcheck="false" autocapitalize="off" inputmode="text">
-            <button class="btn brass sm" id="tr-go" type="submit">Audit</button>
-          </form>
-          <div class="stage"><canvas id="tr-canvas" aria-hidden="true"></canvas></div>
-          <ul class="fields" id="tr-fields" aria-label="What this wallet gives away"></ul>
-          <div class="foot">
-            <p class="meta" id="tr-meta" aria-live="polite"></p>
-            <button class="btn sm" id="tr-copy" type="button" disabled>Copy result</button>
-          </div>
-          <details class="rpc">
-            <summary>RPC node</summary>
-            <input id="tr-rpc" aria-label="Solana RPC URL" spellcheck="false">
-            <p>Your browser sends every request to this node. The public one is rate limited, so a Helius, Triton or QuickNode URL runs faster.</p>
-          </details>
-        </div>
-        <div class="side">
-          <div class="steps">
-            <div class="step"><span class="n">1</span><h3>Paste any address</h3><p>No wallet connection, no signature, no account. Audit any wallet, not only yours.</p></div>
-            <div class="step"><span class="n">2</span><h3>Read public history</h3><p>Up to 100 recent transactions, the first few ever, and one hop out to the wallets that matter most.</p></div>
-            <div class="step"><span class="n">3</span><h3>See the links</h3><p>Funding, exchanges, linked wallets, habits and poisoning attempts, scored the way trackers score them.</p></div>
-          </div>
-          <div class="hours-box">
-            <div class="cap"><span>Signing hours for <b id="hr-name">the wallet you audit</b></span><span id="hr-zone"></span></div>
-            <div class="hours" id="hours" role="img" aria-label="Transactions signed per hour of the day, UTC"></div>
-            <div class="key"><span><i style="background:var(--steel)"></i>Signed, by hour (UTC)</span><span><i style="background:var(--brass)"></i>Quietest 7 hours</span></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <section id="token">
       <div class="head">
         <div>
@@ -468,7 +432,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 
 <footer>
   <div class="wrap">
     <p class="big">A wallet should only show <em>what you choose to sign.</em></p>
-    <nav aria-label="Footer"><a href="./app.html">Terminal</a><a href="./docs.html">Docs</a><a href="#audit">Trail audit</a><a href="https://github.com/JermWang/ardea" target="_blank" rel="noopener">GitHub</a><a href="#" data-x hidden target="_blank" rel="noopener">X</a><a href="#arm">Arm a wallet</a></nav>
+    <nav aria-label="Footer"><a href="./app.html">Terminal</a><a href="./docs.html">Docs</a><a href="https://github.com/JermWang/ardea" target="_blank" rel="noopener">GitHub</a><a href="#" data-x hidden target="_blank" rel="noopener">X</a><a href="#arm">Arm a wallet</a></nav>
     <div class="fine">
       <a class="brand" href="#top" aria-label="Ardea home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
       <span>Non-custodial software. Privacy on a public chain is never perfect; read the limits in the docs.</span>

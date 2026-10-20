@@ -166,6 +166,10 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#C24A00,#933800 55%
 @media (max-width:600px){.links a.x{display:inline-flex}}
 .proof-btn{font:600 .9rem var(--sans);background:var(--ink);color:var(--paper);border:0;border-radius:6px;padding:11px 18px;cursor:pointer}.proof-btn:disabled{opacity:.6;cursor:wait}
 .proof-out{background:var(--plate);color:#E0E0E0;border-radius:10px;padding:16px;font:.76rem/1.6 var(--mono);white-space:pre-wrap;overflow-x:auto;max-width:76ch}.proof-out b{color:#FF9A57;font-weight:500}
+.bl{display:inline-block;width:15px;height:15px;vertical-align:-2px;margin-right:5px}
+.routeline{margin:6px 0 14px}
+.route-chip{display:inline-flex;align-items:center;gap:2px;padding:6px 12px;border:1px solid var(--rule-2);border-radius:99px;font:500 .74rem var(--mono);letter-spacing:.08em;color:var(--ink)}
+.route-chip i{font-style:normal;color:var(--mute);margin:0 8px}
 </style>
 <script type="module" src="./docs.js"></script>
 </head>
@@ -175,7 +179,6 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#C24A00,#933800 55%
     <a class="brand" href="./" aria-label="Ardea home"><span data-glyph="mark" data-tone="orangePaper" class="mark"></span><span data-glyph="word" class="word"></span><span class="tag">Documentation</span></a>
     <nav class="links" aria-label="Site">
       <a href="./">Home</a>
-      <a href="./#audit">Trail audit</a>
       <a class="x" href="https://github.com/JermWang/ardea" target="_blank" rel="noopener" aria-label="Ardea source code on GitHub" title="Source code on GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.65.5.5 5.65.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.87-1.37-3.87-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg></a>
       <a class="x" href="#" data-x hidden target="_blank" rel="noopener" aria-label="Ardea on X" title="Ardea on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
       <a class="cta" href="./app.html">Open terminal</a>
@@ -292,6 +295,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#C24A00,#933800 55%
 
       <section id="arm">
         <p class="eyebrow"><span data-glyph="bolt"></span>Arm a wallet</p>
+        <p class="routeline"><span class="route-chip light" aria-label="SOL to XMR to SOL"><span data-glyph="solana" class="bl"></span>SOL<i>→</i><span data-glyph="monero" class="bl"></span>XMR<i>→</i><span data-glyph="solana" class="bl"></span>SOL</span></p>
         <h2>Do the slow part first. <em>Fire when it counts.</em></h2>
         <p>A private route through Monero takes 10–40 minutes, too slow for a coin that's moving. Arming moves that wait to before you need it. You fund one to five clean stealth wallets through Monero ahead of time. Each one is <b>armed</b> once its SOL lands, and with Private mode on, any buy or ⚡ quick-buy fires the oldest armed wallet instantly.</p>
         <ol class="steps">
@@ -310,7 +314,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#C24A00,#933800 55%
       </section>
 
       <section id="private">
-        <p class="eyebrow"><span data-glyph="lock"></span>Private mode · through Monero</p>
+        <p class="eyebrow"><span data-glyph="monero"></span>Private mode · through Monero</p>
         <h2>Monero pays your stealth wallet. <em>You never do.</em></h2>
         <p>Trackers link wallets by following SOL: whoever funds a wallet is assumed to own it. Private mode breaks that link by never sending SOL from your wallet to the stealth wallet. Instead your SOL crosses <b>Monero</b>, whose ring signatures, stealth addresses and RingCT hide sender, receiver and amount on its own chain. <b>Houdini Swap's</b> private send runs the route: one exchange swaps your SOL to XMR, the XMR moves on Monero, and an unrelated exchange swaps it back to SOL and pays the stealth wallet from its own hot wallet. You never hold XMR or need a Monero wallet.</p>
         <figure class="fig">
@@ -417,7 +421,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#C24A00,#933800 55%
           <div class="icon-card"><div class="art" data-icon="clock"></div><div class="t"><b>Habits</b><span>Signing hours that place you in a time zone.</span></div></div>
         </div>
         <p>It reads up to 100 recent transactions, the earliest ones it can reach, and one hop out to the funder and the most-linked wallets. It also flags address-poisoning attempts. Scores: <b>Low</b> under 25, <b>Moderate</b> 25–49, <b>High</b> 50–74, <b>Exposed</b> 75 and up.</p>
-        <p><a href="./#audit">Run the Trail audit on the home page →</a></p>
+        <p><a href="./app.html#/portfolio">Open it in the terminal's Portfolio →</a></p>
       </section>
 
       <section id="proxy">
@@ -428,7 +432,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#C24A00,#933800 55%
           <div class="art"><svg data-diagram="proxy" role="img" aria-label="The browser calls one gateway, which adds API keys and forwards to RPC, Jupiter, Houdini and X"></svg></div>
           <figcaption><b>The gateway</b> adds a private RPC URL, the Jupiter key, the Houdini partner key (with the IP, user agent and timezone headers Houdini requires) and an X token. It also serves token images from IPFS, cached on the gateway. It only forwards: it never sees a private key, signs anything or records which wallets you look up.</figcaption>
         </figure>
-        <p>Rather not go through the gateway for reads? Paste your own RPC URL (Helius, Triton, QuickNode) in the terminal's Settings, or under RPC node in the Trail audit, and your browser reads the chain from that node directly.</p>
+        <p>Rather not go through the gateway for reads? Paste your own RPC URL (Helius, Triton, QuickNode) in the terminal's Settings, and your browser reads the chain from that node directly.</p>
       </section>
 
       <section id="token">

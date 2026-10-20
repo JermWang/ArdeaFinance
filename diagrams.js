@@ -12,9 +12,9 @@ export function stealthRoute(svg, narrow = false) {
     : { main: [0, 0], fee: [0, 110], dep: [220, 0], xmr: [440, 0], exb: [660, 0], stealth: [660, 110], jup: [440, 110] };
   schematic(svg, {
     nodes: [
-      n("main", ...at.main, "Your wallet", "one plain transfer", { glyph: "key" }),
+      n("main", ...at.main, "Your wallet", "one plain transfer", { glyph: "solana" }),
       n("dep", ...at.dep, "Exchange A", "SOL → XMR · fee in route", { glyph: "file" }),
-      n("xmr", ...at.xmr, "Monero", "ring sigs · RingCT", { glyph: "lock", tone: "core" }),
+      n("xmr", ...at.xmr, "Monero", "ring sigs · RingCT", { glyph: "monero", tone: "core" }),
       n("exb", ...at.exb, "Exchange B", "XMR → SOL", { glyph: "file" }),
       n("stealth", ...at.stealth, "Clean wallet", "armed · fires instantly", { glyph: "stealth", tone: "brass" }),
       n("jup", ...at.jup, "Jupiter", "swap", { glyph: "route" })
@@ -34,8 +34,8 @@ export function stealthExit(svg, narrow = false) {
     nodes: [
       n("jup", ...at.jup, "Jupiter", "sell", { glyph: "route" }),
       n("stealth", ...at.stealth, "Stealth", "holds SOL", { glyph: "stealth", tone: "brass" }),
-      n("xmr", ...at.xmr, "Monero route", "SOL → XMR → SOL", { glyph: "lock", tone: "core" }),
-      n("main", ...at.main, "Your wallet", "receives", { glyph: "key" })
+      n("xmr", ...at.xmr, "Monero route", "SOL → XMR → SOL", { glyph: "monero", tone: "core" }),
+      n("main", ...at.main, "Your wallet", "receives", { glyph: "solana" })
     ],
     links: [{ from: "jup", to: "stealth" }, { from: "stealth", to: "xmr" }, { from: "xmr", to: "main" }],
     tags: [{ link: 2, text: "NO FEE" }]
@@ -65,13 +65,13 @@ export function walletTree(svg) {
 export function overview(svg, narrow = false) {
   const nodes = narrow ? [
     n("you", 0, 0, "Your browser", "keys + signing", { glyph: "globe", tone: "core" }),
-    n("rpc", -86, 120, "Solana RPC", "chain reads", { glyph: "stack", w: 156 }), n("jup", 86, 120, "Jupiter", "routes, prices", { glyph: "route", w: 156 }),
-    n("near", -86, 200, "Houdini", "Monero routes", { glyph: "lock", w: 156 }), n("pump", 86, 200, "PumpPortal", "new launches", { glyph: "flame", w: 156 }),
+    n("rpc", -86, 120, "Solana RPC", "chain reads", { glyph: "solana", w: 156 }), n("jup", 86, 120, "Jupiter", "routes, prices", { glyph: "route", w: 156 }),
+    n("near", -86, 200, "Houdini", "Monero routes", { glyph: "monero", w: 156 }), n("pump", 86, 200, "PumpPortal", "new launches", { glyph: "flame", w: 156 }),
     n("jito", -86, 280, "Jito", "block engine", { glyph: "shield", w: 156 }), n("dex", 86, 280, "DexScreener", "charts", { glyph: "chart", w: 156 })
   ] : [
     n("you", 0, 0, "Your browser", "keys + signing", { glyph: "globe", tone: "core" }),
-    n("rpc", 280, -100, "Solana RPC", "chain reads", { glyph: "stack" }), n("jup", 280, 0, "Jupiter", "routes, prices", { glyph: "route" }), n("jito", 280, 100, "Jito", "block engine", { glyph: "shield" }),
-    n("pump", -280, -100, "PumpPortal", "new launches", { glyph: "flame" }), n("dex", -280, 0, "DexScreener", "charts", { glyph: "chart" }), n("near", -280, 100, "Houdini", "Monero routes", { glyph: "lock" })
+    n("rpc", 280, -100, "Solana RPC", "chain reads", { glyph: "solana" }), n("jup", 280, 0, "Jupiter", "routes, prices", { glyph: "route" }), n("jito", 280, 100, "Jito", "block engine", { glyph: "shield" }),
+    n("pump", -280, -100, "PumpPortal", "new launches", { glyph: "flame" }), n("dex", -280, 0, "DexScreener", "charts", { glyph: "chart" }), n("near", -280, 100, "Houdini", "Monero routes", { glyph: "monero" })
   ];
   const links = ["rpc", "jup", "jito", "pump", "dex", "near"].map(id => narrow ? { from: "you", to: id, axis: "y", mid: 60 } : { from: "you", to: id, axis: "x" });
   schematic(svg, { nodes, links, sequence: [[0, 3], [1, 4], [2, 5]] });
@@ -84,8 +84,8 @@ export function proxy(svg) {
     nodes: [
       n("you", 0, 0, "Browser", "no keys", { glyph: "globe" }),
       n("gw", 230, 0, "Gateway", "holds the keys", { glyph: "key", tone: "core" }),
-      n("rpc", 470, -114, "RPC", "", { glyph: "stack" }), n("jup", 470, -38, "Jupiter", "", { glyph: "route" }),
-      n("near", 470, 38, "Houdini", "", { glyph: "lock" }), n("x", 470, 114, "X posts", "", { glyph: "file" })
+      n("rpc", 470, -114, "RPC", "", { glyph: "solana" }), n("jup", 470, -38, "Jupiter", "", { glyph: "route" }),
+      n("near", 470, 38, "Houdini", "", { glyph: "monero" }), n("x", 470, 114, "X posts", "", { glyph: "file" })
     ],
     links: [{ from: "you", to: "gw" }, ...["rpc", "jup", "near", "x"].map(id => ({ from: "gw", to: id, axis: "x", mid: 350 }))],
     sequence: [[0], [1, 2, 3, 4]],
