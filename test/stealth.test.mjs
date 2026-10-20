@@ -162,3 +162,12 @@ test("the fee rides inside the route as Houdini markup, split across both legs; 
   assert.equal(qs[qs.length - 1].markup, "0");
   assert.ok(qs.every(q => q.rotate === "true" && q.useXmr === "true"));
 });
+
+test("if no route can carry the fee, it takes a normal Monero route and waives the fee rather than block or add a transfer", async () => {
+  const m = createHoudini({ noMarkupRoutes: true }), hd = houdini({ base: "https://p.test/houdini", fetch: m.fetch, timezone: "UTC" });
+  const to = (await deriveStealth(web3, sig, 6)).publicKey.toBase58(), from = main.publicKey.toBase58();
+  const r = await routeQuote({ hd, token: SOL_ID, amount: 500_000_000n, from, to, feeBps: 50 });
+  assert.equal(r.feeWaived, true);
+  assert.equal(r.markup, 0);
+  assert.equal([...m.quotes.values()].pop().useXmr, "true");
+});

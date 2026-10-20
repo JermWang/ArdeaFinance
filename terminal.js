@@ -1355,7 +1355,7 @@ async function stealthBuy() {
     rec = { index, address: gpk, mint, symbol: sym, sol: Number(raw) / 1e9, state: "funding", routeId: route.id, depositAddress: route.depositAddress, amountOut: String(route.amountOut), createdAt: Date.now() };
     saveStealth(rec);
     text(go, "Approve in wallet…");
-    setTradeStatus(`Approve one transaction: ${fromRaw(amount, 9, 4)} SOL to a one-time Monero route address, nothing else. Ardea's ${feeBps() / 100}% fee is taken inside the route. Stealth wallet #${index} receives ≈${fromRaw(route.amountOut, 9, 4)} SOL in ${eta}, then buys ${sym}.`);
+    setTradeStatus(`Approve one transaction: ${fromRaw(amount, 9, 4)} SOL to a one-time Monero route address, nothing else. ${route.feeWaived ? "No route could carry Ardea's fee just now, so this one is fee-free." : `Ardea's ${feeBps() / 100}% fee is taken inside the route.`} Stealth wallet #${index} receives ≈${fromRaw(route.amountOut, 9, 4)} SOL in ${eta}, then buys ${sym}.`);
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
     const tx = fundingTx(web3, { from: main, depositAddress: route.depositAddress, amount, blockhash });
     await preflight(connection, tx);
@@ -1447,7 +1447,7 @@ async function armWallets(totalRaw, count, say) {
   const recs = picks.map((p, i) => ({ index: p.index, address: p.stealth.publicKey.toBase58(), armed: true, state: "funding", routeId: routes[i].id, depositAddress: routes[i].depositAddress, amountOut: String(routes[i].amountOut), sol: Number(sizes[i]) / 1e9, createdAt: Date.now() }));
   recs.forEach(saveStealth);
   const out = routes.reduce((n, r) => n + r.amountOut, 0n);
-  say(`Approve ${count === 1 ? "one transaction" : `${count} transactions in one prompt`}: ${fromRaw(totalRaw, 9, 4)} SOL into Monero routes, plain transfers to one-time addresses. Ardea's ${feeBps() / 100}% fee is taken inside the routes. About ${fromRaw(out, 9, 4)} SOL arrives across ${count} clean wallet${count > 1 ? "s" : ""} in 10–40 minutes.`);
+  say(`Approve ${count === 1 ? "one transaction" : `${count} transactions in one prompt`}: ${fromRaw(totalRaw, 9, 4)} SOL into Monero routes, plain transfers to one-time addresses. ${routes.every(r => r.feeWaived) ? "No route could carry Ardea's fee just now, so these are fee-free." : `Ardea's ${feeBps() / 100}% fee is taken inside the routes${routes.some(r => r.feeWaived) ? " (waived on any that couldn't carry it)" : ""}.`} About ${fromRaw(out, 9, 4)} SOL arrives across ${count} clean wallet${count > 1 ? "s" : ""} in 10–40 minutes.`);
   const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
   const txs = routes.map((r, i) => fundingTx(web3, { from: main, depositAddress: r.depositAddress, amount: sizes[i], blockhash }));
   for (const tx of txs) await preflight(connection, tx);

@@ -2,7 +2,7 @@
 // that walks waiting → confirming → exchanging → anonymizing → finished over a few polls.
 import web3 from "@solana/web3.js";
 export const SOL_ID = "6689b73ec90e45f3b3e51553";
-export function createHoudini({ pollsUntilDone = 4, tamper = null, min = 0.1, max = 500, feePct = 2.5 } = {}) {
+export function createHoudini({ pollsUntilDone = 4, tamper = null, min = 0.1, max = 500, feePct = 2.5, noMarkupRoutes = false } = {}) {
   const orders = new Map(), quotes = new Map(), created = [], headers = [];
   let n = 0;
   function handle(method, url, body) {
@@ -16,6 +16,7 @@ export function createHoudini({ pollsUntilDone = 4, tamper = null, min = 0.1, ma
       const amount = Number(u.searchParams.get("amount"));
       if (u.searchParams.get("token") !== SOL_ID) return { status: 422, body: { message: "Token does not support private send", code: "TOKEN" } };
       if (amount < min || amount > max) return { quotes: [{ swap: "x", type: "private", min, max, error: "amount out of range", amountIn: amount, amountOut: 0 }], total: 1 };
+      if (noMarkupRoutes && Number(u.searchParams.get("markup")) > 0) return { quotes: [{ swap: "x", type: "private", error: "no route supports markup", amountIn: amount, amountOut: 0 }], total: 1 };
       const quoteId = `q${++n}`, amountOut = +(amount * (1 - feePct / 100)).toFixed(9);
       quotes.set(quoteId, { amount, amountOut, useXmr: u.searchParams.get("useXmr"), markup: u.searchParams.get("markup"), rotate: u.searchParams.get("rotatePayoutWallets") });
       return { quotes: [{ swap: "ff", quoteId, type: "private", amountIn: amount, amountOut, duration: 25, min, max }, { swap: "worse", quoteId: `q${++n}`, type: "private", amountIn: amount, amountOut: amountOut * 0.9, duration: 30, min, max }], total: 2 };

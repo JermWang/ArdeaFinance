@@ -115,9 +115,17 @@ export const legMarkup = bps => Math.round(Number(bps) / 2) / 100;
 export async function routeQuote({ hd, token, amount, from, to, feeBps = 0, now = Date.now() }) {
   amount = BigInt(amount);
   const sol = lamportsToSol(amount);
-  const markup = legMarkup(feeBps);
-  const { quotes = [] } = (await hd.quote({ token, amount: sol, useXmr: true, markup })) || {};
-  const usable = quotes.filter(q => q && q.quoteId && !q.error && !q.filtered && (!q.type || q.type === "private") && Number(q.amountOut) > 0 && (markup === 0 || q.markupSupported !== false));
+  const pick = (qs, mk) => qs.filter(q => q && q.quoteId && !q.error && !q.filtered && (!q.type || q.type === "private") && Number(q.amountOut) > 0 && (mk === 0 || q.markupSupported !== false));
+  let markup = legMarkup(feeBps), feeWaived = false;
+  let { quotes = [] } = (await hd.quote({ token, amount: sol, useXmr: true, markup })) || {};
+  let usable = pick(quotes, markup);
+  // Few providers accept partner markup. If none can carry the fee right now, take a normal Monero route and waive
+  // Ardea's fee for this one route, rather than block the user or add a fee transfer that would mark their funding.
+  if (!usable.length && markup > 0) {
+    ({ quotes = [] } = (await hd.quote({ token, amount: sol, useXmr: true, markup: 0 })) || {});
+    usable = pick(quotes, 0);
+    if (usable.length) { markup = 0; feeWaived = true; }
+  }
   if (!usable.length) {
     const lim = quotes.find(q => q && (q.min || q.max)) || {};
     if (lim.min && Number(sol) < lim.min) throw new StealthError(`Private routes start at ${lim.min} SOL.`);
@@ -130,7 +138,8 @@ export async function routeQuote({ hd, token, amount, from, to, feeBps = 0, now 
   return {
     order, quote, id: order.houdiniId, depositAddress: order.depositAddress,
     amountIn: amount, amountOut: solToLamports(order.outAmount),
-    etaMin: Math.round(Number(order.eta || quote.duration) || 0) || null
+    etaMin: Math.round(Number(order.eta || quote.duration) || 0) || null,
+    markup, feeWaived
   };
 }
 
