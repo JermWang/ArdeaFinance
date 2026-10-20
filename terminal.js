@@ -4,7 +4,7 @@
 import { RPC_URL, TREASURY, FEE_BPS, JUP_BASE, JUP_API_KEY, DEFAULT_SLIPPAGE_BPS, PRIORITY_MAX_LAMPORTS, STEALTH_MAX_SOL, STEALTH_GAS_RESERVE, PROXY_URL } from "./config.js";
 import { jupiter, prepareSwap, sendAndConfirm, preflight, confirmSent, toRaw, fromRaw, SOL_MINT, SwapError, JITO_URL, JITO_MIN_TIP } from "./swap.js";
 import { triggerApi, limitAmounts, signAndExecute, describeOrder, evaluateRule, newRule, ruleTarget } from "./orders.js";
-import { STEALTH_MESSAGE, StealthError, deriveStealth, deriveInstant, nextUnusedStealth, scanStealths, seedFingerprint, houdini, SOL_QUERY, solTokenId, routeQuote, fundingTx, exitTx, exitAmount, waitForRoute, jitter, feeOf } from "./stealth.js";
+import { STEALTH_MESSAGE, StealthError, deriveStealth, deriveInstant, nextUnusedStealth, scanStealths, seedFingerprint, houdini, SOL_QUERY, solTokenId, routeQuote, fastestFair, legMarkup, lamportsToSol, fundingTx, exitTx, exitAmount, waitForRoute, jitter, feeOf } from "./stealth.js";
 import { trace, DEFAULT_RPC, short, isAddress, base58Encode } from "./trace.js";
 import { createBoard, fromPumpPortal, fromJupiter, fromStonk, STONK, pnl, isPumpMint, mergeHistory, pushSample, momentum } from "./market.js";
 import { pumpPortal, stonkFun, tokenTrades, readCurves, metadata, holders, recentSwaps, walletHistory, onchainMeta, imageSources, identicon, setMediaProxy } from "./feeds.js";
@@ -1500,22 +1500,40 @@ function renderArm() {
   const box = $("arm-body");
   if (!box) return;
   box.textContent = "";
-  if (!S.wallet) {
-    const b = make("button", "btn primary", "Connect wallet"); b.type = "button"; b.addEventListener("click", ensureConnected);
-    box.append(make("p", "muted", "Connect the wallet you'll arm from. It signs the funding; the armed wallets are derived from one signature of it and can be rebuilt on any device."), b);
-    return;
-  }
-  const s = armSummary(stealthRecords(), armBalances, STEALTH_GAS_RESERVE);
+  const s = armSummary(S.wallet ? stealthRecords() : [], armBalances, STEALTH_GAS_RESERVE);
   const stats = make("div", "arm-stats");
   [["Armed", String(s.ready)], ["Ready to fire", `${fromRaw(s.readySol, 9, 3)} SOL`], ["Arming", String(s.arming)]].forEach(([k, v]) => { const d = make("div"); d.append(make("i", "", k), make("b", "", v)); stats.append(d); });
   const form = make("div", "arm-form");
   const total = make("input", "inp"); total.placeholder = "Total SOL, e.g. 1.5"; total.inputMode = "decimal"; total.setAttribute("aria-label", "Total SOL to arm");
   const count = make("select", "inp"); count.setAttribute("aria-label", "Number of wallets");
   for (let n = 1; n <= ARM_MAX_WALLETS; n++) { const o = make("option", "", `${n} wallet${n > 1 ? "s" : ""}`); o.value = n; if (n === 2) o.selected = true; count.append(o); }
-  const go = make("button", "btn primary arm-go", "Arm"); go.type = "button";
+  const go = make("button", "btn primary arm-go", S.wallet ? "Arm" : "Connect & arm"); go.type = "button";
+  const pv = make("button", "btn arm-go arm-pv", "Preview route"); pv.type = "button";
   const st = make("p", "arm-status muted mono", `Each wallet is funded through its own Monero route (about 0.3 SOL minimum per wallet right now) and is ready in 10–40 minutes. The ${feeBps() / 100}% fee is paid once, here; firing is free.`);
+  // Preview: live Monero route quotes for this arm, straight from Houdini, with no wallet, no funds and no order opened.
+  pv.addEventListener("click", async () => {
+    const raw = toRaw(total.value, 9), n = Number(count.value);
+    if (!raw) return text(st, "Enter how much SOL to arm in total, then preview.");
+    pv.disabled = true; text(st, "Asking Houdini for live Monero routes…");
+    try {
+      const token = await routeToken(), lines = [];
+      for (const [i, size] of armSizes(raw, n).entries()) {
+        const amount = lamportsToSol(size), mk = legMarkup(feeBps());
+        const ok = q => q && q.quoteId && !q.error && (!q.type || q.type === "private") && Number(q.amountOut) > 0;
+        let qs = ((await hd.quote({ token, amount, useXmr: true, markup: mk })) || {}).quotes || [], usable = qs.filter(q => ok(q) && q.markupSupported !== false), waived = false;
+        if (!usable.length) { qs = ((await hd.quote({ token, amount, useXmr: true, markup: 0 })) || {}).quotes || []; usable = qs.filter(ok); waived = true; }
+        if (!usable.length) { const lim = qs.find(q => q && q.min); lines.push(`Wallet ${i + 1}: ${amount} SOL, no Monero route right now${lim?.min ? ` (minimum ${lim.min} SOL)` : ""}`); continue; }
+        const q = fastestFair(usable);
+        lines.push(`Wallet ${i + 1}: ${amount} SOL → ≈${Number(q.amountOut).toFixed(4)} SOL in about ${Math.round(q.duration) || "10–40"} min (${usable.length} private route${usable.length > 1 ? "s" : ""}, Monero forced${waived ? ", fee waived" : ""})`);
+        if (i < n - 1) await sleep(400);
+      }
+      text(st, `Live from Houdini, SOL → XMR → SOL, no order opened:\n${lines.join("\n")}`);
+    } catch (e) { text(st, errMsg(e)); }
+    finally { pv.disabled = false; }
+  });
   go.addEventListener("click", async () => {
     if (S.busy) return;
+    if (!S.wallet) { if (await ensureConnected()) renderArm(); return; }
     const raw = toRaw(total.value, 9), n = Number(count.value);
     if (!raw) return text(st, "Enter how much SOL to arm in total.");
     if (raw > toRaw(String(STEALTH_MAX_SOL * n), 9)) return text(st, `Up to ${STEALTH_MAX_SOL} SOL per wallet while arming is in beta.`);
@@ -1525,10 +1543,10 @@ function renderArm() {
     catch (e) { text(st, errMsg(e)); }
     finally { S.busy = false; go.disabled = false; }
   });
-  form.append(total, count, go);
+  form.append(total, count, pv, go);
   const list = make("div", "arm-list");
-  const recs = stealthRecords().filter(r => r.armed).sort((a, b) => b.index - a.index);
-  if (!recs.length) list.append(make("p", "muted", "No armed wallets yet."));
+  const recs = S.wallet ? stealthRecords().filter(r => r.armed).sort((a, b) => b.index - a.index) : [];
+  if (!recs.length) list.append(make("p", "muted", S.wallet ? "No armed wallets yet." : "Connect the wallet you'll arm from to see its armed wallets. They're derived from one signature of it, so they can be rebuilt on any device."));
   for (const r of recs) {
     const row = make("div", "arm-row"), meta = make("div", "meta"), acts = make("div", "acts");
     const label = { funding: "waiting for your approval", routing: r.route || "crossing Monero", armed: "armed · ready to fire", firing: "firing…", holding: `fired · holds ${r.symbol || "a token"}`, exiting: "returning to your wallet", closed: "returned", partial: "returned, tokens left" }[r.state] || r.state;
