@@ -247,6 +247,44 @@ const ca = $("ca");
   });
 })();
 
+/* ---------- background particles ---------- */
+// A few dozen tiny orange specks drifting slowly upward behind the page, each fading in and out on its own beat.
+// One fixed canvas, about 1 per 30,000 px² of screen; off with reduced motion, paused while the tab is hidden.
+if (!REDUCE) {
+  const cv = document.createElement("canvas"), cx = cv.getContext("2d");
+  cv.setAttribute("aria-hidden", "true");
+  cv.style.cssText = "position:fixed;inset:0;width:100vw;height:100vh;z-index:-1;pointer-events:none";
+  document.body.prepend(cv);
+  let W = 0, H = 0, dots = [];
+  const spawn = (y = Math.random() * H) => ({ x: Math.random() * W, y, r: .5 + Math.random() * 1.3, vy: 4 + Math.random() * 10, vx: (Math.random() - .5) * 4, a: .12 + Math.random() * .38, ph: Math.random() * Math.PI * 2, tw: .3 + Math.random() * .7 });
+  const size = () => {
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = Math.round(Math.min(70, W * H / 30000));
+    while (dots.length < n) dots.push(spawn());
+    dots.length = n;
+  };
+  size(); addEventListener("resize", size);
+  let last = performance.now();
+  const tick = now => {
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    if (!document.hidden) {
+      cx.clearRect(0, 0, W, H);
+      for (const d of dots) {
+        d.y -= d.vy * dt; d.x += d.vx * dt;
+        if (d.y < -4 || d.x < -4 || d.x > W + 4) Object.assign(d, spawn(H + 4));
+        const alpha = d.a * (.55 + .45 * Math.sin(now / 1000 * d.tw + d.ph));
+        cx.beginPath(); cx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+        cx.fillStyle = `rgba(255,${102 + Math.round(d.r * 30)},${Math.round(d.r * 20)},${alpha.toFixed(3)})`;
+        cx.shadowColor = "rgba(255,102,0,.6)"; cx.shadowBlur = d.r * 4;
+        cx.fill();
+      }
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
 /* ---------- boot ---------- */
 ready();
 
