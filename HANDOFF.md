@@ -9,9 +9,9 @@ Live: https://ardea-production.up.railway.app (Railway project **ardea**, servic
 
 Done and live:
 - Engine: Houdini Monero route for private buys, exits and instant-wallet deposits/withdrawals; order checks; no
-  fallback path; background route completion with resume after reload. 62 tests pass (`npm test`).
+  fallback path; background route completion with resume after reload. 71 tests pass (`npm test`).
 - Gateway: `/houdini/*` with the partner key and compliance headers. Railway variables are set: `RPC_URL`,
-  `RPC_WS_URL`, `JUP_API_KEY`, `X_BEARER`, `JITO_URL` (copied from Privatus), `HOUDINI_API_KEY`,
+  `RPC_WS_URL`, `JUP_API_KEY` (copied from Privatus; `X_BEARER` and `JITO_URL` are empty there too), `HOUDINI_API_KEY`,
   `HOUDINI_API_SECRET` (copied from Wraith), `ALLOWED_ORIGINS`.
 - Public repo: https://github.com/JermWang/ardea (history scanned for secrets, CI runs the tests on every push),
   linked from the nav, footer, terminal and docs.
