@@ -5,7 +5,7 @@
 Arm a clean wallet through Monero, then fire private buys from it instantly. A full Solana trading terminal sits around it.
 
 Ardea is built on the Privatus codebase (itself descended from Ghostprint) by the same team, with a new name, look and
-privacy route. Live at https://ardea-production.up.railway.app until the custom domain is added.
+privacy route. Live at https://ardeafinance.xyz.
 
 ## What it does
 

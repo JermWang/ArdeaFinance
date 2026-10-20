@@ -3,7 +3,7 @@
 Ardea is the Privatus terminal with a new name, look and privacy route: Private mode now funds every buy through
 Monero (Houdini Swap private send, `useXmr=true`) instead of NEAR Intents. See `README.md` for how it works.
 
-Live: https://ardea-production.up.railway.app (Railway project **ardea**, service **ardea**). Built 2026-10-20.
+Live: https://ardeafinance.xyz (also www., and ardea-production.up.railway.app) (Railway project **ardea**, service **ardea**). Built 2026-10-20.
 
 ## Status
 

@@ -35,8 +35,8 @@ export const RPC_URL = "";
 // Served from one of the site's own domains, the gateway is that same origin (server.mjs runs both), so
 // the custom domain and the Railway domain each work on their own. Anywhere else (local preview, another
 // static host) it's the Railway deployment.
-const OWN_HOSTS = ["ardea-production.up.railway.app"];
-export const PROXY_URL = typeof location !== "undefined" && OWN_HOSTS.includes(location.hostname) ? location.origin : "https://ardea-production.up.railway.app";
+const OWN_HOSTS = ["ardeafinance.xyz", "www.ardeafinance.xyz", "ardea-production.up.railway.app"];
+export const PROXY_URL = typeof location !== "undefined" && OWN_HOSTS.includes(location.hostname) ? location.origin : "https://ardeafinance.xyz";
 
 // The Ardea token's mint. Shown on the landing page (copy bar and a Trade button) from launch.
 export const TOKEN_CA = ""; // set at launch

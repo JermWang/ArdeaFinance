@@ -228,12 +228,14 @@ copyBtn.addEventListener("click", async () => {
 /* ---------- token contract address ---------- */
 // TOKEN_CA is set in config.js, so the address shows from the first second; the server's /env.js can override it.
 const ca = $("ca");
-(async () => {
+// The server serves the address only once the mint exists on-chain, so until launch this checks again every 20 s
+// and the address appears for visitors already on the page, with no reload.
+(async function showCa() {
   let env = {};
-  try { env = await import(PROXY_URL ? `${PROXY_URL.replace(/\/$/, "")}/env.js` : "./env.js"); }
+  try { env = await import(`${PROXY_URL ? `${PROXY_URL.replace(/\/$/, "")}/env.js` : "./env.js"}?t=${Date.now()}`); }
   catch (_) { try { env = await import("./env.js"); } catch (_) {} }
   const addr = isAddress(env.TOKEN_CA || "") ? env.TOKEN_CA : isAddress(TOKEN_CA || "") ? TOKEN_CA : "";
-  if (!addr) return;
+  if (!addr) { setTimeout(showCa, 20000); return; }
   $("ca-v").textContent = addr;
   $("ca-trade").href = `./app.html#/token/${addr}`; $("ca-trade").hidden = false;
   ca.disabled = false;
