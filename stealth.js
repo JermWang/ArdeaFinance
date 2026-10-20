@@ -109,6 +109,14 @@ export function solTokenId(res) {
 
 // Quote a private SOL → XMR → SOL send and open the order. Monero is always forced as the bridge: if no Monero route
 // is available, this stops rather than use any other path. Throws rather than return anything we didn't ask for.
+// Which quote to take: the fastest among those paying within `slack` (1%) of the best payout. Routes differ by tens
+// of minutes for a fraction of a percent, and waiting is the main cost of a Monero route.
+export function fastestFair(quotes, slack = .01) {
+  const best = Math.max(...quotes.map(q => Number(q.amountOut)));
+  const fair = quotes.filter(q => Number(q.amountOut) >= best * (1 - slack));
+  return fair.sort((a, b) => (Number(a.duration) || 1e9) - (Number(b.duration) || 1e9) || Number(b.amountOut) - Number(a.amountOut))[0];
+}
+
 // The per-leg markup (in %) that takes `bps` of the routed amount in total: a private route charges it on both legs.
 export const legMarkup = bps => Math.round(Number(bps) / 2) / 100;
 
@@ -132,7 +140,7 @@ export async function routeQuote({ hd, token, amount, from, to, feeBps = 0, now 
     if (lim.max && Number(sol) > lim.max) throw new StealthError(`Private routes top out at ${lim.max} SOL right now.`);
     throw new StealthError("No Monero route is available for this amount right now, so nothing was sent. Try again shortly or a different amount.");
   }
-  const quote = usable.sort((a, b) => Number(b.amountOut) - Number(a.amountOut))[0];
+  const quote = fastestFair(usable);
   const order = await hd.create({ quoteId: quote.quoteId, addressTo: to, refundAddress: from });
   checkOrder(order, { amount, from, to, now });
   return {

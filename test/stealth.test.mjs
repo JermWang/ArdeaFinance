@@ -171,3 +171,11 @@ test("if no route can carry the fee, it takes a normal Monero route and waives t
   assert.equal(r.markup, 0);
   assert.equal([...m.quotes.values()].pop().useXmr, "true");
 });
+
+test("takes the fastest route among those paying within 1% of the best", async () => {
+  const { fastestFair } = await import("../stealth.js");
+  const qs = [{ quoteId: "slow", amountOut: 0.4838, duration: 41 }, { quoteId: "fast", amountOut: 0.4801, duration: 13 }, { quoteId: "cheap", amountOut: 0.40, duration: 5 }];
+  assert.equal(fastestFair(qs).quoteId, "fast");
+  assert.equal(fastestFair([{ quoteId: "a", amountOut: 1, duration: 30 }, { quoteId: "b", amountOut: 1, duration: 30 }]).quoteId, "a");
+  assert.equal(fastestFair([{ quoteId: "only", amountOut: 0.47 }]).quoteId, "only");
+});
