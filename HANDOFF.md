@@ -26,11 +26,11 @@ Done and live:
 
 Waiting on the owner (the site is safe to show meanwhile: trades say "Trading opens at launch" until the treasury is set,
 the contract row says "Announced at launch", X links stay hidden):
-1. **Treasury wallet**: a new address used only by Ardea → `TREASURY` in `config.js`.
+1. **Treasury**: done. It is proof wallet A (`3WfKw8…zYjy`), whose key is on the server for the proof route: sweep fees to cold storage regularly.
 2. **Domain**: add it to the Railway service and point DNS → then update `OWN_HOSTS` in `config.js`, the og/twitter
    URLs in the three HTML files, and `ALLOWED_ORIGINS` on Railway (one save).
 3. **X account** → `X_URL` in `config.js`.
-4. **Houdini Pro tier**: the free tier allows 10 orders and 50 quotes a day across all users. Request Pro before launch.
+4. **Houdini tier**: upgraded for launch day (owner arranged it). The free tier is 10 orders and 50 quotes a day across all users, so make the upgrade permanent.
 5. **Proof run** (after 1): one real private buy and exit through the terminal, at least ~0.3 SOL (Houdini's minimum
    is about 0.11–0.29 SOL per route right now). Add the funding, delivery, buy and exit signatures to `PROOF_TXS`.
 6. **Daily proof route**: make a new wallet used only for proof, fund it with about 0.35 SOL, and set its base58 secret
