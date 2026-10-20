@@ -1,7 +1,7 @@
 // Terminal settings. Public values only: nothing here can move funds.
 
 // Where trading fees go. Only the public key belongs in this repo.
-export const TREASURY = "DGorZp9ari8RGGdiQbXCsQ62HDmkxSL66xxQcYvWfWMP";
+export const TREASURY = ""; // TODO before launch: this project's own treasury (never another project's). Trades refuse to build until it's set.
 
 // Fee on every terminal trade, in basis points (50 = 0.5%). Charged in SOL:
 // on buys from the SOL you spend, on sells from the minimum SOL you receive.
@@ -17,14 +17,10 @@ export const JUP_API_KEY = "";
 export const DEFAULT_SLIPPAGE_BPS = 300;           // 3%: memecoins move fast
 export const PRIORITY_MAX_LAMPORTS = 1_000_000;     // cap on the priority fee (0.001 SOL)
 
-// Private mode routes through NEAR Intents (1Click API). Without a JWT, 1Click adds a 0.1–0.2% fee
-// per route; a JWT from the NEAR Intents partner dashboard removes it. Like the Jupiter key, a JWT
-// here is public, so it belongs behind the same server proxy.
-export const ONECLICK_JWT = "";
-export const STEALTH_CONFIDENTIALITY = "advanced";    // tries "advanced" Confidential Intents, then "basic"; never goes public without asking
-// Where private-mode fees go: an account inside NEAR Intents, taken from each route by 1Click's appFees. Empty means
-// the NEAR implicit account of TREASURY's key (the hex of its public key), which the treasury key can withdraw from.
-export const FEE_INTENTS_ACCOUNT = "";
+// Private mode routes through Monero with Houdini Swap's private send: SOL → XMR at one exchange, XMR → SOL at an
+// unrelated one, paid to a fresh stealth wallet. Houdini's API key and secret are server-only (HOUDINI_API_KEY and
+// HOUDINI_API_SECRET on the gateway), so Private mode needs PROXY_URL. Every route is forced through Monero; if none
+// is available the terminal stops instead of using another path.
 export const STEALTH_MAX_SOL = 5;                     // per stealth buy while Private mode is in beta
 export const STEALTH_GAS_RESERVE = 10_000_000n;       // 0.01 SOL kept in each stealth wallet for fees and token account rent
 
@@ -33,7 +29,7 @@ export const STEALTH_GAS_RESERVE = 10_000_000n;       // 0.01 SOL kept in each s
 export const RPC_URL = "";
 
 // After deploying worker/ (see worker/README.md), set this to the worker URL, e.g.
-// "https://privatus-proxy.<you>.workers.dev". RPC, Jupiter, NEAR Intents, Jito and X then go through
+// "https://privatus-proxy.<you>.workers.dev". RPC, Jupiter, the Monero route, Jito and X then go through
 // the proxy, which holds the keys. Empty = browsers talk to the public endpoints directly.
 // Served from one of the site's own domains, the gateway is that same origin (server.mjs runs both), so
 // the custom domain and the Railway domain each work on their own. Anywhere else (local preview, another
@@ -42,7 +38,7 @@ const OWN_HOSTS = ["privatusterminal.xyz", "www.privatusterminal.xyz", "privatus
 export const PROXY_URL = typeof location !== "undefined" && OWN_HOSTS.includes(location.hostname) ? location.origin : "https://privatusterminal.xyz";
 
 // The Privatus token's mint. Shown on the landing page (copy bar and a Trade button) from launch.
-export const TOKEN_CA = "FepxP15gLqWBW3pHV9Mmcb625UtPst7dFk1v2Ffhpump";
+export const TOKEN_CA = ""; // set at launch
 
 // Public proof of Private mode working: real transaction signatures shown in the docs' Proof section, each linked to
 // Solscan. Add them after a real private buy and exit, e.g. { step: "Funding", note: "...", sig: "5abc…" }.

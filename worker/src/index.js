@@ -2,13 +2,13 @@
 // and gives every visitor the same paid capacity instead of per-browser free-tier limits.
 //   /rpc         Solana JSON-RPC (HTTP, method allowlist) and websocket subscriptions (Upgrade)
 //   /jup/*       Jupiter API with x-api-key; token lists and prices cached briefly
-//   /1click/*    NEAR Intents 1Click API with the partner JWT
+//   /houdini/*   Houdini Swap private send (the Monero route) with the partner key and compliance headers
 //   /jito        Jito block engine sendTransaction relay
 //   /x/search    X recent search (cached; costs money per post read, so it's opt-in on the site)
 //   /ipfs/<cid>  token images and metadata, raced across public gateways and cached at the edge
 //   /meta?u=     a token's metadata JSON from any public https host, trimmed to the fields the terminal uses
 //   /health      which upstreams are configured
-// Secrets: RPC_URL, RPC_WS_URL (optional), JUP_API_KEY, ONECLICK_JWT, X_BEARER. Var: ALLOWED_ORIGINS.
+// Secrets: RPC_URL, RPC_WS_URL (optional), JUP_API_KEY, HOUDINI_API_KEY, HOUDINI_API_SECRET, X_BEARER. Var: ALLOWED_ORIGINS.
 
 const RPC_METHODS = new Set([
   "getBalance", "getAccountInfo", "getMultipleAccounts", "getTokenAccountsByOwner", "getTokenLargestAccounts",
@@ -16,7 +16,7 @@ const RPC_METHODS = new Set([
   "simulateTransaction", "getSignatureStatuses", "getBlockHeight", "getSlot", "getRecentPrioritizationFees",
   "getFeeForMessage", "getMinimumBalanceForRentExemption", "getEpochInfo", "getVersion", "getHealth"
 ]);
-const JUP = "https://api.jup.ag", JUP_LITE = "https://lite-api.jup.ag", ONECLICK = "https://1click.chaindefuser.com", JITO = "https://mainnet.block-engine.jito.wtf/api/v1/transactions";
+const JUP = "https://api.jup.ag", JUP_LITE = "https://lite-api.jup.ag", HOUDINI = "https://api-partner.houdiniswap.com", JITO = "https://mainnet.block-engine.jito.wtf/api/v1/transactions";
 const X_SEARCH = "https://api.x.com/2/tweets/search/recent";
 const GATEWAYS = ["https://ipfs.io/ipfs/", "https://dweb.link/ipfs/", "https://gateway.pinata.cloud/ipfs/"];
 const IPFS_PATH = /^\/ipfs\/((?:Qm[1-9A-HJ-NP-Za-km-z]{44}|b[a-z2-7]{50,})(?:\/[\w\-.%]+)*)$/;
@@ -41,16 +41,16 @@ export default {
     const refOrigin = (() => { try { return new URL(req.headers.get("referer") || "").origin; } catch (_) { return ""; } })();
     const isIpfs = url.pathname.startsWith("/ipfs/");
     const originOk = !allowed.length || allowed.includes(origin) || (isIpfs && !origin && allowed.includes(refOrigin));
-    const cors = { "access-control-allow-origin": originOk && origin ? origin : allowed.length ? "null" : "*", "access-control-allow-headers": "content-type, solana-client", "access-control-allow-methods": "GET,POST,OPTIONS", vary: "origin" };
+    const cors = { "access-control-allow-origin": originOk && origin ? origin : allowed.length ? "null" : "*", "access-control-allow-headers": "content-type, solana-client, x-user-timezone", "access-control-allow-methods": "GET,POST,OPTIONS", vary: "origin" };
     if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
     if (!originOk) return json({ error: "origin not allowed" }, 403, cors);
     const ip = req.headers.get("cf-connecting-ip") || "anon";
     if (!(isIpfs ? allow(`${ip}:img`, 200) : allow(ip))) return json({ error: "rate limited" }, 429, cors);
     try {
-      if (url.pathname === "/health") return json({ ok: true, rpc: !!env.RPC_URL, jupiterKey: !!env.JUP_API_KEY, oneclickJwt: !!env.ONECLICK_JWT, x: !!env.X_BEARER }, 200, cors);
+      if (url.pathname === "/health") return json({ ok: true, rpc: !!env.RPC_URL, jupiterKey: !!env.JUP_API_KEY, houdini: !!(env.HOUDINI_API_KEY && env.HOUDINI_API_SECRET), x: !!env.X_BEARER }, 200, cors);
       if (url.pathname === "/rpc") return await rpc(req, env, cors);
       if (url.pathname.startsWith("/jup/")) return await jupiter(req, env, url, cors, ctx);
-      if (url.pathname.startsWith("/1click/")) return await oneclick(req, env, url, cors);
+      if (url.pathname.startsWith("/houdini/")) return await houdini(req, env, url, cors, ctx, ip);
       if (url.pathname === "/jito") return await jito(req, env, cors);
       if (url.pathname === "/x/search") return await xsearch(env, url, cors, ctx);
       if (isIpfs) return await ipfsGet(url, cors, ctx);
@@ -97,10 +97,40 @@ async function jupiter(req, env, url, cors, ctx) {
   return withCors(res, cors);
 }
 
-async function oneclick(req, env, url, cors) {
-  const target = ONECLICK + url.pathname.slice(7) + url.search;
-  const up = await fetch(target, { method: req.method, headers: { "content-type": "application/json", ...(env.ONECLICK_JWT ? { authorization: `Bearer ${env.ONECLICK_JWT}` } : {}) }, body: req.method === "POST" ? await req.text() : undefined });
-  return new Response(up.body, { status: up.status, headers: { "content-type": "application/json", ...cors } });
+const HOUDINI_PATHS = [
+  ["GET", /^\/v2\/tokens$/], ["GET", /^\/v2\/quotes\/private-send$/],
+  ["POST", /^\/v2\/exchanges\/private-send$/], ["GET", /^\/v2\/orders\/[A-Za-z0-9_-]{4,64}$/]
+];
+async function houdini(req, env, url, cors, ctx, ip) {
+  if (!env.HOUDINI_API_KEY || !env.HOUDINI_API_SECRET) return json({ error: "HOUDINI_API_KEY is not configured" }, 503, cors);
+  const path = url.pathname.slice(8);
+  if (!HOUDINI_PATHS.some(([m, re]) => m === req.method && re.test(path))) return json({ error: "not allowed" }, 404, cors);
+  let body;
+  if (req.method === "POST") {
+    // a new order is the expensive call (Houdini's free tier allows 10 a day), so it gets its own limit
+    if (!allow(`${ip}:houdini-order`, 1)) return json({ error: "rate limited" }, 429, cors);
+    let b;
+    try { b = JSON.parse(await req.text()); } catch (_) { return json({ error: "bad json" }, 400, cors); }
+    const pick = {};
+    for (const k of ["quoteId", "addressTo", "refundAddress"]) if (typeof b?.[k] === "string" && b[k].length <= 200) pick[k] = b[k];
+    if (!pick.quoteId || !pick.addressTo) return json({ error: "quoteId and addressTo are required" }, 400, cors);
+    body = JSON.stringify(pick);
+  }
+  const tz = req.headers.get("x-user-timezone") || "";
+  const headers = {
+    authorization: `${env.HOUDINI_API_KEY}:${env.HOUDINI_API_SECRET}`, "content-type": "application/json",
+    "x-user-ip": ip === "anon" ? "0.0.0.0" : ip,
+    "x-user-agent": (req.headers.get("user-agent") || "unknown").slice(0, 400),
+    "x-user-timezone": /^[A-Za-z0-9_+\-\/]{1,64}$/.test(tz) ? tz : "UTC"
+  };
+  const target = HOUDINI + path + url.search;
+  // the token list barely changes; cache it so finding SOL's id costs one upstream call an hour
+  const cacheable = req.method === "GET" && path === "/v2/tokens", cache = cacheable && globalThis.caches ? caches.default : null;
+  if (cache) { const hit = await cache.match(target); if (hit) return withCors(hit, cors); }
+  const up = await fetch(target, { method: req.method, headers, body });
+  const res = new Response(up.body, { status: up.status, headers: { "content-type": "application/json", "cache-control": cacheable ? "max-age=3600" : "no-store" } });
+  if (cache && up.ok) ctx.waitUntil(cache.put(target, res.clone()));
+  return withCors(res, cors);
 }
 
 async function jito(req, env, cors) {

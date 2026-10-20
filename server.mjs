@@ -1,6 +1,6 @@
 // Privatus on a plain Node server (Railway): serves the static site and runs the same proxy as the
 // Cloudflare Worker in worker/ on the same origin. Env vars are the worker's secrets and vars:
-// RPC_URL, RPC_WS_URL, JUP_API_KEY, ONECLICK_JWT, X_BEARER, JITO_URL, ALLOWED_ORIGINS. No dependencies.
+// RPC_URL, RPC_WS_URL, JUP_API_KEY, HOUDINI_API_KEY, HOUDINI_API_SECRET, X_BEARER, JITO_URL, ALLOWED_ORIGINS. No dependencies.
 import http from "node:http";
 import net from "node:net";
 import tls from "node:tls";
@@ -37,7 +37,7 @@ globalThis.caches ??= { default: {
 
 const ROOT = fileURLToPath(new URL(".", import.meta.url));
 const PORT = Number(process.env.PORT) || 5178;
-const PROXY_PATH = /^\/(rpc|jito|health|x\/search|meta)$|^\/(jup|1click|ipfs)\//;
+const PROXY_PATH = /^\/(rpc|jito|health|x\/search|meta)$|^\/(jup|houdini|ipfs)\//;
 const HIDDEN = /^(\.|node_modules$|test$|worker$|server\.mjs$|package(-lock)?\.json$)/;
 const TYPES = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".mjs": "text/javascript; charset=utf-8",

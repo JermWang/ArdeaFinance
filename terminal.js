@@ -1,10 +1,10 @@
 // Privatus terminal. Views: Pulse, Trending, token page, Tracker, Portfolio. All data comes from public
-// sources in the browser (PumpPortal, Jupiter, DexScreener, your Solana RPC, NEAR Intents); every trade is
+// sources in the browser (PumpPortal, Jupiter, DexScreener, your Solana RPC, Houdini's Monero route); every trade is
 // signed by your wallet, or locally by your instant/stealth wallets which are derived from one signature of it.
-import { RPC_URL, TREASURY, FEE_BPS, JUP_BASE, JUP_API_KEY, DEFAULT_SLIPPAGE_BPS, PRIORITY_MAX_LAMPORTS, ONECLICK_JWT, STEALTH_CONFIDENTIALITY, STEALTH_MAX_SOL, STEALTH_GAS_RESERVE, PROXY_URL, FEE_INTENTS_ACCOUNT } from "./config.js";
+import { RPC_URL, TREASURY, FEE_BPS, JUP_BASE, JUP_API_KEY, DEFAULT_SLIPPAGE_BPS, PRIORITY_MAX_LAMPORTS, STEALTH_MAX_SOL, STEALTH_GAS_RESERVE, PROXY_URL } from "./config.js";
 import { jupiter, prepareSwap, sendAndConfirm, preflight, confirmSent, toRaw, fromRaw, SOL_MINT, SwapError, JITO_URL, JITO_MIN_TIP } from "./swap.js";
 import { triggerApi, limitAmounts, signAndExecute, describeOrder, evaluateRule, newRule, ruleTarget } from "./orders.js";
-import { STEALTH_MESSAGE, StealthError, ConfidentialUnavailable, deriveStealth, deriveInstant, nextUnusedStealth, scanStealths, seedFingerprint, oneclick, solAssetId, routeQuote, fundingTx, exitTx, exitAmount, waitForRoute, splitAmount, jitter, intentsAccount } from "./stealth.js";
+import { STEALTH_MESSAGE, StealthError, deriveStealth, deriveInstant, nextUnusedStealth, scanStealths, seedFingerprint, houdini, SOL_QUERY, solTokenId, routeQuote, fundingTx, exitTx, exitAmount, waitForRoute, jitter, feeOf } from "./stealth.js";
 import { trace, DEFAULT_RPC, short, isAddress, base58Encode } from "./trace.js";
 import { createBoard, fromPumpPortal, fromJupiter, fromStonk, STONK, pnl, isPumpMint, mergeHistory, pushSample, momentum } from "./market.js";
 import { pumpPortal, stonkFun, tokenTrades, readCurves, metadata, holders, recentSwaps, walletHistory, onchainMeta, imageSources, identicon, setMediaProxy } from "./feeds.js";
@@ -120,25 +120,23 @@ const DEFAULTS = {
   ],
   preset: 0, from: "main", finalStretch: 60, autoTp: 0, autoSl: 0,
   stealth: true, // Private mode on by default for buys from the main wallet; the trade panel switch saves the choice
-  privacy: "strong" // "strong": split routes, random timing; "fast": one route, no waits
+  privacy: "strong" // "strong": a random wait between the SOL landing and the buy; "fast": buy as soon as it lands
 };
 const settings = Object.assign(structuredClone(DEFAULTS), store.get("privatus-settings", {}));
 const saveSettings = () => store.set("privatus-settings", settings);
 const preset = () => settings.presets[settings.preset] || DEFAULTS.presets[0];
-// Private mode plan: how many routes a buy is split into, and the random gaps (ms) between transfers and before the buy.
+// Private mode timing: the random wait (ms) between the SOL landing in the stealth wallet and its buy.
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const PRIVACY = { strong: { routes: 3, gap: [4000, 16000], settle: [8000, 28000] }, fast: { routes: 1, gap: [0, 0], settle: [0, 0] } };
-const privacyPlan = raw => { const p = PRIVACY[settings.privacy] || PRIVACY.strong; return { ...p, routes: Math.max(1, Math.min(p.routes, Number(raw / 50_000_000n))) }; };
-const feeAccount = () => FEE_INTENTS_ACCOUNT || intentsAccount(TREASURY);
+const PRIVACY = { strong: { settle: [30000, 180000] }, fast: { settle: [0, 0] } };
 
 /* ---------- services ---------- */
-// With PROXY_URL set, RPC, Jupiter, NEAR Intents, Jito and X go through the Privatus proxy, which holds the keys.
+// With PROXY_URL set, RPC, Jupiter, the Monero route (Houdini), Jito and X go through the Privatus proxy, which holds the keys.
 const PROXY = (PROXY_URL || "").replace(/\/$/, "");
 setMediaProxy(PROXY);
 const rpcUrl = (() => { const v = store.get("privatus-rpc-url", null) || (() => { try { return localStorage.getItem("privatus-rpc"); } catch (_) { return null; } })(); return typeof v === "string" && /^https?:\/\/\S+$/.test(v.trim()) ? v.trim() : PROXY ? `${PROXY}/rpc` : RPC_URL || DEFAULT_RPC; })();
 const connection = new web3.Connection(rpcUrl, "confirmed");
 const jup = jupiter({ base: PROXY ? `${PROXY}/jup` : JUP_BASE, apiKey: PROXY ? "" : JUP_API_KEY, minInterval: PROXY ? 300 : JUP_API_KEY ? 1050 : 2050 });
-const oc = oneclick({ base: PROXY ? `${PROXY}/1click` : undefined, jwt: PROXY ? "" : ONECLICK_JWT });
+const hd = houdini({ base: PROXY ? `${PROXY}/houdini` : "" });
 const jitoUrl = PROXY ? `${PROXY}/jito` : JITO_URL;
 const trig = triggerApi(jup);
 const S = { solUsd: null, wallet: null, seed: null, instant: null, sol: null, instantSol: null, busy: false, route: null };
@@ -973,7 +971,7 @@ function renderTradePanel() {
   gs.disabled = inst || !buy;
   gs.setAttribute("aria-checked", stealthOn());
   $("stealth-box").classList.toggle("on", stealthOn());
-  text($("stealth-sub"), inst ? "Instant trades already use a separate wallet" : !buy ? "Stealth positions sell from Portfolio" : "Buy from a fresh wallet via NEAR Intents");
+  text($("stealth-sub"), inst ? "Instant trades already use a separate wallet" : !buy ? "Stealth positions sell from Portfolio" : "Buy from a fresh wallet funded through Monero");
   updateGo();
 }
 function amountRaw() {
@@ -1004,7 +1002,7 @@ function updateGo() {
   go.className = `btn go ${needConnect || !p ? (T.side === "buy" ? "buy" : "primary") : ""}`;
   const pr = preset();
   text($("fine"), stealthOn()
-    ? `Private mode: your wallet sends ${(PRIVACY[settings.privacy] || PRIVACY.strong).routes > 1 ? "up to 3 plain transfers" : "one plain transfer"} to one-time NEAR Intents addresses; the ${FEE_BPS / 100}% fee and NEAR's routing fee come out inside the route; a fresh stealth wallet buys. NEAR's service sees both ends, and a close observer can still try to match amounts and timing.`
+    ? `Private mode: your wallet signs one transaction, the amount to a one-time Monero route address plus the ${FEE_BPS / 100}% fee to the treasury. The SOL crosses Monero through two unrelated exchanges (10–40 min, their fees included in the quote) and lands in a fresh stealth wallet, which buys. Houdini sees both ends, and a close observer can still try to match amounts and timing.`
     : `${FEE_BPS / 100}% fee in SOL · P${settings.preset + 1}: ${pr.slippageBps / 100}% slippage, ${pr.priority} priority up to ${pr.maxSol} SOL${pr.tipSol ? ` · Jito tip ${pr.tipSol} SOL${pr.mev ? " (MEV-protected)" : ""}` : ""} · ${inst ? "signed instantly by your instant wallet" : "you approve every trade in your wallet"}`);
 }
 function scheduleQuote() {
@@ -1028,7 +1026,7 @@ function renderQuote(qt, fee) {
   const buy = T.side === "buy", outDec = buy ? T.decimals : 9, outSym = buy ? symbolOf(S.tokenMint) : "SOL";
   const route = [...new Set((qt.routePlan || []).map(r => r.swapInfo?.label).filter(Boolean))].slice(0, 3).join(" → ");
   const rows = [["You get ≈", `${fromRaw(qt.outAmount, outDec, 4)} ${outSym}`], ["Minimum", `${fromRaw(qt.otherAmountThreshold, outDec, 4)} ${outSym}`], ["Price impact", `${(Number(qt.priceImpactPct || 0) * 100).toFixed(2)}%`], ["Route", route || "—"], [`Fee ${FEE_BPS / 100}%`, `${fromRaw(fee, 9, 6)} SOL`]];
-  if (stealthOn()) { const pl = privacyPlan(amountRaw() || 0n); rows.push(["Private route", `${pl.routes > 1 ? `${pl.routes} confidential routes, random timing` : "1 confidential route"} → fresh wallet`], ["Fee", "taken inside the NEAR route, not from your wallet"]); }
+  if (stealthOn()) rows.push(["Private route", "SOL → XMR → SOL via Houdini → fresh wallet"], ["Route time", "10–40 min; the stealth wallet buys when its SOL lands"], ["Route fees", "two exchange hops; the exact SOL out is shown before you sign"]);
   const box = $("quote"); box.textContent = "";
   for (const [k, v] of rows) { const r = make("div", "row"); r.append(make("span", "k", k), make("span", "", v)); box.append(r); }
   box.hidden = false;
@@ -1272,37 +1270,29 @@ async function loadPosts() {
 }
 
 /* ---------- Private mode ---------- */
-let solAsset = null;
+let solToken = null;
 const GKEY = pk => `privatus-stealths-${pk}`;
 const stealthRecords = () => S.wallet ? store.get(GKEY(S.wallet.pk), []) : [];
 function saveStealth(rec) { const list = stealthRecords().filter(g => g.index !== rec.index); list.push(rec); list.sort((a, b) => a.index - b.index); store.set(GKEY(S.wallet.pk), list); }
-const ROUTE_LABEL = { PENDING_DEPOSIT: "waiting for the deposit", KNOWN_DEPOSIT_TX: "deposit seen", INCOMPLETE_DEPOSIT: "deposit incomplete", PROCESSING: "routing privately", SUCCESS: "delivered" };
 // Any signature at all means the address has history. RPC errors throw: better no buy than a reused stealth.
 const usedOnChain = async pk => (await connection.getSignaturesForAddress(new web3.PublicKey(pk), { limit: 1 })).length > 0;
 const TOKEN_PROGRAMS = ["TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"];
-const routeAsset = async () => solAsset || (solAsset = await oc.tokens().then(solAssetId).catch(() => undefined));
+// Houdini's id for native SOL. A failure here stops the route: there is no other path to fall back on.
+const routeToken = async () => solToken || (solToken = await hd.tokens(SOL_QUERY).then(solTokenId));
 function gsteps(n) { [...$("gsteps").children].forEach((li, i) => { li.className = i < n ? "done" : i === n ? "active" : ""; }); $("gsteps").hidden = n < 0; }
 async function waitForSol(pk, min, ms = 90000) {
   const until = Date.now() + ms;
   for (;;) {
     const b = BigInt(await connection.getBalance(new web3.PublicKey(pk)));
     if (b >= min) return b;
-    if (Date.now() > until) throw new StealthError("NEAR Intents reported delivery but the wallet hasn't received SOL yet. Check Portfolio in a minute.");
+    if (Date.now() > until) throw new StealthError("The Monero route reported delivery but the wallet hasn't received SOL yet. Check Portfolio in a minute.");
     await new Promise(r => setTimeout(r, 2500));
   }
 }
-// Private buy. With "strong" privacy (the default) the amount is split into up to three routes of uneven, non-round
-// sizes, all signed in one wallet approval and sent at random intervals; once NEAR Intents has paid them all into the
-// fresh stealth wallet, it waits a random beat before buying. The fee rides inside each route (appFees), so every
-// funding transaction is one plain transfer to a one-time deposit address.
-async function privateRoute(args) {
-  try { return await routeQuote(args); }
-  catch (e) {
-    if (!(e instanceof ConfidentialUnavailable)) throw e;
-    if (!confirm(`${e.message}\n\nRoute this one publicly through NEAR Intents instead? A public route still avoids a direct transfer, but its details are on NEAR's public record.`)) throw e;
-    return routeQuote({ ...args, allowPublic: true });
-  }
-}
+// Private buy. The main wallet signs one transaction: the amount to a one-time Monero route address, plus the platform
+// fee to the treasury. The route takes 10–40 minutes, so the rest runs in the background and the terminal stays
+// usable: when the SOL lands in the fresh stealth wallet, it waits a random beat (Strong) and buys. The record is saved
+// at every step, so Portfolio resumes or retries it after a reload.
 async function stealthBuy() {
   const raw = amountRaw(), mint = S.tokenMint, sym = symbolOf(mint), main = S.wallet.pk, go = $("go");
   S.busy = true; go.disabled = true;
@@ -1312,50 +1302,59 @@ async function stealthBuy() {
     const seed = await walletSeed();
     text(go, "Finding a fresh stealth wallet…");
     const { index, stealth } = await nextUnusedStealth(web3, seed, { isUsed: usedOnChain, start: stealthRecords().reduce((m, g) => Math.max(m, g.index + 1), 0) });
-    const gpk = stealth.publicKey.toBase58(), plan = privacyPlan(raw), parts = splitAmount(raw, plan.routes), asset = await routeAsset();
-    gsteps(0); text(go, "Routing…");
-    setTradeStatus(`Getting ${parts.length > 1 ? `${parts.length} confidential routes` : "a confidential route"} from NEAR Intents…`);
-    const routes = [];
-    for (const part of parts) routes.push(await privateRoute({ oc, asset, amount: part, from: main, to: gpk, confidentiality: STEALTH_CONFIDENTIALITY, appFee: { recipient: feeAccount(), bps: FEE_BPS } }));
-    const confidential = routes.every(r => r.confidential);
-    rec = { index, address: gpk, mint, symbol: sym, state: "funding", depositAddress: routes[0].quote.depositAddress, depositAddresses: routes.map(r => r.quote.depositAddress), confidential, createdAt: Date.now() };
+    const gpk = stealth.publicKey.toBase58(), fee = feeOf(raw, FEE_BPS), amount = raw - fee;
+    gsteps(0); text(go, "Getting a Monero route…"); setTradeStatus("Asking Houdini for a SOL → XMR → SOL route to a fresh stealth wallet…");
+    const route = await routeQuote({ hd, token: await routeToken(), amount, from: main, to: gpk });
+    const eta = route.etaMin ? `about ${route.etaMin} min` : "10–40 min";
+    rec = { index, address: gpk, mint, symbol: sym, sol: Number(raw) / 1e9, state: "funding", routeId: route.id, depositAddress: route.depositAddress, amountOut: String(route.amountOut), createdAt: Date.now() };
     saveStealth(rec);
-    // one approval for every funding transfer
     text(go, "Approve in wallet…");
-    setTradeStatus(`Approve ${parts.length > 1 ? `${parts.length} transfers` : "one transfer"} (${fromRaw(raw, 9, 4)} SOL in total) into ${confidential ? "Confidential Intents" : "NEAR Intents"} routes. Each is a plain transfer to a one-time address.`);
+    setTradeStatus(`Approve one transaction: ${fromRaw(amount, 9, 4)} SOL to a one-time Monero route address and the ${FEE_BPS / 100}% fee (${fromRaw(fee, 9, 4)} SOL) to the treasury. Stealth wallet #${index} receives ≈${fromRaw(route.amountOut, 9, 4)} SOL in ${eta}, then buys ${sym}.`);
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
-    const txs = routes.map((r, i) => fundingTx(web3, { from: main, depositAddress: r.quote.depositAddress, amount: parts[i], blockhash }));
-    for (const tx of txs) await preflight(connection, tx);
-    const p = S.wallet.p, signed = p.signAllTransactions ? await p.signAllTransactions(txs) : [];
-    if (!p.signAllTransactions) for (const tx of txs) signed.push(await p.signTransaction(tx));
-    const sigs = [];
-    for (let i = 0; i < signed.length; i++) {
-      if (i) { const ms = jitter(...plan.gap); text(go, "Sending at random intervals…"); setTradeStatus(`Sent ${i} of ${signed.length}. Next transfer in ${Math.round(ms / 1000)}s, so they don't line up in time.`); await sleep(ms); }
-      const sig = await sendAndConfirm(connection, signed[i], lastValidBlockHeight, {});
-      sigs.push(sig); oc.submitDeposit(sig, routes[i].quote.depositAddress).catch(() => {});
-    }
-    saveStealth({ ...rec, state: "routing", fundingSig: sigs[0], fundingSigs: sigs });
-    gsteps(1); text(go, "Routing privately…");
-    await Promise.all(routes.map(r => waitForRoute(oc, r.quote.depositAddress, { onStatus: s => setTradeStatus(`NEAR Intents: ${ROUTE_LABEL[s] || s.toLowerCase()}${confidential ? " (confidential)" : ""}…`) })));
-    const bal = await waitForSol(gpk, STEALTH_GAS_RESERVE + 1n);
-    saveStealth({ ...rec, state: "funded" });
-    const settle = jitter(...plan.settle);
-    if (settle) { text(go, "Waiting…"); setTradeStatus(`Stealth wallet #${index} received ${fromRaw(bal, 9, 4)} SOL. Waiting a random ${Math.round(settle / 1000)}s before buying, so the buy doesn't line up with the funding.`); await sleep(settle); }
-    gsteps(2); text(go, "Private buy…"); setTradeStatus(`Buying ${sym} from stealth wallet #${index}…`);
-    const pr = preset();
-    const prep = await prepareSwap({ web3, jup, connection, side: "buy", mint, amountRaw: (await connection.getBalance(stealth.publicKey).then(BigInt)) - STEALTH_GAS_RESERVE, user: gpk, treasury: TREASURY, feeBps: 0, slippageBps: pr.slippageBps, priorityMaxLamports: Math.round(pr.maxSol * 1e9), priorityLevel: pr.priority });
-    const bsig = await signSend(prep.tx, { local: stealth }, prep.lastValidBlockHeight);
-    saveStealth({ ...rec, state: "holding", buySig: bsig });
-    gsteps(3);
-    const dec = T.decimals ?? await decimalsOf(mint);
-    const out = Number(prep.quote.outAmount) / 10 ** dec;
-    logTrade(main, { sig: bsig, time: Date.now(), side: "buy", mint, symbol: sym, sol: Number(raw) / 1e9, tokens: out, from: `stealth #${index}` });
-    setTradeStatus(`Stealth wallet #${index} bought ≈${num(out)} ${sym}. No transfer runs from your wallet to it.`, "ok", bsig);
+    const tx = fundingTx(web3, { from: main, depositAddress: route.depositAddress, amount, fee, treasury: TREASURY, blockhash });
+    await preflight(connection, tx);
+    const sig = await signSend(tx, { local: null }, lastValidBlockHeight);
+    rec = { ...rec, state: "routing", fundingSig: sig };
+    saveStealth(rec);
+    gsteps(1);
+    setTradeStatus(`Sent. The Monero route takes ${eta} and runs in the background, so keep trading. Stealth wallet #${index} buys ${sym} when its SOL lands; progress is in Portfolio.`, "ok", sig);
     amt.value = ""; $("quote").hidden = true;
+    refreshBalances();
+    finishPrivateBuy(rec);
+  } catch (e) {
+    setTradeStatus(`${errMsg(e)}${rec && rec.state !== "funding" ? ` Stealth wallet #${rec.index} is listed in Portfolio.` : ""}`, "err");
+  } finally { S.busy = false; setTimeout(() => gsteps(-1), 8000); updateGo(); }
+}
+// The background half of a private buy: wait for the Monero route, then buy from the stealth wallet.
+const finishing = new Set();
+async function finishPrivateBuy(rec) {
+  if (finishing.has(rec.index) || !S.wallet) return;
+  finishing.add(rec.index);
+  const tag = `Stealth #${rec.index}`, save = patch => { rec = { ...rec, ...patch }; saveStealth(rec); };
+  try {
+    if (rec.state === "routing") {
+      await waitForRoute(hd, rec.routeId, { onStatus: label => { save({ route: label }); if (S.route === "portfolio") renderStealths(); } });
+      await waitForSol(rec.address, STEALTH_GAS_RESERVE + 1n, 10 * 60_000);
+      save({ state: "funded", route: "delivered", error: undefined });
+      toast(`${tag} received its SOL through Monero.`, "ok");
+    }
+    if (rec.state !== "funded" || !rec.mint) return;
+    const settle = jitter(...(PRIVACY[settings.privacy] || PRIVACY.strong).settle);
+    if (settle) { save({ route: `buying in ${Math.round(settle / 1000)}s` }); await sleep(settle); }
+    const stealth = await deriveStealth(web3, await walletSeed(), rec.index), pr = preset();
+    const bal = BigInt(await connection.getBalance(stealth.publicKey));
+    if (bal <= STEALTH_GAS_RESERVE) throw new StealthError(`${tag} has no SOL to buy with yet.`);
+    const prep = await prepareSwap({ web3, jup, connection, side: "buy", mint: rec.mint, amountRaw: bal - STEALTH_GAS_RESERVE, user: rec.address, treasury: TREASURY, feeBps: 0, slippageBps: pr.slippageBps, priorityMaxLamports: Math.round(pr.maxSol * 1e9), priorityLevel: pr.priority });
+    const bsig = await signSend(prep.tx, { local: stealth }, prep.lastValidBlockHeight);
+    save({ state: "holding", buySig: bsig, route: undefined, error: undefined });
+    const out = Number(prep.quote.outAmount) / 10 ** await decimalsOf(rec.mint);
+    logTrade(S.wallet.pk, { sig: bsig, time: Date.now(), side: "buy", mint: rec.mint, symbol: rec.symbol, sol: rec.sol, tokens: out, from: `stealth #${rec.index}` });
+    toast(`${tag} bought ≈${num(out)} ${rec.symbol}. No transfer runs from your wallet to it.`, "ok", bsig);
     refreshBalances(); renderMine();
   } catch (e) {
-    setTradeStatus(`${errMsg(e)}${rec ? ` Stealth wallet #${rec.index} is listed in Portfolio if it received anything.` : ""}`, "err");
-  } finally { S.busy = false; setTimeout(() => gsteps(-1), 8000); updateGo(); }
+    save({ error: errMsg(e) });
+    toast(`${tag}: ${errMsg(e)}`, "err");
+  } finally { finishing.delete(rec.index); if (S.route === "portfolio") renderStealths(); }
 }
 async function stealthExit(index, row) {
   if (S.busy) return;
@@ -1374,15 +1373,15 @@ async function stealthExit(index, row) {
     const amount = exitAmount(await connection.getBalance(owner), close);
     if (amount <= 0n) throw new StealthError(`Stealth #${index} has nothing left to send.`);
     say(`Stealth #${index}: getting a private route home…`);
-    const { quote, confidential } = await privateRoute({ oc, asset: await routeAsset(), amount, from: gpk, to: S.wallet.pk, confidentiality: STEALTH_CONFIDENTIALITY });
+    const route = await routeQuote({ hd, token: await routeToken(), amount, from: gpk, to: S.wallet.pk });
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
-    const sig = await sendAndConfirm(connection, exitTx(web3, { stealth, depositAddress: quote.depositAddress, amount, closeAccounts: close, blockhash }), lastValidBlockHeight);
-    oc.submitDeposit(sig, quote.depositAddress).catch(() => {});
+    const sig = await sendAndConfirm(connection, exitTx(web3, { stealth, depositAddress: route.depositAddress, amount, closeAccounts: close, blockhash }), lastValidBlockHeight);
     const rec = stealthRecords().find(g => g.index === index) || { index, address: gpk };
-    saveStealth({ ...rec, state: "exiting", exitDeposit: quote.depositAddress });
-    await waitForRoute(oc, quote.depositAddress, { onStatus: s => say(`Stealth #${index} → your wallet: ${ROUTE_LABEL[s] || s.toLowerCase()}${confidential ? " (confidential)" : ""}…`) });
+    saveStealth({ ...rec, state: "exiting", exitRouteId: route.id, exitDeposit: route.depositAddress });
+    S.busy = false; // the route takes 10–40 minutes; the terminal stays usable meanwhile
+    await waitForRoute(hd, route.id, { onStatus: label => say(`Stealth #${index} → your wallet: ${label}…`) });
     saveStealth({ ...rec, state: stuck.length ? "partial" : "closed" });
-    toast(`Stealth #${index} is back in your wallet: ${fromRaw(BigInt(quote.amountOut), 9, 4)} SOL${stuck.length ? `. ${stuck.length} token(s) had no route and stayed behind` : ""}.`, "ok", sig);
+    toast(`Stealth #${index} is back in your wallet through Monero: ≈${fromRaw(route.amountOut, 9, 4)} SOL${stuck.length ? `. ${stuck.length} token(s) had no route and stayed behind` : ""}.`, "ok", sig);
     refreshBalances();
   } catch (e) { say(errMsg(e), "err"); }
   finally { S.busy = false; renderStealths(); }
@@ -1415,8 +1414,15 @@ async function renderStealths(gap = 5) {
     const row = make("div", "stealth-row"), meta = make("div", "meta"), acts = make("div", "acts");
     meta.append(make("b", "", `Stealth #${r.i}`), ` · ${short(r.stealth.publicKey.toBase58())} · ${fromRaw(r.bal, 9, 4)} SOL`);
     for (const t of r.held) meta.append(` · ${num(Number(t.tokenAmount.uiAmountString || t.tokenAmount.uiAmount))} ${symbolOf(t.mint)}`);
-    if (r.rec) meta.append(` · ${r.rec.state}`);
-    const exit = make("button", "btn small primary", r.held.length ? "Sell all & exit" : "Exit to wallet"); exit.type = "button";
+    if (r.rec) meta.append(` · ${r.rec.state}${r.rec.route ? ` (${r.rec.route})` : ""}`);
+    if (r.rec && r.rec.error) meta.append(make("span", "neg", ` · ${r.rec.error}`));
+    if (r.rec && r.rec.state === "routing" && r.rec.routeId) finishPrivateBuy(r.rec);
+    if (r.rec && r.rec.state === "funded" && r.rec.mint && !finishing.has(r.i)) {
+      const buy = make("button", "btn small primary", `Buy ${r.rec.symbol || symbolOf(r.rec.mint)}`); buy.type = "button";
+      buy.addEventListener("click", () => finishPrivateBuy({ ...r.rec, error: undefined }));
+      acts.append(buy);
+    }
+    const exit = make("button", "btn small" + (r.rec && r.rec.state === "funded" ? "" : " primary"), r.held.length ? "Sell all & exit" : "Exit to wallet"); exit.type = "button";
     exit.addEventListener("click", () => stealthExit(r.i, row));
     const key = make("button", "btn small", "Export key"); key.type = "button";
     key.addEventListener("click", () => { const old = row.querySelector(".keybox"); if (old) return old.remove(); row.append(make("div", "keybox", `Secret key for stealth #${r.i} (import into Phantom or Solflare): ${base58Encode(r.stealth.secretKey)}`)); });
@@ -1736,12 +1742,12 @@ function openWalletModal() {
     } else {
       const r = make("div", "row"); r.append(make("span", "", short(S.instant.pk)), make("b", "", `${S.instantSol != null ? fromRaw(S.instantSol, 9, 4) : "…"} SOL`)); inst.append(r);
       const dep = make("div", "row"), amtIn = make("input", "inp"); amtIn.placeholder = "SOL amount"; amtIn.inputMode = "decimal"; amtIn.setAttribute("aria-label", "Deposit amount in SOL");
-      const dDirect = make("button", "btn small", "Deposit"), dPrivate = make("button", "btn small primary", "Deposit privately (NEAR)"); dDirect.type = dPrivate.type = "button";
+      const dDirect = make("button", "btn small", "Deposit"), dPrivate = make("button", "btn small primary", "Deposit via Monero"); dDirect.type = dPrivate.type = "button";
       dep.append(amtIn, dDirect, dPrivate); inst.append(dep);
-      const wd = make("div", "row"), wDirect = make("button", "btn small", "Withdraw all"), wPrivate = make("button", "btn small", "Withdraw privately (NEAR)"), key = make("button", "btn small", "Export key");
+      const wd = make("div", "row"), wDirect = make("button", "btn small", "Withdraw all"), wPrivate = make("button", "btn small", "Withdraw via Monero"), key = make("button", "btn small", "Export key");
       wDirect.type = wPrivate.type = key.type = "button";
       wd.append(wDirect, wPrivate, key); inst.append(wd);
-      const st = make("p", "", "A direct deposit links the two wallets on-chain. A private deposit goes through NEAR Intents, so it doesn't.");
+      const st = make("p", "", "A direct deposit links the two wallets on-chain. A deposit via Monero doesn't: it takes 10–40 minutes and costs the route's exchange and network fees.");
       inst.append(st);
       const busy = async (fn, btn) => { if (S.busy) return; S.busy = true; btn.disabled = true; try { await fn(m => text(st, m)); } catch (e) { text(st, errMsg(e)); toast(errMsg(e), "err"); } finally { S.busy = false; btn.disabled = false; await refreshBalances(); } };
       const amount = () => { const r2 = toRaw(amtIn.value, 9); if (!r2) throw new SwapError("Enter an amount to deposit."); return r2; };
@@ -1752,24 +1758,24 @@ function openWalletModal() {
         say("Deposited."); toast(`Deposited ${fromRaw(a, 9, 4)} SOL to your instant wallet.`, "ok", sig);
       }, dDirect));
       dPrivate.addEventListener("click", () => busy(async say => {
-        const a = amount(); checkTransfer(a); say("Getting a private route from NEAR Intents…");
-        const { quote, confidential } = await privateRoute({ oc, asset: await routeAsset(), amount: a, from: S.wallet.pk, to: S.instant.pk, confidentiality: STEALTH_CONFIDENTIALITY });
-        say("Approve the deposit in your wallet…");
+        const a = amount(); checkTransfer(a); say("Getting a Monero route…");
+        const route = await routeQuote({ hd, token: await routeToken(), amount: a, from: S.wallet.pk, to: S.instant.pk });
+        say(`Approve the deposit in your wallet. ≈${fromRaw(route.amountOut, 9, 4)} SOL arrives in ${route.etaMin ? `about ${route.etaMin} min` : "10–40 min"}.`);
         const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
-        const sig = await signSend(fundingTx(web3, { from: S.wallet.pk, depositAddress: quote.depositAddress, amount: a, blockhash }), { local: null }, lastValidBlockHeight);
-        oc.submitDeposit(sig, quote.depositAddress).catch(() => {});
-        await waitForRoute(oc, quote.depositAddress, { onStatus: s => say(`NEAR Intents: ${ROUTE_LABEL[s] || s.toLowerCase()}${confidential ? " (confidential)" : ""}…`) });
-        say("Delivered."); toast(`≈${fromRaw(BigInt(quote.amountOut), 9, 4)} SOL arrived in your instant wallet privately.`, "ok", sig);
+        const sig = await signSend(fundingTx(web3, { from: S.wallet.pk, depositAddress: route.depositAddress, amount: a, blockhash }), { local: null }, lastValidBlockHeight);
+        S.busy = false;
+        await waitForRoute(hd, route.id, { onStatus: label => say(`Monero route: ${label}…`) });
+        say("Delivered."); toast(`≈${fromRaw(route.amountOut, 9, 4)} SOL arrived in your instant wallet through Monero.`, "ok", sig);
       }, dPrivate));
       const withdraw = (priv, btn) => busy(async say => {
         const bal = BigInt(await connection.getBalance(S.instant.kp.publicKey)), a = exitAmount(bal);
         if (a <= 0n) throw new SwapError("Nothing to withdraw.");
         let to = S.wallet.pk, route = null;
-        if (priv) { say("Getting a private route home…"); route = await privateRoute({ oc, asset: await routeAsset(), amount: a, from: S.instant.pk, to: S.wallet.pk, confidentiality: STEALTH_CONFIDENTIALITY }); to = route.quote.depositAddress; }
+        if (priv) { say("Getting a Monero route home…"); route = await routeQuote({ hd, token: await routeToken(), amount: a, from: S.instant.pk, to: S.wallet.pk }); to = route.depositAddress; }
         const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
         const sig = await sendAndConfirm(connection, exitTx(web3, { stealth: S.instant.kp, depositAddress: to, amount: a, blockhash }), lastValidBlockHeight);
-        if (route) { oc.submitDeposit(sig, to).catch(() => {}); await waitForRoute(oc, to, { onStatus: s => say(`NEAR Intents: ${ROUTE_LABEL[s] || s.toLowerCase()}…`) }); }
-        say("Withdrawn."); toast(`Withdrew ${fromRaw(a, 9, 4)} SOL to your main wallet${priv ? " privately" : ""}. Tokens stay in the instant wallet.`, "ok", sig);
+        if (route) { S.busy = false; await waitForRoute(hd, route.id, { onStatus: label => say(`Monero route: ${label}…`) }); }
+        say("Withdrawn."); toast(`Withdrew ${priv ? `≈${fromRaw(route.amountOut, 9, 4)}` : fromRaw(a, 9, 4)} SOL to your main wallet${priv ? " through Monero" : ""}. Tokens stay in the instant wallet.`, "ok", sig);
       }, btn);
       wDirect.addEventListener("click", () => withdraw(false, wDirect));
       wPrivate.addEventListener("click", () => withdraw(true, wPrivate));
@@ -1802,8 +1808,8 @@ $("settingsbtn").addEventListener("click", () => openModal("Settings", body => {
   const [lat, autoTpIn] = field("After a snipe: take profit at +% (sells half, 0 = off)", settings.autoTp || 0, { inputMode: "decimal" });
   const [las, autoSlIn] = field("After a snipe: stop loss at −% (0 = off)", settings.autoSl || 0, { inputMode: "decimal" });
   ag.append(lat, las); pulse.append(ag);
-  const pv = make("div", "box"); pv.append(make("h3", "", "Private mode"), make("p", "", "Strong splits each private buy into up to three confidential routes of uneven sizes, sent at random intervals, and waits a random beat before buying. Fast uses one route and no waits."));
-  const lpv = make("label", "", "Privacy strength"), pvSel = make("select", "inp"); [["strong", "Strong (split routes, random timing)"], ["fast", "Fast (one route)"]].forEach(([v, t]) => { const o = make("option", "", t); o.value = v; o.selected = (settings.privacy || "strong") === v; pvSel.append(o); }); lpv.append(pvSel); pv.append(lpv);
+  const pv = make("div", "box"); pv.append(make("h3", "", "Private mode"), make("p", "", "Every private buy crosses Monero. Strong also waits a random 30 seconds to 3 minutes after the SOL lands before buying, so the buy doesn't line up with the delivery. Fast buys as soon as it lands."));
+  const lpv = make("label", "", "Privacy strength"), pvSel = make("select", "inp"); [["strong", "Strong (random wait before buying)"], ["fast", "Fast (buy on arrival)"]].forEach(([v, t]) => { const o = make("option", "", t); o.value = v; o.selected = (settings.privacy || "strong") === v; pvSel.append(o); }); lpv.append(pvSel); pv.append(lpv);
   const net = make("div", "box"); net.append(make("h3", "", "Network"), make("p", "", "The public Solana RPC is rate limited. A Helius, Triton or QuickNode URL makes Pulse, trades and the tracker much faster. Reloads the page."));
   const [lrpc, rpcIn] = field("RPC URL", rpcUrl, { spellcheck: false }); net.append(lrpc);
   const save = make("button", "btn primary", "Save"); save.type = "button";

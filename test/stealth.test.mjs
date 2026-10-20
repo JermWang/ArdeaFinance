@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import web3 from "@solana/web3.js";
-import { deriveStealth, nextUnusedStealth, scanStealths, seedFingerprint, oneclick, routeQuote, checkQuote, fundingTx, exitTx, exitAmount, waitForRoute, solAssetId, SOL_ASSET, STEALTH_MESSAGE, ConfidentialUnavailable, intentsAccount, splitAmount } from "../stealth.js";
-import { createOneClick } from "./oneclickmock.mjs";
+import { feeOf, deriveStealth, nextUnusedStealth, scanStealths, seedFingerprint, houdini, routeQuote, routeLabel, fundingTx, exitTx, exitAmount, waitForRoute, solTokenId, lamportsToSol, solToLamports, STEALTH_MESSAGE } from "../stealth.js";
+import { createHoudini, SOL_ID } from "./houdinimock.mjs";
 import { createRequire } from "node:module";
 const { ed25519 } = createRequire(import.meta.url)("@noble/curves/ed25519");
 const signWith = (msg, kp) => ed25519.sign(msg, kp.secretKey.slice(0, 32));
@@ -19,79 +19,6 @@ test("stealth wallets are deterministic per signature and index, and unrelated t
   const other = signWith(new TextEncoder().encode(STEALTH_MESSAGE), web3.Keypair.generate());
   assert.notEqual((await deriveStealth(web3, other, 0)).publicKey.toBase58(), a0.publicKey.toBase58());
   assert.equal((await seedFingerprint(sig)).length, 16);
-});
-
-test("finds native SOL in the 1Click token list", () => {
-  assert.equal(solAssetId([{ assetId: "x", blockchain: "sol", symbol: "SOL", contractAddress: "So111" }, { assetId: "nep141:sol.omft.near", blockchain: "sol", symbol: "SOL" }]), "nep141:sol.omft.near");
-  assert.equal(solAssetId(null), SOL_ASSET);
-});
-
-test("route quote asks for Confidential Intents and pays exactly the stealth", async () => {
-  const m = createOneClick();
-  const stealth = (await deriveStealth(web3, sig, 0)).publicKey.toBase58();
-  const r = await routeQuote({ oc: oneclick({ fetch: m.fetch }), amount: 995_000_000n, from: main.publicKey.toBase58(), to: stealth });
-  assert.equal(r.confidential, true);
-  const sent = m.quotes[0];
-  assert.equal(sent.confidentiality, "advanced");
-  assert.equal(r.level, "advanced");
-  assert.equal(sent.appFees, undefined);
-  assert.equal(sent.recipient, stealth);
-  assert.equal(sent.refundTo, main.publicKey.toBase58());
-  assert.equal(sent.originAsset, SOL_ASSET);
-  assert.equal(sent.destinationAsset, SOL_ASSET);
-  assert.equal(sent.amount, "995000000");
-  assert.equal(sent.dry, false);
-  assert.equal(sent.recipientType, "DESTINATION_CHAIN");
-});
-
-test("never goes public on its own when the confidential rail refuses; only with allowPublic", async () => {
-  const m = createOneClick({ confidential: false }), to = web3.Keypair.generate().publicKey.toBase58();
-  await assert.rejects(routeQuote({ oc: oneclick({ fetch: m.fetch }), amount: 1000n, from: main.publicKey.toBase58(), to }), ConfidentialUnavailable);
-  assert.deepEqual(m.quotes.map(q => q.confidentiality), ["advanced", "basic"]);
-  const r = await routeQuote({ oc: oneclick({ fetch: m.fetch }), amount: 1000n, from: main.publicKey.toBase58(), to, allowPublic: true });
-  assert.equal(r.confidential, false);
-  assert.equal(r.level, "public");
-  assert.equal(m.quotes.at(-1).confidentiality, undefined);
-});
-
-test("the platform fee rides in the route as an appFee, so funding is one plain transfer", async () => {
-  const m = createOneClick(), to = web3.Keypair.generate().publicKey.toBase58(), acct = intentsAccount(TREASURY);
-  await routeQuote({ oc: oneclick({ fetch: m.fetch }), amount: 1_000_000_000n, from: main.publicKey.toBase58(), to, appFee: { recipient: acct, bps: 50 } });
-  assert.deepEqual(m.quotes[0].appFees, [{ recipient: acct, fee: 50 }]);
-  const dep = web3.Keypair.generate().publicKey.toBase58();
-  const tx = fundingTx(web3, { from: main.publicKey.toBase58(), depositAddress: dep, amount: 1_000_000_000n, blockhash: web3.Keypair.generate().publicKey.toBase58() });
-  assert.equal(tx.message.compiledInstructions.length, 1);
-  assert.ok(!tx.message.staticAccountKeys.some(k => k.toBase58() === TREASURY));
-});
-
-test("intentsAccount is the hex of the Solana public key (a NEAR implicit account)", () => {
-  const kp = web3.Keypair.generate();
-  assert.equal(intentsAccount(kp.publicKey.toBase58()), Buffer.from(kp.publicKey.toBytes()).toString("hex"));
-  assert.equal(intentsAccount(TREASURY).length, 64);
-});
-
-test("splitAmount: parts add up exactly, vary in size, and none is round", () => {
-  let seed = 7; const rand = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
-  const parts = splitAmount(1_000_000_000n, 3, { rand });
-  assert.equal(parts.length, 3);
-  assert.equal(parts.reduce((a, b) => a + b, 0n), 1_000_000_000n);
-  assert.ok(new Set(parts.map(String)).size === 3);
-  assert.ok(parts.every(p => p % 1_000_000n !== 0n));
-  assert.deepEqual(splitAmount(5n, 1), [5n]);
-});
-
-test("refuses tampered quotes", async () => {
-  const to = web3.Keypair.generate().publicKey.toBase58(), from = main.publicKey.toBase58();
-  for (const [tamper, why] of [
-    [r => { r.quoteRequest.recipient = web3.Keypair.generate().publicKey.toBase58(); }, /different wallet/],
-    [r => { r.quote.amountIn = "1"; }, /amount changed/],
-    [r => { r.quote.depositAddress = "0xdeadbeef"; }, /deposit address/],
-    [r => { r.quote.depositAddress = to; }, /your own wallets/],
-    [r => { r.quoteRequest.destinationAsset = "nep141:usdc"; }, /different assets/]
-  ]) {
-    const m = createOneClick({ tamper });
-    await assert.rejects(routeQuote({ oc: oneclick({ fetch: m.fetch }), amount: 1000n, from, to }), why);
-  }
 });
 
 test("funding transaction pays the deposit address and the treasury fee", () => {
@@ -118,28 +45,82 @@ test("exit closes token accounts, sends everything left, and is signed by the st
   assert.equal(exitAmount(3000n), 0n);
 });
 
-test("waits through NEAR Intents statuses to SUCCESS", async () => {
-  const m = createOneClick({ pollsUntilDone: 3 }), oc = oneclick({ fetch: m.fetch });
-  const r = await routeQuote({ oc, amount: 1000n, from: main.publicKey.toBase58(), to: web3.Keypair.generate().publicKey.toBase58() });
-  const seen = [];
-  const st = await waitForRoute(oc, r.quote.depositAddress, { interval: 1, onStatus: s => seen.push(s) });
-  assert.equal(st.status, "SUCCESS");
-  assert.deepEqual(seen, ["PENDING_DEPOSIT", "PROCESSING", "SUCCESS"]);
+test("finds native SOL on Solana among Houdini's private-send tokens", () => {
+  const m = createHoudini();
+  assert.equal(solTokenId(m.handle("GET", "https://p.test/houdini/v2/tokens")), SOL_ID);
+  assert.throws(() => solTokenId({ tokens: [] }), /doesn't list SOL/);
 });
 
-test("refunds and failures stop the wait with a clear message", async () => {
-  for (const [status, re] of [["REFUNDED", /refunded/], ["FAILED", /failed/]]) {
-    const oc = { status: async () => ({ status }) };
-    await assert.rejects(waitForRoute(oc, "x", { interval: 1 }), re);
+test("amounts convert between lamports and Houdini's decimal SOL exactly", () => {
+  assert.equal(lamportsToSol(995_000_000n), "0.995");
+  assert.equal(lamportsToSol(2_000_000_000n), "2");
+  assert.equal(lamportsToSol(1n), "0.000000001");
+  assert.equal(solToLamports(0.995), 995_000_000n);
+  assert.equal(solToLamports("1.2345"), 1_234_500_000n);
+  assert.equal(solToLamports("nope"), 0n);
+});
+
+test("route forces Monero, takes the best private quote and pays exactly the stealth", async () => {
+  const m = createHoudini(), hd = houdini({ base: "https://p.test/houdini", fetch: m.fetch, timezone: "Europe/Berlin" });
+  const stealth = (await deriveStealth(web3, sig, 0)).publicKey.toBase58(), from = main.publicKey.toBase58();
+  const r = await routeQuote({ hd, token: SOL_ID, amount: 995_000_000n, from, to: stealth });
+  assert.equal([...m.quotes.values()][0].useXmr, "true");
+  assert.equal([...m.quotes.values()][0].amount, 0.995);
+  assert.deepEqual(m.created[0], { quoteId: "q1", addressTo: stealth, refundAddress: from });
+  assert.equal(r.amountIn, 995_000_000n);
+  assert.equal(r.amountOut, solToLamports(0.995 * 0.975));
+  assert.equal(r.etaMin, 25);
+  assert.match(r.depositAddress, /^[1-9A-HJ-NP-Za-km-z]{32,44}$/);
+  assert.ok(m.headers.every(h => h["x-user-timezone"] === "Europe/Berlin"));
+});
+
+test("amounts outside the route's limits say what the limit is", async () => {
+  const m = createHoudini({ min: 0.2 }), hd = houdini({ base: "https://p.test/houdini", fetch: m.fetch });
+  await assert.rejects(routeQuote({ hd, token: SOL_ID, amount: 100_000_000n, from: main.publicKey.toBase58(), to: web3.Keypair.generate().publicKey.toBase58() }), /start at 0.2 SOL/);
+  assert.equal(m.created.length, 0);
+});
+
+test("refuses tampered orders", async () => {
+  const to = web3.Keypair.generate().publicKey.toBase58(), from = main.publicKey.toBase58();
+  for (const [tamper, why] of [
+    [o => { o.receiverAddress = web3.Keypair.generate().publicKey.toBase58(); }, /different wallet/],
+    [o => { o.inAmount = 0.5; }, /amount changed/],
+    [o => { o.depositAddress = "0xdeadbeef"; }, /deposit address/],
+    [o => { o.depositAddress = to; }, /your own wallets/],
+    [o => { o.outSymbol = "XMR"; }, /different assets/],
+    [o => { o.outToken.chain = "bsc"; }, /isn't on Solana/],
+    [o => { o.anonymous = false; }, /isn't a private route/],
+    [o => { o.depositTag = "123"; }, /deposit memo/],
+    [o => { o.expires = new Date(Date.now() + 1000).toISOString(); }, /expires/]
+  ]) {
+    const m = createHoudini({ tamper });
+    await assert.rejects(routeQuote({ hd: houdini({ base: "https://p.test/houdini", fetch: m.fetch }), token: SOL_ID, amount: 1_000_000_000n, from, to }), why);
   }
-  let t = 0;
-  await assert.rejects(waitForRoute({ status: async () => ({ status: "PROCESSING" }) }, "x", { interval: 1, timeoutMs: 5, now: () => (t += 3) }), /longer than expected/);
 });
 
-test("1Click client sends the JWT when configured", async () => {
-  let h;
-  await oneclick({ jwt: "abc", fetch: async (u, init) => { h = init.headers; return { ok: true, status: 200, json: async () => [] }; } }).tokens();
-  assert.equal(h.authorization, "Bearer abc");
+test("waits through the Monero route's statuses until it delivers", async () => {
+  const m = createHoudini({ pollsUntilDone: 4 }), hd = houdini({ base: "https://p.test/houdini", fetch: m.fetch });
+  const r = await routeQuote({ hd, token: SOL_ID, amount: 1_000_000_000n, from: main.publicKey.toBase58(), to: web3.Keypair.generate().publicKey.toBase58() });
+  const seen = [];
+  const st = await waitForRoute(hd, r.id, { sleep: async () => {}, onStatus: s => seen.push(s) });
+  assert.equal(st.status, 4);
+  assert.deepEqual(seen, ["waiting for the deposit", "confirming the deposit", "swapping SOL to XMR", "swapping XMR back to SOL", "delivered"]);
+});
+
+test("expired, failed and refunded routes stop the wait with a clear message", async () => {
+  for (const [status, re] of [[5, /expired/], [6, /failed/], [7, /refunded/], [8, /no longer has/]]) {
+    await assert.rejects(waitForRoute({ order: async () => ({ status }) }, "hdX", { sleep: async () => {} }), re);
+  }
+  let t = 0, calls = 0;
+  const flaky = { order: async () => { if (++calls < 3) { const e = new Error("busy"); e.status = 503; throw e; } return { status: 3 }; } };
+  await assert.rejects(waitForRoute(flaky, "hdX", { sleep: async () => {}, timeoutMs: 10, now: () => (t += 3) }), /keeps going without this tab/);
+  assert.ok(calls >= 3);
+  assert.equal(routeLabel({ status: 3 }), "moving through Monero");
+  assert.equal(routeLabel({ status: 3, outStatus: 4 }), "sending SOL to the wallet");
+});
+
+test("the Houdini client refuses to run without the proxy", async () => {
+  await assert.rejects(houdini({ base: "", fetch: async () => { throw new Error("should not fetch"); } }).tokens({}), /needs the gateway/);
 });
 
 test("next stealth skips any index with on-chain history, even when local records are gone", async () => {
@@ -161,4 +142,9 @@ test("stealth scan finds used stealths past gaps and always covers known indexes
   assert.deepEqual((await scanStealths(web3, sig, { isUsed, gap: 3 })).map(g => g.index), [0]);
   assert.deepEqual((await scanStealths(web3, sig, { isUsed, gap: 3, known: 9 })).map(g => g.index), [0, 4, 9]);
   await assert.rejects(scanStealths(web3, sig, { isUsed: async () => { throw new Error("429"); } }), /429/);
+});
+
+test("the platform fee is the basis-point share, rounded down", () => {
+  assert.equal(feeOf(1_000_000_000n, 50), 5_000_000n);
+  assert.equal(feeOf(199n, 50), 0n);
 });

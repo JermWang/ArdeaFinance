@@ -1,14 +1,14 @@
 // Private mode: trade from fresh wallets that have no on-chain link to your main wallet.
 //
-// Funds move between your wallet and a stealth wallet through NEAR Intents (1Click API): you pay
-// SOL into a one-time deposit address, and NEAR's bridge pays SOL out to the stealth from its own
-// wallets. With Confidential Intents the sender, amount and route stay off the public record.
+// Funds move between your wallet and a stealth wallet through Monero. Houdini Swap's private send takes SOL at a
+// one-time deposit address on one exchange, swaps it to XMR, moves the XMR on Monero (where ring signatures, stealth
+// addresses and RingCT hide sender, receiver and amount), swaps it back to SOL on an unrelated exchange and pays the
+// stealth wallet from that exchange's wallet. Nobody on our side holds XMR. Houdini's key never reaches the browser:
+// every call goes through the gateway's /houdini route.
 //
 // Stealth wallets are derived from one signature of STEALTH_MESSAGE by your main wallet, so they can
 // always be rebuilt by signing again. Nothing secret is stored.
 
-export const ONECLICK_BASE = "https://1click.chaindefuser.com";
-export const SOL_ASSET = "nep141:sol.omft.near"; // native SOL inside NEAR Intents
 export const STEALTH_MESSAGE = "Privatus stealth wallets v1\n\nSigning this creates your private trading wallets. It sends no transaction and costs nothing. Only sign it on Privatus: anyone with this signature can open your stealth wallets.";
 export const BASE_FEE = 5000n; // lamports per signature
 
@@ -54,106 +54,104 @@ export async function deriveInstant(web3, signature) {
   return web3.Keypair.fromSeed(seed);
 }
 
-/* ---------- 1Click client ---------- */
-export function oneclick({ base = ONECLICK_BASE, jwt = "", fetch: f = globalThis.fetch.bind(globalThis) } = {}) {
-  const auth = jwt ? { authorization: `Bearer ${jwt}` } : {};
+/* ---------- amounts ---------- */
+// Houdini speaks decimal SOL; everything here is lamports in BigInt, so no float ever sizes a transfer.
+export function lamportsToSol(l) {
+  const v = BigInt(l), whole = v / 1_000_000_000n, frac = (v % 1_000_000_000n).toString().padStart(9, "0").replace(/0+$/, "");
+  return frac ? `${whole}.${frac}` : `${whole}`;
+}
+export function solToLamports(x) {
+  const n = Number(x);
+  if (!Number.isFinite(n) || n < 0) return 0n;
+  const [w, f = ""] = n.toFixed(9).split(".");
+  return BigInt(w) * 1_000_000_000n + BigInt(f.padEnd(9, "0"));
+}
+// The platform fee on a private buy, in lamports, rounded down.
+export const feeOf = (amount, bps) => BigInt(amount) * BigInt(bps) / 10_000n;
+
+/* ---------- Houdini client (through the gateway) ---------- */
+// The gateway adds the API key and the caller's IP and user agent, which Houdini requires for its compliance
+// checks. The browser adds its timezone, the third required header.
+export function houdini({ base, fetch: f = globalThis.fetch.bind(globalThis), timezone } = {}) {
+  const tz = timezone || (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; } catch (_) { return "UTC"; } })();
   async function call(path, init = {}) {
+    if (!base) throw new StealthError("Private mode needs the gateway (PROXY_URL in config.js), which holds the Monero route's key.");
     let res;
-    try { res = await f(base + path, { ...init, headers: { ...auth, ...(init.headers || {}) } }); }
-    catch (_) { throw new StealthError("Couldn't reach NEAR Intents. Check your connection."); }
+    try { res = await f(base + path, { ...init, headers: { "x-user-timezone": tz, ...(init.headers || {}) } }); }
+    catch (_) { throw new StealthError("Couldn't reach the Monero route. Check your connection."); }
     let body = null;
     try { body = await res.json(); } catch (_) {}
-    if (res.status === 429) throw new StealthError("NEAR Intents is rate limiting this browser. Wait a moment and try again.");
-    if (!res.ok) { const e = new StealthError(`NEAR Intents: ${String(body?.message || body?.error || `HTTP ${res.status}`).slice(0, 180)}`); e.status = res.status; throw e; }
+    if (res.status === 429) { const e = new StealthError("The Monero route is rate limited right now. Wait a minute and try again."); e.status = 429; throw e; }
+    if (!res.ok) { const e = new StealthError(`Monero route: ${String(body?.message || body?.error || `HTTP ${res.status}`).slice(0, 180)}`); e.status = res.status; throw e; }
     return body;
   }
   const json = body => ({ method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
   return {
-    tokens: () => call("/v0/tokens"),
-    quote: req => call("/v0/quote", json(req)),
-    submitDeposit: (txHash, depositAddress) => call("/v0/deposit/submit", json({ txHash, depositAddress })),
-    status: depositAddress => call(`/v0/status?${new URLSearchParams({ depositAddress })}`)
+    tokens: params => call(`/v2/tokens?${new URLSearchParams(params)}`),
+    quote: ({ token, amount, useXmr = true }) => call(`/v2/quotes/private-send?${new URLSearchParams({ token, amount: String(amount), useXmr: String(!!useXmr) })}`),
+    create: req => call("/v2/exchanges/private-send", json(req)),
+    order: id => call(`/v2/orders/${encodeURIComponent(id)}`)
   };
 }
 
-export function solAssetId(tokens) {
-  const t = (Array.isArray(tokens) ? tokens : []).find(x => x.blockchain === "sol" && x.symbol === "SOL" && !x.contractAddress);
-  return t ? t.assetId : SOL_ASSET;
+// Houdini's id for native SOL on Solana, among tokens that support private send.
+const SOL_MINT = "So11111111111111111111111111111111111111112";
+export const SOL_QUERY = { symbol: "SOL", hasSelfPrivate: "true", hasCex: "true", pageSize: "50", page: "1" };
+export function solTokenId(res) {
+  const list = Array.isArray(res) ? res : res && Array.isArray(res.tokens) ? res.tokens : [];
+  const sol = list.filter(t => t && t.id && t.symbol === "SOL" && /^sol/i.test(t.chain || t.chainData?.shortName || "") && t.hasSelfPrivate !== false && t.enabled !== false);
+  const native = sol.find(t => !t.address || t.address === SOL_MINT) || sol[0];
+  if (!native) throw new StealthError("The Monero route doesn't list SOL right now. Try again later.");
+  return native.id;
 }
 
-// The NEAR Intents account a Solana key controls: the hex of its ed25519 public key (an implicit account).
-export function intentsAccount(base58) {
-  const A = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-  let n = 0n;
-  for (const c of base58) { const v = A.indexOf(c); if (v < 0) throw new StealthError("Not a Solana address."); n = n * 58n + BigInt(v); }
-  return n.toString(16).padStart(64, "0");
-}
-
-export class ConfidentialUnavailable extends StealthError {}
-
-// Quote a SOL→SOL route on Solana from one wallet to another. It asks for Confidential Intents at the strongest level
-// first ("advanced", then "basic"). If neither will route it, it stops with ConfidentialUnavailable rather than quietly
-// going public; the caller decides, with the user's say-so, whether to retry with allowPublic.
-// appFee { recipient, bps }: the platform fee is taken inside NEAR Intents from the routed amount, so the user's
-// funding transaction is a single plain transfer to the deposit address, with nothing pointing at Privatus.
-export async function routeQuote({ oc, asset = SOL_ASSET, amount, from, to, slippageBps = 100, confidentiality = "advanced", appFee = null, allowPublic = false, now = Date.now() }) {
-  const request = level => ({
-    dry: false, swapType: "EXACT_INPUT", slippageTolerance: slippageBps,
-    originAsset: asset, depositType: "ORIGIN_CHAIN", destinationAsset: asset,
-    amount: String(amount), refundTo: from, refundType: "ORIGIN_CHAIN",
-    recipient: to, recipientType: "DESTINATION_CHAIN",
-    deadline: new Date(now + 30 * 60 * 1000).toISOString(),
-    ...(level !== "public" ? { confidentiality: level } : {}),
-    ...(appFee && appFee.bps > 0 ? { appFees: [{ recipient: appFee.recipient, fee: appFee.bps }] } : {}),
-    referral: "privatus"
-  });
-  const levels = confidentiality === "public" ? ["public"] : confidentiality === "advanced" ? ["advanced", "basic"] : ["basic"];
-  let res = null, level = null, lastErr = null;
-  for (const lv of levels) {
-    try { res = await oc.quote(request(lv)); level = lv; break; }
-    catch (e) {
-      lastErr = e;
-      if (lv === "public" || !(e.status >= 400 && e.status < 500) || !/confiden|private|not supported|unsupported/i.test(e.message)) throw e;
-    }
+// Quote a private SOL → XMR → SOL send and open the order. Monero is always forced as the bridge: if no Monero route
+// is available, this stops rather than use any other path. Throws rather than return anything we didn't ask for.
+export async function routeQuote({ hd, token, amount, from, to, now = Date.now() }) {
+  amount = BigInt(amount);
+  const sol = lamportsToSol(amount);
+  const { quotes = [] } = (await hd.quote({ token, amount: sol, useXmr: true })) || {};
+  const usable = quotes.filter(q => q && q.quoteId && !q.error && !q.filtered && (!q.type || q.type === "private") && Number(q.amountOut) > 0);
+  if (!usable.length) {
+    const lim = quotes.find(q => q && (q.min || q.max)) || {};
+    if (lim.min && Number(sol) < lim.min) throw new StealthError(`Private routes start at ${lim.min} SOL.`);
+    if (lim.max && Number(sol) > lim.max) throw new StealthError(`Private routes top out at ${lim.max} SOL right now.`);
+    throw new StealthError("No Monero route is available for this amount right now, so nothing was sent. Try again shortly or a different amount.");
   }
-  if (!res) {
-    if (!allowPublic) throw new ConfidentialUnavailable("NEAR Intents can't route this confidentially right now, so nothing was sent. You can try again shortly, or choose a standard (public) route.");
-    res = await oc.quote(request("public")); level = "public";
-  }
-  checkQuote(res, { asset, amount, from, to });
-  return { res, quote: res.quote, confidential: level !== "public", level };
+  const quote = usable.sort((a, b) => Number(b.amountOut) - Number(a.amountOut))[0];
+  const order = await hd.create({ quoteId: quote.quoteId, addressTo: to, refundAddress: from });
+  checkOrder(order, { amount, from, to, now });
+  return {
+    order, quote, id: order.houdiniId, depositAddress: order.depositAddress,
+    amountIn: amount, amountOut: solToLamports(order.outAmount),
+    etaMin: Math.round(Number(order.eta || quote.duration) || 0) || null
+  };
 }
 
-// Split an amount into n parts that don't look like a split: each part varies by up to ±spread around an even share,
-// none is a round number, and they add up exactly. Used to fund a private buy through several separate routes.
-export function splitAmount(total, n, { spread = .18, rand = Math.random } = {}) {
-  total = BigInt(total);
-  if (n <= 1) return [total];
-  const w = Array.from({ length: n }, () => 1 + (rand() * 2 - 1) * spread), sum = w.reduce((a, b) => a + b, 0);
-  const parts = w.map(x => BigInt(Math.floor(Number(total) * x / sum)));
-  parts[n - 1] += total - parts.reduce((a, b) => a + b, 0n);
-  return parts;
+// Never send funds into an order that doesn't say exactly what we asked for.
+export function checkOrder(o, { amount, from, to, now = Date.now() }) {
+  const bad = m => { throw new StealthError(`Refusing this route: ${m}.`); };
+  if (!o || !o.houdiniId) bad("the order is incomplete");
+  if (o.receiverAddress !== to) bad("it pays a different wallet");
+  if (o.inSymbol !== "SOL" || o.outSymbol !== "SOL") bad("it swaps different assets");
+  for (const t of [o.inToken, o.outToken]) if (t && t.chain && !/^sol/i.test(t.chain)) bad("it isn't on Solana");
+  if (o.anonymous !== true) bad("it isn't a private route");
+  const diff = solToLamports(o.inAmount) - BigInt(amount);
+  if (diff > 1n || diff < -1n) bad("the amount changed");
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(o.depositAddress || "")) bad("there is no valid Solana deposit address");
+  if (o.depositAddress === to || o.depositAddress === from) bad("the deposit address is one of your own wallets");
+  if (o.depositTag) bad("it needs a deposit memo");
+  if (!(solToLamports(o.outAmount) > 0n)) bad("it pays out nothing");
+  if (typeof o.status === "number" && o.status > 0) bad("the order is already past waiting for a deposit");
+  if (o.expires && Date.parse(o.expires) < now + 60_000) bad("the order expires before a deposit could land");
 }
+
 // A random wait in [min, max] ms, so funding and buying don't line up in time.
 export const jitter = (min, max, rand = Math.random) => Math.round(min + rand() * (max - min));
 
-// Never send funds on a quote that doesn't say exactly what we asked for.
-export function checkQuote(res, { asset, amount, from, to }) {
-  const q = res && res.quote, r = res && res.quoteRequest;
-  const bad = m => { throw new StealthError(`Refusing this route: ${m}.`); };
-  if (!q || !r) bad("the quote is incomplete");
-  if (r.recipient !== to) bad("it pays a different wallet");
-  if (r.refundTo !== from) bad("refunds go to a different wallet");
-  if (r.originAsset !== asset || r.destinationAsset !== asset) bad("it swaps different assets");
-  if (String(r.amount) !== String(amount) || String(q.amountIn) !== String(amount)) bad("the amount changed");
-  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(q.depositAddress || "")) bad("there is no valid Solana deposit address");
-  if (q.depositAddress === to || q.depositAddress === from) bad("the deposit address is one of your own wallets");
-  if (!(BigInt(q.minAmountOut || 0) > 0n)) bad("it pays out nothing");
-}
-
 /* ---------- transactions ---------- */
-// Main wallet → deposit address, one transaction signed in the user's wallet. The platform fee rides in the route
-// (appFees), so `fee` stays 0 for private buys; it's kept for routes that charge it on-chain.
+// Main wallet → deposit address, plus the platform fee to the treasury, in one transaction signed in the user's
+// wallet. The treasury never sends anything to a stealth wallet, so the fee doesn't connect the two.
 export function fundingTx(web3, { from, depositAddress, amount, fee = 0n, treasury, blockhash }) {
   const payer = new web3.PublicKey(from);
   const ixs = [web3.SystemProgram.transfer({ fromPubkey: payer, toPubkey: new web3.PublicKey(depositAddress), lamports: BigInt(amount) })];
@@ -181,19 +179,38 @@ export function exitAmount(balance, closeAccounts = []) {
   return total > 0n ? total : 0n;
 }
 
-/* ---------- waiting on NEAR Intents ---------- */
-export async function waitForRoute(oc, depositAddress, { onStatus = () => {}, interval = 3000, timeoutMs = 20 * 60 * 1000, now = () => Date.now() } = {}) {
+/* ---------- waiting on the Monero route ---------- */
+// Houdini v2 order status: -2/-1 setting up, 0 waiting, 1 confirming, 2 exchanging, 3 anonymizing,
+// 4 finished, 5 expired, 6 failed, 7 refunded, 8 deleted. outStatus tracks the second exchange.
+export function routeLabel(st) {
+  switch (st && st.status) {
+    case -2: case -1: return "setting up the route";
+    case 0: return "waiting for the deposit";
+    case 1: return "confirming the deposit";
+    case 2: return "swapping SOL to XMR";
+    case 3: return st.outStatus >= 4 ? "sending SOL to the wallet" : st.outStatus >= 3 ? "swapping XMR back to SOL" : "moving through Monero";
+    case 4: return "delivered";
+    default: return "routing";
+  }
+}
+
+// Routes take 5 to 50 minutes, so this polls slowly. A route keeps going on Houdini's side if the tab closes.
+export async function waitForRoute(hd, id, { onStatus = () => {}, interval = 15000, timeoutMs = 90 * 60 * 1000, now = () => Date.now(), sleep = ms => new Promise(r => setTimeout(r, ms)) } = {}) {
   const until = now() + timeoutMs;
   let last = "";
   for (;;) {
     let st = null;
-    try { st = await oc.status(depositAddress); } catch (e) { if (!(e.status >= 500) && e.status !== 404) throw e; }
-    const s = st && st.status;
-    if (s && s !== last) { last = s; onStatus(s, st); }
-    if (s === "SUCCESS") return st;
-    if (s === "REFUNDED") throw new StealthError("NEAR Intents couldn't complete the route and refunded the deposit to the sending wallet.");
-    if (s === "FAILED") throw new StealthError("NEAR Intents reported the route as failed. Check the sending wallet for a refund.");
-    if (now() > until) throw new StealthError("The route is taking longer than expected. It may still complete, so check Portfolio in a few minutes. If it can't, NEAR Intents refunds the sending wallet.");
-    await new Promise(r => setTimeout(r, interval));
+    try { st = await hd.order(id); } catch (e) { if (!(e.status >= 500) && e.status !== 404 && e.status !== 429) throw e; }
+    if (st && typeof st.status === "number") {
+      const label = routeLabel(st);
+      if (label !== last) { last = label; onStatus(label, st); }
+      if (st.status === 4) return st;
+      if (st.status === 5) throw new StealthError(`Route ${id} expired before the deposit reached it. If SOL left the sending wallet, Houdini support can trace it with that order id.`);
+      if (st.status === 6) throw new StealthError(`Route ${id} failed. The exchange returns the deposit to the sending wallet; Houdini support can help if it doesn't arrive.`);
+      if (st.status === 7) throw new StealthError("The route couldn't complete and the deposit was refunded to the sending wallet.");
+      if (st.status === 8) throw new StealthError(`Houdini no longer has route ${id}. Check the receiving wallet.`);
+    }
+    if (now() > until) throw new StealthError(`Route ${id} is taking longer than usual. It keeps going without this tab; check the wallet later.`);
+    await sleep(interval);
   }
 }

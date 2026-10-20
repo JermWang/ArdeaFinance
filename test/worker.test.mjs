@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import worker from "../worker/src/index.js";
 
-const env = { RPC_URL: "https://rpc.test/?api-key=SECRET", JUP_API_KEY: "JUPKEY", ONECLICK_JWT: "JWT", X_BEARER: "XB", ALLOWED_ORIGINS: "https://jermwang.github.io" };
+const env = { RPC_URL: "https://rpc.test/?api-key=SECRET", JUP_API_KEY: "JUPKEY", HOUDINI_API_KEY: "HKEY", HOUDINI_API_SECRET: "HSECRET", X_BEARER: "XB", ALLOWED_ORIGINS: "https://jermwang.github.io" };
 const ctx = { waitUntil: () => {} };
 const ORIGIN = { origin: "https://jermwang.github.io" };
 function withFetch(fn) {
@@ -28,7 +28,7 @@ test("rpc: forwards allowed methods with the secret URL, refuses others", async 
 test("preflight allows the solana-client header that @solana/web3.js sends on every RPC call", async () => {
   const r = await worker.fetch(new Request("https://p.test/rpc", { method: "OPTIONS", headers: { ...ORIGIN, "access-control-request-headers": "content-type,solana-client" } }), env, ctx);
   assert.equal(r.status, 204);
-  assert.deepEqual(r.headers.get("access-control-allow-headers").split(",").map(s => s.trim()).sort(), ["content-type", "solana-client"]);
+  assert.deepEqual(r.headers.get("access-control-allow-headers").split(",").map(s => s.trim()).sort(), ["content-type", "solana-client", "x-user-timezone"]);
 });
 
 test("origins outside the allowlist are refused", async () => {
@@ -47,12 +47,25 @@ test("jupiter: adds the API key and strips the /jup prefix", async () => {
   } finally { f.restore(); }
 });
 
-test("1click gets the JWT; jito only relays sendTransaction", async () => {
+test("houdini gets the key and compliance headers and only the private-send calls; jito only relays sendTransaction", async () => {
   const f = withFetch(() => ok({ result: "sig" }));
   try {
-    await worker.fetch(new Request("https://p.test/1click/v0/tokens", { headers: ORIGIN }), env, ctx);
-    assert.equal(f.calls[0].url, "https://1click.chaindefuser.com/v0/tokens");
-    assert.equal(f.calls[0].init.headers.authorization, "Bearer JWT");
+    const hdr = { ...ORIGIN, "cf-connecting-ip": "203.0.113.9", "user-agent": "UA/1", "x-user-timezone": "America/New_York" };
+    await worker.fetch(new Request("https://p.test/houdini/v2/quotes/private-send?token=t&amount=1&useXmr=true", { headers: hdr }), env, ctx);
+    assert.equal(f.calls[0].url, "https://api-partner.houdiniswap.com/v2/quotes/private-send?token=t&amount=1&useXmr=true");
+    const h = f.calls[0].init.headers;
+    assert.equal(h.authorization, "HKEY:HSECRET");
+    assert.equal(h["x-user-ip"], "203.0.113.9"); assert.equal(h["x-user-agent"], "UA/1"); assert.equal(h["x-user-timezone"], "America/New_York");
+    await worker.fetch(new Request("https://p.test/houdini/v2/exchanges/private-send", { method: "POST", headers: { ...hdr, "x-user-timezone": "<script>" }, body: JSON.stringify({ quoteId: "q", addressTo: "a", refundAddress: "r", markup: 4 }) }), env, ctx);
+    assert.deepEqual(JSON.parse(f.calls[1].init.body), { quoteId: "q", addressTo: "a", refundAddress: "r" });
+    assert.equal(f.calls[1].init.headers["x-user-timezone"], "UTC");
+    for (const [path, method] of [["/houdini/v2/exchanges", "POST"], ["/houdini/v2/orders", "GET"], ["/houdini/v2/partner/stats", "GET"]]) {
+      const r = await worker.fetch(new Request("https://p.test" + path, { method, headers: hdr, body: method === "POST" ? "{}" : undefined }), env, ctx);
+      assert.equal(r.status, 404);
+    }
+    assert.equal(f.calls.length, 2);
+    const off = await worker.fetch(new Request("https://p.test/houdini/v2/tokens", { headers: ORIGIN }), { ...env, HOUDINI_API_KEY: "" }, ctx);
+    assert.equal(off.status, 503);
     const j = await worker.fetch(new Request("https://p.test/jito", { method: "POST", headers: ORIGIN, body: JSON.stringify({ method: "sendTransaction", params: [] }) }), env, ctx);
     assert.equal((await j.json()).result, "sig");
     const nope = await worker.fetch(new Request("https://p.test/jito", { method: "POST", headers: ORIGIN, body: JSON.stringify({ method: "sendBundle" }) }), env, ctx);
