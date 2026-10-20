@@ -1,38 +1,43 @@
-# Ardea: handoff for the next session
+# Ardea handoff
 
-Read this and `README.md` before touching anything.
+Ardea is the Privatus terminal with a new name, look and privacy route: Private mode now funds every buy through
+Monero (Houdini Swap private send, `useXmr=true`) instead of NEAR Intents. See `README.md` for how it works.
 
-## What this is
-Ardea is a private execution terminal for Solana. The product is the trading terminal (`app.html`): Pulse, token pages, one-click Jupiter trades with a 0.5% SOL fee, an instant wallet, a tracker, portfolio and PnL, limit orders, autopilot TP/SL and a migration sniper. **Private mode** (beta) buys from fresh **stealth wallets** that NEAR Intents' 1Click API funds through a one-time deposit address with Confidential Intents, so no on-chain transfer runs from the user's wallet to the buyer. The **Trail audit** is the free, read-only tool on the landing page that shows what trackers can link to a wallet.
+Live: https://ardea-production.up.railway.app (Railway project **ardea**, service **ardea**). Built 2026-10-20.
 
-Never call it "untraceable": amounts and timing can still be matched, and the docs say so. Get a legal review before Private mode ships to real users.
+## Status
 
-## State (2026-10-19)
-- **Live on Railway:** https://ardea-production.up.railway.app (also https://ardea-production.up.railway.app) (project `ardea`, service `ardea`, linked in this folder; deploy with `railway up --service ardea --detach`). `server.mjs` serves the site and the gateway on one origin; `PROXY_URL` in `config.js` points at it.
-- **Railway variables:** all eight exist on the service. Set: `RPC_URL=https://api.mainnet-beta.solana.com` (placeholder) and `ALLOWED_ORIGINS=http://localhost:5179` (the server always allows its own origin on top). Set by the owner: `RPC_URL`, `RPC_WS_URL`, `JUP_API_KEY`, `ONECLICK_JWT`. Still blank: `X_BEARER`, `JITO_URL` (blank uses Jito's default), `TOKEN_CA`. An older Railway project `lacuna` from before the rename still exists and can be deleted.
-- **Keys still to add in Railway (Variables tab), in order of importance:**
-  1. `RPC_URL`: a paid RPC such as Helius (`https://mainnet.helius-rpc.com/?api-key=…`), plus `RPC_WS_URL` (`wss://…`) for live trades. The public node rate-limits Railway's shared IP, so the Trail audit (about 70 calls) fails with "rate limiting" and balances and trades are flaky until this is set. PublicNode was tested and doesn't return full wallet history, so it isn't a substitute.
-  2. `JUP_API_KEY` from portal.jup.ag. Without it, the gateway uses Jupiter's keyless host (`lite-api.jup.ag`, then `api.jup.ag` on a 429), which works but is shared and slow.
-  3. `ONECLICK_JWT` (NEAR Intents partner key), which removes the 0.1–0.2% route fee. Optional: `X_BEARER` for the Posts tab, `JITO_URL`.
-  4. When a custom domain is added, put it in `ALLOWED_ORIGINS` and set an absolute `og:image`.
-- All 59 unit tests pass (`npm test`).
-- Terminal: no emoji anywhere (16-unit line icons in `terminal.js` `ICO`, 24-unit glyphs from `art.js` on the pages); a status bar (stream, curves, RPC latency and slot, SOL price, UTC clock); skeleton cards while Pulse fills; tabular numbers; brass focus rings. Checked at 1440, 1024 and 375 px with no horizontal overflow.
-- `TREASURY` in `config.js` is still the wallet the code came with. Using the same treasury as another product links the two on-chain; set a new one if that matters.
-- Wallet derivation strings are `ardea/instant/0` and `ardea/stealth/<i>`, and the signed message names Ardea.
-- The 1Click `referral` is `"ardea"`; register it with NEAR Intents if referral tracking is wanted.
-- **Custom domain:** ardea-production.up.railway.app (Namecheap) and www are attached to the Railway `ardea` service (moved off the old `lacuna` project on 2026-10-19). They go live once the CNAME and `_railway-verify` TXT records from `railway domain status` are added at Namecheap. `ALLOWED_ORIGINS` (Railway variable and `worker/wrangler.toml`) lists both, and `config.js` uses same-origin for the gateway on its own domains. Once DNS is live, switch `og:url`/`og:image` to https://ardea-production.up.railway.app.
-- No X account yet.
+Done and live:
+- Engine: Houdini Monero route for private buys, exits and instant-wallet deposits/withdrawals; order checks; no
+  fallback path; background route completion with resume after reload. 62 tests pass (`npm test`).
+- Gateway: `/houdini/*` with the partner key and compliance headers. Railway variables are set: `RPC_URL`,
+  `RPC_WS_URL`, `JUP_API_KEY`, `X_BEARER`, `JITO_URL` (copied from Privatus), `HOUDINI_API_KEY`,
+  `HOUDINI_API_SECRET` (copied from Wraith), `ALLOWED_ORIGINS`.
+- Brand: heron mark (Codex concept, traced to a vector in `logo.js`), Monero orange `#FF6600` on navy `#0B0F1A`,
+  Cormorant Garamond / Manrope / IBM Plex Mono, favicons, all copy rewritten for the Monero route with the limits
+  stated, Proof page with a live Houdini quote (verified on production: 9 private routes, 0.5 → 0.4838 SOL, 13–41 min).
+- Graphics in `media/promo/`: `ardea-pfp-1000.png`, `ardea-banner-1500x500.png`, `ardea-promo-hero.png`,
+  `ardea-promo-route.png`, `ardea-promo-proof.png`; share image `media/banner.png` (1200×630).
 
-## Design system
-See "Design" in `README.md`. Short version: vault navy, ivory, steel lines, one brass accent; Instrument Serif, Geist, Geist Mono; guilloché engravings drawn in `art.js`; the vault-dial mark. The docs invert it (ivory paper, navy figure plates). Re-render the PNG brand files with `media/source/render.sh` after changing the mark or the hero.
+Waiting on the owner (the site is safe to show meanwhile: trades say "Trading opens at launch" until the treasury is set,
+the contract row says "Announced at launch", X links stay hidden):
+1. **Treasury wallet**: a new address used only by Ardea → `TREASURY` in `config.js`.
+2. **Domain**: add it to the Railway service and point DNS → then update `OWN_HOSTS` in `config.js`, the og/twitter
+   URLs in the three HTML files, and `ALLOWED_ORIGINS` on Railway (one save).
+3. **X account** → `X_URL` in `config.js`.
+4. **Houdini Pro tier**: the free tier allows 10 orders and 50 quotes a day across all users. Request Pro before launch.
+5. **Proof run** (after 1): one real private buy and exit through the terminal, at least ~0.3 SOL (Houdini's minimum
+   is about 0.11–0.29 SOL per route right now). Add the funding, delivery, buy and exit signatures to `PROOF_TXS`.
+6. **Public repo**: OK to publish this code (scan history for secrets first) → `SOURCE_REPO`.
+7. **Token**: at launch set `TOKEN_CA` on Railway (and in `config.js`), identical everywhere.
+8. Run larpcheck.app on the site before announcing (see `../LAUNCH_PROOF.md`).
 
-## TODO, roughly in order
-1. Add the Railway keys above (a paid RPC first), then a custom domain.
-2. A small real buy and sell, then a real Private mode buy and exit with about 0.05 SOL. Confirm 1Click accepts SOL→SOL on Solana with `confidentiality: "basic"`, and note timing and fees.
-3. Run the Trail audit on real wallets and tune the heuristics. Only Binance 2 (`5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9`) is a confirmed exchange label; confirm any others on Solscan before adding them.
-4. Check the name "Ardea" for trademark and domain conflicts before launch.
-5. Token design and legal review before anything token-related.
+## Notes
 
-## How the owner likes to work
-- Iterate fast, keep updates short, show the page.
-- Ask before outward-facing actions: pushing to new remotes, deploying, buying domains, anything token-related.
+- Wallet derivation tags are `ardea/stealth/i` and `ardea/instant/0`, and the signed message is "Ardea stealth wallets
+  v1". Changing the name later changes every user's stealth wallets, so the name is final once anyone trades.
+- The fee on a private buy is a visible transfer to the treasury in the funding transaction (Houdini has no in-route
+  fee like NEAR's appFees). The treasury never sends to stealth wallets, and the copy says exactly this.
+- Every saved Railway variable redeploys the service. Batch variable changes into one save; never change them mid-launch.
+- The Privatus demo recorder was removed: it mocked NEAR delivery timing, and a Monero route takes 10–40 minutes, so a
+  demo should be a real recording (or clearly marked as sped up).

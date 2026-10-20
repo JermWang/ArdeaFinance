@@ -1,98 +1,59 @@
 # Ardea
 
-A private execution terminal for Solana. Trade without leaving a trail.
+A Solana trading terminal whose Private mode funds every buy through Monero.
 
-- **Terminal** (`app.html`), an Axiom/Padre-style trench terminal:
-  - **Pulse:** New Pairs, Final Stretch and Migrated columns. They stream live from PumpPortal's free feed of pump.fun launches and migrations, are seeded from Jupiter's recent and top-traded lists, and show bonding-curve progress and market cap read straight from the curve accounts on-chain. Each column has filters, pauses while you hover, and has one-click buys.
-  - **Trending:** Jupiter's trending, most-traded and organic lists, plus new pools, at 5m, 1h, 6h or 24h.
-  - **Token pages:** DexScreener chart and stats, a bonding-curve bar, and live trades (pump.fun trade events decoded from logs or inner instructions over your RPC websocket, plus any other DEX's swaps). Also top holders labelled curve or dev, with a Track button; authorities, top-10 and dev holdings; a dev-wallet trace; a watchlist star; and your own trades.
-  - **Trade panel:** buy/sell, quick amounts, sell percentages, P1–P3 presets (slippage, priority level, priority cap), a choice of trading from Main or Instant, and Private mode.
-  - **Instant wallet:** derived from one signature of your wallet. Trades sign in the tab with no popups. Deposit directly or privately through NEAR, withdraw directly or privately, export the key.
-  - **Tracker:** follow wallets, get a live swap feed and toasts, one-click copy-buy.
-  - **Portfolio:** positions for Main or Instant with average cost and realized/unrealized PnL, sell 50%/100%, stealth wallets, the Trail audit, and activity.
-  - **Orders:**
-    - **Limit orders** (buy below, or sell above as a take-profit) are Jupiter Trigger v1 orders. They sit on-chain and are filled by Jupiter's keepers even with the tab closed. You can list and cancel them from the token page or Portfolio.
-    - **Autopilot** runs inside the terminal and signs with the Instant wallet, so it only acts while the terminal is open:
-      - take profit, stop loss and trailing stop by %;
-      - a **migration sniper** (the target button on Pulse cards) that buys the moment a token migrates, with optional automatic TP/SL afterwards.
-  - **Jito:** each preset can carry a Jito tip so swaps land faster. With MEV protect on, swaps go only through Jito's block engine and never touch the public mempool.
-  - **Also:**
-    - Posts from X on token pages (needs the proxy with an X key).
-    - Import on-chain history, so PnL covers trades made elsewhere.
-    - A watchlist bar, settings (quick amounts, presets, Jito, autopilot defaults, Final Stretch threshold, RPC), hotkeys (`/` search, `b`/`s` buy/sell, `1`–`3` presets, `p` Pulse) and migration alerts.
-  - Every trade routes through Jupiter. A 0.5% SOL fee goes to the treasury inside the same transaction, from Main or Instant. Stealth wallets never pay it; private buys pay at funding.
-- **Trail audit** (on the landing page, and as a panel in the terminal): paste any wallet and see what trackers can link to it: funding source, sibling wallets, exchange links, wallets you move funds between, address-poisoning attempts, the hours you're awake, and what you hold. Read-only.
-- **Private mode** (beta, in the terminal): buy from a fresh stealth wallet with no direct transfer from yours. Funds go in and out through **NEAR Intents** (1Click API, Confidential Intents): you pay into a one-time deposit address, and NEAR's bridge pays the stealth wallet from its own wallets. Stealth wallets are derived from one signature of your wallet, so signing again on any device rebuilds them. Portfolio lists them and can sell, exit back to your wallet, or export a key.
+Ardea is built on the Privatus codebase (itself descended from Ghostprint) by the same team, with a new name, look and
+privacy route. Live at https://ardea-production.up.railway.app until the custom domain is added.
 
-## Design
+## What it does
 
-Everything visual is drawn in code (`art.js`), in one style: fine-line guilloché engraving, the woven line work printed on banknotes and bond certificates.
+- **Terminal** (`app.html`): Pulse (new pairs, final stretch, migrated, streamed live from PumpPortal), Trending, token
+  pages with live trades and holders, one-click Jupiter trades with presets, an instant wallet derived from one
+  signature, wallet tracker, limit orders, portfolio and PnL.
+- **Private mode** (beta, on by default for buys): the main wallet signs one transaction, the amount to a one-time
+  Houdini Swap deposit address plus the 0.5% fee to the treasury. One exchange swaps the SOL to XMR, the XMR crosses
+  Monero, and an unrelated exchange swaps it back and pays a fresh stealth wallet, which buys on Jupiter. Routes take
+  10–40 minutes and run in the background; the record is saved so Portfolio resumes or retries after a reload.
+  - Monero is always forced as the bridge (`useXmr=true`). If no Monero route exists, nothing is sent: there is no
+    fallback path.
+  - Every order is checked before the user signs (`checkOrder` in `stealth.js`): right receiver, SOL to SOL on
+    Solana, private, same amount, a deposit address that isn't one of ours, no memo, not about to expire.
+  - Stealth wallets come from one signature of `STEALTH_MESSAGE` (SHA-256 of signature ‖ `ardea/stealth/i`), so
+    they can be rebuilt on any device. Nothing secret is stored.
+  - Exits sell on Jupiter and route all SOL back through Monero. No fee on exits.
+- **Trail audit** (landing page): reads any wallet's public history and shows what trackers link to it.
+- **Docs** (`docs.html`), including a **Proof** section: a live Houdini quote from the browser (quote only, no order),
+  the on-chain transactions in `PROOF_TXS`, and the source.
 
-- **Palette:** vault navy `#0A0E14`, ivory `#EFE9DC`, steel `#5D7596` for engraving lines, and one brass accent `#D6B26E`. Gains are `#43D19E` and losses `#F06A6A`. The docs use the inverse "prospectus" scheme: ivory paper with navy figure plates.
-- **Type:** Instrument Serif for display, Geist for UI, Geist Mono for numbers and labels.
-- **Mascot and mark:** a chameleon. It blends into any background (the product in one animal), its tail coils like a vault dial into a brass core, and a brass stripe runs along its flank. The turret eye wanders and blinks, the skin shifts colour to hide, and in the hero its tongue snaps a brass token out of the air. `chameleon()` in `art.js` draws it in `currentColor`, so it is ivory on dark pages and navy on paper; `mark()` is the cropped logo. `favicon.svg` is the still version.
-- **Art:** `guilloche()` draws woven rosette bands. `hero()` is the landing seal: your wallet's trail runs into a NEAR Intents seal and stops, and a new wallet's line leaves through a gap cut in it. `ICONS` holds the four "record" vignettes, `schematic()` draws every diagram (node cards, rules and a travelling brass packet), and `ledger()` and `curveChart()` draw the transaction slip and the bonding curve. Line icons are 24-unit strokes with one brass detail each.
-- **Brand files:** `media/banner.png` (1200×630 link preview), `apple-touch-icon.png` and `favicon.ico` are rendered from `media/source/*.html` by `media/source/render.sh`.
+## Honest limits (also on the site)
 
-## Run it
+Houdini sees both ends of a route and keeps order data for 72 hours; each exchange sees its own leg. Amounts and
+timing can still be matched by a determined observer. The route's fees change the amount, and its duration plus a
+random 30 s – 3 min wait (Strong mode) blur the timing; that makes tracing harder, not impossible.
 
-The pages load ES modules, so serve the folder over HTTP:
+## Layout
 
-```bash
-npm run serve        # python3 -m http.server 5179
-open http://localhost:5179          # landing page
-open http://localhost:5179/app.html # terminal
-open http://localhost:5179/docs.html # docs
-```
+- `index.html` + `landing.js`, `docs.html` + `docs.js`, `app.html` + `terminal.js`
+- `stealth.js`: stealth wallets, the Houdini client, `routeQuote`, `checkOrder`, funding and exit transactions,
+  `waitForRoute`.
+- `logo.js`: the heron mark (one path traced from `media/source/logo/heron-concept-3.png`). Keep it clean: no effects,
+  never set inside other artwork.
+- `art.js`, `diagrams.js`: line icons, guilloché, the landing hero and the route diagrams.
+- `server.mjs` + `worker/src/index.js`: static files plus the gateway (`/rpc`, `/jup`, `/houdini`, `/jito`,
+  `/x/search`, `/ipfs`, `/meta`, `/env.js`). Keys live only in Railway variables.
+- `media/source/brand.html`: renders the PFP, X banner, share image and promo cards (serve the folder over HTTP, then
+  screenshot `?s=pfp|xbanner|og|hero|route|proof` at its size).
 
-Not deployed yet. Any static host works (no build step); the gateway below needs a Node host or a Cloudflare Worker.
-
-## Gateway (needed before launch)
-
-`worker/` is a Cloudflare Worker that holds the API keys: your paid Solana RPC, Jupiter, the NEAR Intents JWT and X. It also relays Jito. Deploy it (see `worker/README.md`) and set `PROXY_URL` in `config.js`. Every visitor then shares paid capacity instead of being rate limited on free endpoints, and no key ever ships in the page.
-
-`server.mjs` runs the same proxy on a plain Node server (`npm start`, for Railway or any Node host). It also serves the site, so the site and proxy share one origin. Set the worker's secrets as environment variables (`RPC_URL`, `RPC_WS_URL`, `JUP_API_KEY`, `ONECLICK_JWT`, `X_BEARER`, optional `ALLOWED_ORIGINS`), then point `PROXY_URL` at the server's URL.
-
-## Configure
-
-`config.js` holds public values only:
-- `TREASURY`: the wallet that receives fees
-- `FEE_BPS`: the fee (50 = 0.5%). The docs and landing page read it from `config.js`; the transaction slip in `diagrams.js` says 0.5%, so update that too.
-- `JUP_BASE` and `JUP_API_KEY`: leave the key empty. A key in a static site is shared by every visitor; see the comment in the file.
-- slippage default and the cap on priority fees
-- `ONECLICK_JWT`: optional NEAR Intents key. Without it 1Click adds a 0.1–0.2% fee per route; like the Jupiter key it's public in a static site.
-- `STEALTH_CONFIDENTIALITY` (`basic`), `STEALTH_MAX_SOL` (beta cap per private buy, 5 SOL), `STEALTH_GAS_RESERVE` (0.01 SOL kept in each stealth wallet)
-- `PROXY_URL`: the deployed worker URL (empty means talk to public endpoints directly)
-
-Users can point both the terminal and the Trail audit at their own RPC node using the "RPC node" field under the tracer. It's stored in their browser and the two share it.
-
-## Test
+## Run and test
 
 ```bash
-npm install   # dev only: @solana/web3.js for the tests
+npm ci
 npm test
+node server.mjs
 ```
 
-Tests run against a fake chain (`test/mockchain.mjs`), fake Jupiter responses (`test/jupmock.mjs`) and a fake 1Click API (`test/oneclickmock.mjs`). `pump.test.mjs` and `market.test.mjs` cover curve and trade-event decoding, the Pulse columns, tracker parsing and PnL. They build real signed transactions with web3.js and decode them to check where the fee goes and how much it is.
+## Deploy
 
-## Files
-
-- `index.html` + `landing.js`: landing page and the Trail audit tracer
-- `docs.html` + `docs.js`: documentation, with live engraved diagrams
-- `art.js`: the shared art toolkit (guilloché bands and rosettes, banknote waves, line icons, the chameleon mascot and mark, the hero seal, the record vignettes, `schematic`/`ledger`/`curveChart` diagram builders, terminal emblems), one animation clock that pauses off-screen and honors reduced motion
-- `diagrams.js`: the explanatory drawings (private route and exit, wallet derivation, overview, proxy, Pulse sources, limit order, autopilot, transaction slip, bonding curve), shared by the landing page and the docs
-- `app.html`: the terminal's markup and styles; `terminal.js`: its views and logic
-- `pump.js`: pump.fun bonding-curve and trade-event decoding
-- `feeds.js`: PumpPortal websocket, RPC live trades, curve reads, metadata JSON (gateway race), on-chain token metadata, holders, tracked-wallet swaps
-- `media.js`: IPFS link parsing, image source lists, social link cleanup, Metaplex and Token-2022 metadata decoding, generated pixel avatars (no DOM or network, tested in Node)
-- `market.js`: Pulse board, wallet swap parsing, PnL (no DOM or network, so it's tested in Node)
-- `config.js`: treasury, fee, Jupiter settings
-- `swap.js`: Jupiter client, fee math, transaction assembly, sending and confirming
-- `orders.js`: Jupiter Trigger limit orders (create, execute, cancel, list), limit amount math, autopilot rules
-- `worker/`: the Cloudflare Worker proxy (keys, RPC method allowlist, Jito relay, X search)
-- `stealth.js`: Private mode (stealth wallet derivation, NEAR Intents 1Click client, quote checks, funding and exit transactions, route status)
-- `trace.js`: wallet exposure analysis
-- `vendor/solana-web3.min.js`: the Solana web3.js 1.98.4 browser build, checked in so the site needs no CDN
-- `test/`: fake chain, fake Jupiter, tests
-
-See `HANDOFF.md` for the design, what's verified, and the to-do list.
+Railway project **ardea**, service **ardea**: `railway up --service ardea --detach` from this folder.
+Variables: `RPC_URL`, `RPC_WS_URL`, `JUP_API_KEY`, `HOUDINI_API_KEY`, `HOUDINI_API_SECRET`, `JITO_URL`, `X_BEARER`,
+`ALLOWED_ORIGINS`, and `TOKEN_CA` at launch. Every saved variable redeploys, so set them in one save, never mid-launch.

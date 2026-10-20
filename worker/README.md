@@ -6,7 +6,7 @@ A Cloudflare Worker that holds Ardea's API keys so the static site never ships t
 |---|---|---|
 | `/rpc` | your Solana RPC (`RPC_URL`) | JSON-RPC over HTTP with a method allowlist; websocket subscriptions pass through |
 | `/jup/*` | `api.jup.ag` + `JUP_API_KEY` | token lists cached for 20 s, prices for 5 s |
-| `/1click/*` | NEAR Intents 1Click + `ONECLICK_JWT` | removes the 0.1–0.2% keyless fee |
+| `/houdini/*` | Houdini Swap partner API + `HOUDINI_API_KEY`/`HOUDINI_API_SECRET` | the Monero route; only the four private-send calls; adds the IP, user-agent and timezone headers Houdini requires |
 | `/jito` | Jito block engine | only `sendTransaction` |
 | `/x/search` | X recent search + `X_BEARER` | results cached for 5 minutes; X charges per post read |
 | `/ipfs/<cid>` | ipfs.io, dweb.link, Pinata (raced) | token images and metadata, cached at the edge for a week; images and JSON only |
@@ -19,11 +19,12 @@ cd worker
 npx wrangler login
 npx wrangler secret put RPC_URL        # e.g. a Helius mainnet URL
 npx wrangler secret put JUP_API_KEY
-npx wrangler secret put ONECLICK_JWT   # optional
+npx wrangler secret put HOUDINI_API_KEY
+npx wrangler secret put HOUDINI_API_SECRET
 npx wrangler secret put X_BEARER       # optional
 npx wrangler deploy
 ```
 
-Then set `PROXY_URL` in `../config.js` to the worker's URL (for example `https://ardea-proxy.<you>.workers.dev`) and push. The site then routes RPC, Jupiter, NEAR Intents, Jito and X through the proxy automatically.
+Then set `PROXY_URL` in `../config.js` to the worker's URL (for example `https://ardea-proxy.<you>.workers.dev`) and push. The site then routes RPC, Jupiter, the Monero route, Jito and X through the proxy automatically.
 
 Edit `ALLOWED_ORIGINS` in `wrangler.toml` if the site moves to another domain (it allows only localhost:5179 until the site has a domain).

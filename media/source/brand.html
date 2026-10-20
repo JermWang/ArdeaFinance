@@ -1,0 +1,107 @@
+<!doctype html>
+<!-- Ardea brand graphics. Render one at a time with headless Chrome at its exact size:
+     ?s=pfp (1000x1000) · xbanner (1500x500) · og (1200x630) · hero / route / proof (1600x900).
+     The mark is always drawn clean, on its own; the only decoration is thin orange ripples. -->
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B0F1A;--bg-1:#111726;--line:#27324C;--ivory:#F1ECE4;--mute:#8B93A1;--or:#FF6600;--or-l:#FF8A3D}
+*{box-sizing:border-box;margin:0}
+html,body{background:var(--bg);overflow:hidden}
+body{width:100vw;height:100vh;position:relative;color:var(--ivory);font-family:Manrope,sans-serif}
+.glow{position:absolute;inset:0;background:radial-gradient(60% 70% at var(--gx,70%) var(--gy,50%),rgba(255,102,0,.09),transparent 70%)}
+svg.rip{position:absolute;inset:0;width:100%;height:100%}
+.mark{display:block}
+.word{font:600 1em "Cormorant Garamond",serif;letter-spacing:.01em}
+.kick{font:500 13px "IBM Plex Mono",monospace;letter-spacing:.22em;text-transform:uppercase;color:var(--mute)}
+.kick b{color:var(--or);font-weight:600}
+h1{font:500 1em "Cormorant Garamond",serif;line-height:1.02;letter-spacing:-.005em}
+h1 em{font-style:italic;color:var(--or)}
+.url{font:500 15px "IBM Plex Mono",monospace;letter-spacing:.12em;color:var(--mute)}
+.rule{height:1px;background:var(--line)}
+.card{background:var(--bg-1);border:1px solid var(--line);border-radius:14px}
+.node{flex:none;display:flex;flex-direction:column;align-items:flex-start;padding:18px 22px;white-space:nowrap;border:1px solid var(--line);border-radius:12px;background:var(--bg-1);font:600 15px "IBM Plex Mono",monospace;letter-spacing:.12em}
+.node small{display:block;font-weight:400;color:var(--mute);letter-spacing:.06em;margin-top:4px}
+.node.core{border-color:var(--ivory)}
+.node.hot{border-color:var(--or);color:var(--or)}
+.arrow{flex:1;height:1px;border-top:1px dashed #4A5878;position:relative}
+.arrow i{position:absolute;top:-12px;left:50%;transform:translateX(-50%);font:600 11px "IBM Plex Mono",monospace;letter-spacing:.14em;padding:3px 9px;border-radius:99px;border:1px solid var(--line);background:var(--bg);font-style:normal}
+.arrow i.hot{border-color:var(--or);color:var(--or)}
+pre{font:400 17px/1.75 "IBM Plex Mono",monospace;color:#C9CDD4;white-space:pre-wrap}
+pre b{color:var(--or-l);font-weight:500}
+</style></head><body>
+<script type="module">
+import { MARK_PATH, MARK_VIEWBOX } from "../../logo.js";
+const NS = "http://www.w3.org/2000/svg", s = new URLSearchParams(location.search).get("s") || "pfp";
+const W = innerWidth, H = innerHeight;
+const mark = (size, fill = "#FF6600") => { const v = document.createElementNS(NS, "svg"); v.setAttribute("viewBox", MARK_VIEWBOX); v.setAttribute("class", "mark"); v.style.width = v.style.height = size + "px"; const p = document.createElementNS(NS, "path"); p.setAttribute("d", MARK_PATH); p.setAttribute("fill-rule", "evenodd"); p.setAttribute("fill", fill); v.append(p); return v; };
+// concentric ripples, like water rings around a standing heron: thin, orange, fading outwards
+function ripples({ cx, cy, rx0, ry0, n, step, fade = .5, tilt = .32 }) {
+  const v = document.createElementNS(NS, "svg"); v.setAttribute("class", "rip"); v.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  for (let i = 0; i < n; i++) {
+    const e = document.createElementNS(NS, "ellipse"), rx = rx0 + i * step;
+    Object.entries({ cx, cy, rx, ry: ry0 + i * step * tilt, fill: "none", stroke: i % 4 === 0 ? "#FF8A3D" : "#FF6600", "stroke-width": i % 4 === 0 ? 1.4 : .8, opacity: Math.max(.05, (1 - i / n) * fade) }).forEach(([k, val]) => e.setAttribute(k, val));
+    v.append(e);
+  }
+  document.body.append(v);
+}
+const glow = (x, y) => { const g = document.createElement("div"); g.className = "glow"; g.style.setProperty("--gx", x); g.style.setProperty("--gy", y); document.body.append(g); };
+const box = (css, html = "") => { const d = document.createElement("div"); d.style.cssText = "position:absolute;" + css; d.innerHTML = html; document.body.append(d); return d; };
+
+if (s === "pfp") {
+  glow("50%", "50%");
+  const m = mark(720); m.style.cssText = "position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)"; document.body.append(m);
+}
+if (s === "xbanner") {
+  glow("80%", "70%");
+  ripples({ cx: W * .86, cy: H * .9, rx0: 60, ry0: 16, n: 24, step: 34, fade: .7, tilt: .26 });
+  const b = box(`left:${W * .3}px;top:50%;transform:translateY(-50%)`);
+  b.innerHTML = `<p class="kick">A Solana terminal · <b>routed through Monero</b></p><h1 style="font-size:76px;margin-top:18px">Cross Monero.<br><em>Trade from a clean wallet.</em></h1>`;
+}
+if (s === "og") {
+  glow("78%", "70%");
+  ripples({ cx: W * .82, cy: H * .9, rx0: 50, ry0: 14, n: 18, step: 36, fade: .6, tilt: .26 });
+  const top = box("left:80px;top:72px;display:flex;align-items:center;gap:20px");
+  top.append(mark(76)); top.insertAdjacentHTML("beforeend", `<span class="word" style="font-size:58px">Ardea</span>`);
+  box("left:80px;top:210px", `<h1 style="font-size:84px">Cross Monero.<br><em>Trade from a clean wallet.</em></h1>`);
+  box("left:84px;bottom:66px", `<p class="kick">Solana terminal · SOL → <b>XMR</b> → SOL · non-custodial</p>`);
+}
+if (s === "hero") {
+  glow("76%", "50%");
+  const m = mark(500); m.style.cssText = `position:absolute;left:${W * .76 - 250}px;top:${H / 2 - 250}px`; document.body.append(m);
+  const top = box("left:110px;top:96px;display:flex;align-items:center;gap:16px");
+  top.append(mark(44)); top.insertAdjacentHTML("beforeend", `<span class="word" style="font-size:38px">Ardea</span>`);
+  box("left:110px;top:270px;width:760px", `<p class="kick">Private mode · <b>routed through Monero</b></p><h1 style="font-size:104px;margin-top:22px">Cross Monero.<br><em>Trade from a clean wallet.</em></h1><p style="font-size:22px;line-height:1.6;color:#B8BDC6;margin-top:30px;max-width:640px">A full Solana trading terminal. In Private mode your SOL becomes XMR, crosses Monero, and an unrelated exchange pays a fresh wallet that makes the buy.</p>`);
+}
+if (s === "route") {
+  glow("50%", "40%");
+  const top = box("left:110px;top:90px;display:flex;align-items:center;gap:16px");
+  top.append(mark(44)); top.insertAdjacentHTML("beforeend", `<span class="word" style="font-size:38px">Ardea</span>`);
+  box("left:110px;top:190px;width:1380px", `<p class="kick">How a private buy works</p><h1 style="font-size:84px;margin-top:18px">Your SOL goes in. <em>A stranger's wallet buys.</em></h1>`);
+  box("left:110px;right:110px;top:480px;display:flex;align-items:center;gap:18px", `
+    <div class="node">YOUR WALLET<small>signs once</small></div><div class="arrow"><i>SOL</i></div>
+    <div class="node">EXCHANGE A<small>SOL → XMR</small></div><div class="arrow"><i class="hot">XMR</i></div>
+    <div class="node core">MONERO<small>ring sigs · RingCT</small></div><div class="arrow"></div>
+    <div class="node">EXCHANGE B<small>XMR → SOL</small></div><div class="arrow"><i>PAYS</i></div>
+    <div class="node hot">STEALTH<small>fresh wallet · buys</small></div>`);
+  box("left:110px;right:110px;top:640px", `<div class="rule"></div><p style="font-size:21px;line-height:1.6;color:#B8BDC6;margin-top:28px;max-width:1150px">No transfer runs from your wallet to the wallet that buys. Routes take 10–40 minutes and run in the background. Houdini sees both ends of a route; amounts and timing can still be guessed at, and the docs say so.</p>`);
+}
+if (s === "proof") {
+  glow("70%", "50%");
+  ripples({ cx: W * .1, cy: H * .95, rx0: 50, ry0: 14, n: 16, step: 36, fade: .45, tilt: .26 });
+  const top = box("left:110px;top:90px;display:flex;align-items:center;gap:16px");
+  top.append(mark(44)); top.insertAdjacentHTML("beforeend", `<span class="word" style="font-size:38px">Ardea</span>`);
+  box("left:110px;top:220px;width:600px", `<p class="kick">Proof</p><h1 style="font-size:86px;margin-top:18px">Don't take our word. <em>Check it.</em></h1><p style="font-size:21px;line-height:1.6;color:#B8BDC6;margin-top:28px">The docs run a real Monero route quote from your browser, list on-chain transactions, and serve the code as plain files.</p>`);
+  box("right:110px;top:220px;width:760px;padding:34px 38px", "").className = "card";
+  document.querySelectorAll(".card")[0].innerHTML = `<pre><b>GET</b> houdini /v2/quotes/private-send
+<b>route</b>      SOL → XMR → SOL (useXmr=true)
+<b>amount in</b>  0.5 SOL
+<b>quotes</b>     9 private routes
+<b>SOL out</b>    0.4838 SOL after both hops
+<b>route time</b> about 13–41 min
+<b>order</b>      none opened · nothing sent
+<b>checked</b>    2026-10-20, live from the docs</pre>`;
+}
+document.fonts.ready.then(() => document.body.dataset.ready = "1");
+</script>
+</body></html>

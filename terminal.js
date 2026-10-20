@@ -297,7 +297,10 @@ const tradesOf = pk => store.get(TKEY(pk), []);
 function logTrade(pk, t) { const l = tradesOf(pk); l.unshift(t); store.set(TKEY(pk), l.slice(0, 500)); }
 const tradedMints = () => { const s = new Set(); for (const pk of [S.wallet?.pk, S.instant?.pk]) if (pk) tradesOf(pk).forEach(t => s.add(t.mint)); return s; };
 
+// Fee-paying trades need the project's treasury. Until it's set (before launch) they stop with a plain message.
+const TRADING_CLOSED = "Trading opens at launch: the treasury address isn't set yet.";
 async function executeTrade({ side, mint, amountRaw, from = settings.from, onStatus = () => {} }) {
+  if (!TREASURY) throw new SwapError(TRADING_CLOSED);
   const signer = await signerFor(from), p = preset();
   if (side === "buy") {
     const bal = from === "instant" ? S.instantSol : S.sol;
@@ -1050,6 +1053,7 @@ $("stealth-switch").addEventListener("click", () => { settings.stealth = !settin
 $("go").addEventListener("click", async () => {
   if (!S.wallet) { await ensureConnected(); return; }
   if (S.busy || problem()) return;
+  if (!TREASURY) return setTradeStatus(TRADING_CLOSED, "err");
   if (stealthOn()) return stealthBuy();
   const go = $("go"), raw = amountRaw(), mint = S.tokenMint, sym = symbolOf(mint), side = T.side;
   S.busy = true; go.disabled = true;
