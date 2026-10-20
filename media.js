@@ -89,7 +89,7 @@ export function decodeToken2022Meta(bytes) {
 
 // A small rosette avatar derived from the mint, as an SVG data URI. Shown at once while the real
 // image loads, and kept if none does, so no token is ever a blank square.
-const AVATAR = ["#DEB471", "#43D19E", "#8FA9CC", "#E8A35A", "#B9A3E3", "#EFE9DC"];
+const AVATAR = ["#FF6600", "#43D19E", "#8FA9CC", "#F2C14E", "#B9A3E3", "#F1ECE4"];
 export function identicon(seed = "") {
   // a small guilloché rosette: lobe count, phase and colour all come from a hash of the mint
   let h = 2166136261;
@@ -103,5 +103,5 @@ export function identicon(seed = "") {
     }
     d += "Z";
   }
-  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' fill='#151C27'/><path d='${d}' fill='none' stroke='${fg}' stroke-width='.7'/><circle cx='12' cy='12' r='1.6' fill='${fg}'/></svg>`)}`;
+  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' fill='#161D2E'/><path d='${d}' fill='none' stroke='${fg}' stroke-width='.7'/><circle cx='12' cy='12' r='1.6' fill='${fg}'/></svg>`)}`;
 }

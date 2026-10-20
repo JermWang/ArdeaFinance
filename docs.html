@@ -3,34 +3,33 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="How Privatus works: wallets, Jupiter routing, the 0.5% fee, Private mode on NEAR Intents, Pulse data, orders, the Trail audit and the gateway.">
+<meta name="description" content="How Ardea works: wallets, Jupiter routing, the 0.5% fee, Private mode through Monero, Pulse data, orders, the Trail audit and the gateway.">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Privatus">
-<meta property="og:title" content="Privatus · Documentation">
-<meta property="og:description" content="How Privatus works: wallets, Jupiter routing, fees, Private mode on NEAR Intents, Pulse data, orders and the Trail audit.">
-<meta property="og:image" content="https://privatusterminal.xyz/media/banner.png?v=2">
+<meta property="og:site_name" content="Ardea">
+<meta property="og:title" content="Ardea · Documentation">
+<meta property="og:description" content="How Ardea works: wallets, Jupiter routing, fees, Private mode through Monero, Pulse data, orders and the Trail audit.">
+<meta property="og:image" content="https://ardea-production.up.railway.app/media/banner.png?v=1">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta name="twitter:site" content="@privatussol">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://privatusterminal.xyz/media/banner.png?v=2">
-<meta name="theme-color" content="#F1ECE1">
-<title>Privatus · Documentation</title>
+<meta name="twitter:image" content="https://ardea-production.up.railway.app/media/banner.png?v=1">
+<meta name="theme-color" content="#F1EEE8">
+<title>Ardea · Documentation</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* The docs read like a prospectus: ivory paper, ink type, serif headings, hairline rules.
    Every figure is a live engraving from diagrams.js, printed on a navy plate. */
 :root{
-  --paper:#F1ECE1;--paper-2:#E9E2D3;--paper-3:#DED5C2;--ink:#0E1520;--ink-2:#353D4B;--mute:#687080;
-  --rule:rgba(14,21,32,.14);--rule-2:rgba(14,21,32,.26);--brass:#DEB471;--brass-d:#93692D;--plate:#0A0E14;--plate-line:#263142;--ivory:#EFE9DC;--plate-mute:#8B93A1;
-  --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
-  --sans:"Geist","Segoe UI",system-ui,sans-serif;
-  --mono:"Geist Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --paper:#F1EEE8;--paper-2:#E7E2D9;--paper-3:#D9D2C6;--ink:#0D1220;--ink-2:#353D4B;--mute:#687080;
+  --rule:rgba(14,21,32,.14);--rule-2:rgba(14,21,32,.26);--brass:#FF6600;--brass-d:#B84300;--plate:#0B0F1A;--plate-line:#27324C;--ivory:#F1ECE4;--plate-mute:#8B93A1;
+  --serif:"Cormorant Garamond",Georgia,"Times New Roman",serif;
+  --sans:"Manrope","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
   color-scheme:light;
 }
 *{box-sizing:border-box}
@@ -51,7 +50,7 @@ em{font-style:italic;color:var(--brass-d)}
 .links a{font:500 .84rem var(--sans);text-decoration:none;padding:8px 12px;border-radius:4px;white-space:nowrap;color:var(--ink-2)}
 .links a:hover{color:var(--ink)}
 .links a.cta{background:var(--ink);color:var(--paper);margin-left:6px}
-.links a.cta:hover{background:#1E2735}
+.links a.cta:hover{background:#1F283B}
 @media (max-width:600px){.links a:not(.cta){display:none}.brand .tag{display:none}}
 
 .hero{padding-block:clamp(36px,6vw,72px) 28px;border-bottom:1px solid var(--rule);margin-bottom:28px}
@@ -161,22 +160,22 @@ footer .big{font:400 clamp(1.6rem,3vw,2.3rem)/1.1 var(--serif);margin:0;max-widt
 svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;margin:0 .1em}
 
 /* headline accents in the logo's deep gold for paper */
-h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%,#A57B3A);-webkit-background-clip:text;background-clip:text;color:transparent}
+h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#C24A00,#933800 55%,#A84000);-webkit-background-clip:text;background-clip:text;color:transparent}
 .links a.x{display:inline-flex;padding:8px 10px}.links a.x svg{width:14px;height:14px}
 @media (max-width:600px){.links a.x{display:inline-flex}}
 .proof-btn{font:600 .9rem var(--sans);background:var(--ink);color:var(--paper);border:0;border-radius:6px;padding:11px 18px;cursor:pointer}.proof-btn:disabled{opacity:.6;cursor:wait}
-.proof-out{background:var(--plate);color:#D9DEE6;border-radius:10px;padding:16px;font:.76rem/1.6 var(--mono);white-space:pre-wrap;overflow-x:auto;max-width:76ch}.proof-out b{color:#F2CF8E;font-weight:500}
+.proof-out{background:var(--plate);color:#D9DEE6;border-radius:10px;padding:16px;font:.76rem/1.6 var(--mono);white-space:pre-wrap;overflow-x:auto;max-width:76ch}.proof-out b{color:#FF9A57;font-weight:500}
 </style>
 <script type="module" src="./docs.js"></script>
 </head>
 <body>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="./" aria-label="Privatus home"><span data-glyph="mark" data-tone="goldPaper" class="mark"></span><span data-glyph="word" class="word"></span><span class="tag">Documentation</span></a>
+    <a class="brand" href="./" aria-label="Ardea home"><span data-glyph="mark" data-tone="orangePaper" class="mark"></span><span data-glyph="word" class="word"></span><span class="tag">Documentation</span></a>
     <nav class="links" aria-label="Site">
       <a href="./">Home</a>
       <a href="./#audit">Trail audit</a>
-      <a class="x" href="https://x.com/privatussol" target="_blank" rel="noopener" aria-label="Privatus on X" title="Privatus on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+      <a class="x" href="#" data-x hidden target="_blank" rel="noopener" aria-label="Ardea on X" title="Ardea on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
       <a class="cta" href="./app.html">Open terminal</a>
     </nav>
   </div>
@@ -184,11 +183,11 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%
 <div class="wrap">
   <div class="hero">
     <p class="eyebrow">Documentation</p>
-    <h1>How Privatus <em>works.</em></h1>
+    <h1>How Ardea <em>works.</em></h1>
     <p class="kicker">Every wallet, route, fee and data source in the terminal, drawn as it runs. These are the paths your SOL actually takes.</p>
     <figure class="fig">
-      <div class="art"><svg data-diagram="overview" role="img" aria-label="Your browser at the centre, connected to Solana RPC, Jupiter, NEAR 1Click, PumpPortal, Jito and DexScreener"></svg></div>
-      <figcaption><b>Your browser is the app.</b> It builds every transaction, and you sign it. Privatus's gateway only forwards requests to the RPC, Jupiter and NEAR Intents with its API keys. No Privatus server holds funds, wallet keys or orders.</figcaption>
+      <div class="art"><svg data-diagram="overview" role="img" aria-label="Your browser at the centre, connected to Solana RPC, Jupiter, Houdini's Monero routes, PumpPortal, Jito and DexScreener"></svg></div>
+      <figcaption><b>Your browser is the app.</b> It builds every transaction, and you sign it. Ardea's gateway only forwards requests to the RPC, Jupiter and Houdini with its API keys. No Ardea server holds funds, wallet keys or orders.</figcaption>
     </figure>
   </div>
 
@@ -216,11 +215,11 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%
       <section id="overview">
         <p class="eyebrow"><span data-glyph="stealth"></span>Overview</p>
         <h2>A trading desk that leaves <em>fewer tracks.</em></h2>
-        <p>Privatus is a Solana trading terminal that runs entirely in your browser. It does what fast terminals do: a live board of new pump.fun launches, one-click buys, token pages with live trades and holders, wallet tracking, limit orders and PnL. On top of that it gives you two things the others don't: <b>Private mode</b>, which buys from fresh wallets funded privately through NEAR Intents, and the <b>Trail audit</b>, which shows what wallet trackers can already link to you.</p>
+        <p>Ardea is a Solana trading terminal that runs entirely in your browser. It does what fast terminals do: a live board of new pump.fun launches, one-click buys, token pages with live trades and holders, wallet tracking, limit orders and PnL. On top of that it gives you two things the others don't: <b>Private mode</b>, which buys from fresh wallets funded through Monero, and the <b>Trail audit</b>, which shows what wallet trackers can already link to you.</p>
         <div class="cards">
-          <div class="card"><span data-glyph="key" class="gl"></span><h4>Non-custodial</h4><p>You sign every trade, in your wallet or in wallets derived from your own signature. Privatus never holds funds.</p></div>
+          <div class="card"><span data-glyph="key" class="gl"></span><h4>Non-custodial</h4><p>You sign every trade, in your wallet or in wallets derived from your own signature. Ardea never holds funds.</p></div>
           <div class="card"><span data-glyph="route" class="gl"></span><h4>Best-price routing</h4><p>Every swap is routed by Jupiter across Solana's DEXs and pump.fun curves.</p></div>
-          <div class="card"><span data-glyph="lock" class="gl"></span><h4>Private funding</h4><p>Stealth wallets are paid by NEAR's bridge, not by you, so no transfer runs from you to them.</p></div>
+          <div class="card"><span data-glyph="lock" class="gl"></span><h4>Private funding</h4><p>Stealth wallets are paid by an exchange after a Monero hop, not by you, so no transfer runs from you to them.</p></div>
           <div class="card ink"><span data-glyph="shield" class="gl"></span><h4>Static and open</h4><p>The app is plain files: HTML and JavaScript you can read, host or run locally.</p></div>
         </div>
       </section>
@@ -231,7 +230,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%
         <p>You connect a normal Solana wallet (Phantom, Solflare, Backpack and others). That is your <b>main wallet</b>. When you first use the instant wallet or Private mode, the terminal asks it to sign one fixed message. The signature never leaves your browser and is never stored. From it, the terminal derives:</p>
         <figure class="fig">
           <div class="art"><svg data-diagram="walletTree" role="img" aria-label="Main wallet signs once; the signature feeds SHA-256 with a path to make the instant wallet and stealth wallets 0, 1 and 2"></svg></div>
-          <figcaption><b>Derivation.</b> Each wallet's seed is <code>SHA-256(signature ‖ path)</code>: <code>privatus/instant/0</code> for the instant wallet, <code>privatus/stealth/0</code>, <code>/1</code>, <code>/2</code>… for stealth wallets.</figcaption>
+          <figcaption><b>Derivation.</b> Each wallet's seed is <code>SHA-256(signature ‖ path)</code>: <code>ardea/instant/0</code> for the instant wallet, <code>ardea/stealth/0</code>, <code>/1</code>, <code>/2</code>… for stealth wallets.</figcaption>
         </figure>
         <div class="tbl"><table>
           <thead><tr><th>Wallet</th><th>Signs with</th><th>Use it for</th></tr></thead>
@@ -245,7 +244,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%
         <p>Solana signatures are deterministic: the same wallet signing the same message always produces the same signature. Sign again on any device and you get the same instant and stealth wallets back. Nothing secret needs to be backed up beyond your main wallet.</p>
         <p>The terminal stores a short fingerprint of the signature (8 bytes of its hash, which reveals nothing). If your wallet ever signs differently, for example a different wallet app that signs messages another way, the terminal stops instead of opening a different set of wallets.</p>
         <p>Every derived wallet has an <b>Export key</b> button, so you can import it into any Solana wallet.</p>
-        <div class="note"><p><b>Only sign the Privatus message on Privatus.</b> Anyone holding that signature can rebuild your instant and stealth wallets; the message itself warns that it opens your private trading wallets. Some hardware-wallet setups can't sign messages; with those, instant and Private mode are unavailable and you trade from the main wallet.</p></div>
+        <div class="note"><p><b>Only sign the Ardea message on Ardea.</b> Anyone holding that signature can rebuild your instant and stealth wallets; the message itself warns that it opens your private trading wallets. Some hardware-wallet setups can't sign messages; with those, instant and Private mode are unavailable and you trade from the main wallet.</p></div>
       </section>
 
       <section id="trading">
@@ -258,7 +257,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%
           <li><span>It sends the transaction, rebroadcasts it every 2 seconds until it lands or its blockhash expires, and reports the result.</span></li>
         </ol>
         <figure class="fig narrow">
-          <div class="art"><svg data-diagram="tradeTx" role="img" aria-label="A buy transaction printed top to bottom: compute budget, token account, Privatus fee, Jupiter swap, cleanup, Jito tip if set"></svg></div>
+          <div class="art"><svg data-diagram="tradeTx" role="img" aria-label="A buy transaction printed top to bottom: compute budget, token account, Ardea fee, Jupiter swap, cleanup, Jito tip if set"></svg></div>
           <figcaption><b>One buy, one transaction.</b> Every layer lands together or none do: if the swap fails, the fee is not taken.</figcaption>
         </figure>
         <h3>Presets</h3>
@@ -282,42 +281,42 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%
         <ul class="list">
           <li><b>Buys:</b> <span data-cfg="fee">0.5%</span> of the SOL you spend, transferred before the swap.</li>
           <li><b>Sells:</b> <span data-cfg="fee">0.5%</span> of the <i>minimum</i> SOL the route guarantees, transferred after the swap, so a fill better than the minimum is all yours.</li>
-          <li><b>Private buys:</b> the fee is taken inside the NEAR route (1Click <code>appFees</code>), not paid from your wallet, so your funding is one plain transfer per route and nothing on it points at Privatus.</li>
+          <li><b>Private buys:</b> <span data-cfg="fee">0.5%</span> of the amount, sent to the treasury in the same transaction that funds the Monero route. The treasury never sends anything to a stealth wallet, so the fee doesn't connect your wallet to it.</li>
           <li><b>Not charged:</b> stealth exits, deposits to and withdrawals from your instant wallet, and limit orders (Jupiter fills those).</li>
         </ul>
         <p>Network costs are separate and go to Solana validators: the base fee, the priority fee from your preset, and a Jito tip if set. Jupiter's routing is free.</p>
       </section>
 
       <section id="private">
-        <p class="eyebrow"><span data-glyph="lock"></span>Private mode · NEAR Intents</p>
-        <h2>The bridge pays your stealth wallet. <em>You never do.</em></h2>
-        <p>Trackers link wallets by following SOL: whoever funds a wallet is assumed to own it. Private mode breaks that link by never sending SOL from your wallet to the stealth wallet. Instead it uses <b>NEAR Intents</b>, a cross-chain settlement network where independent solvers fill requests. Through its 1Click API, you pay into a one-time deposit address, and NEAR's Solana bridge pays the stealth wallet out of its own wallets.</p>
+        <p class="eyebrow"><span data-glyph="lock"></span>Private mode · through Monero</p>
+        <h2>Monero pays your stealth wallet. <em>You never do.</em></h2>
+        <p>Trackers link wallets by following SOL: whoever funds a wallet is assumed to own it. Private mode breaks that link by never sending SOL from your wallet to the stealth wallet. Instead your SOL crosses <b>Monero</b>, whose ring signatures, stealth addresses and RingCT hide sender, receiver and amount on its own chain. <b>Houdini Swap's</b> private send runs the route: one exchange swaps your SOL to XMR, the XMR moves on Monero, and an unrelated exchange swaps it back to SOL and pays the stealth wallet from its own hot wallet. You never hold XMR or need a Monero wallet.</p>
         <figure class="fig">
-          <div class="art"><svg data-diagram="stealthRoute" role="img" aria-label="Main wallet sends SOL to a one-time deposit address and the fee to the treasury; NEAR Intents routes it confidentially; the bridge pays a fresh stealth wallet, which swaps on Jupiter"></svg></div>
-          <figcaption><b>A private buy.</b> Your main wallet's transaction ends at a deposit address shared with many other users. The stealth wallet's SOL arrives from the bridge.</figcaption>
+          <div class="art"><svg data-diagram="stealthRoute" role="img" aria-label="Main wallet sends SOL to a one-time deposit address at exchange A and the fee to the treasury; exchange A swaps it to XMR; the XMR crosses Monero; exchange B swaps it back and pays a fresh stealth wallet, which swaps on Jupiter"></svg></div>
+          <figcaption><b>A private buy.</b> Your main wallet's transaction ends at an exchange's one-time deposit address. The stealth wallet's SOL arrives from a different exchange's wallet, after the Monero hop.</figcaption>
         </figure>
         <ol class="steps">
           <li><span>The terminal derives the next stealth wallet from your signature and checks the chain that it has never been used, so a cleared browser or a new device never reuses one.</span></li>
-          <li><span>It asks 1Click for a SOL → SOL route to the stealth wallet, with <b>Confidential Intents</b> on: the sender, amount and route stay off NEAR's public record. It asks for the advanced level first, then basic. If neither will route it, nothing is sent; a public route only happens if you choose it.</span></li>
-          <li><span>It checks the quote before sending anything: the recipient must be the stealth wallet, refunds must go to your wallet, the amount and assets must match, and the deposit address must not be one of yours. Otherwise it refuses.</span></li>
-          <li><span>You approve the funding in one wallet prompt: a plain transfer to each deposit address. The <span data-cfg="fee">0.5%</span> fee is taken inside the route. In Strong mode (the default) the amount is split into up to three uneven, non-round routes, sent at random intervals of 4–16 seconds.</span></li>
-          <li><span>NEAR Intents settles and the bridge pays the stealth wallet, usually within a minute or two. The terminal follows the route's status.</span></li>
-          <li><span>After a random 8–28 second pause, the stealth wallet buys on Jupiter, keeping 0.01 SOL for network fees and token-account rent.</span></li>
+          <li><span>It asks Houdini for a private-send quote with Monero forced as the bridge (<code>useXmr=true</code>), takes the best private route, and opens the order with the stealth wallet as receiver and your wallet for refunds. If no Monero route is available, nothing is sent; there is no other path.</span></li>
+          <li><span>It checks the order before you sign: it must pay exactly the stealth wallet, swap SOL to SOL on Solana, be a private (anonymous) route, keep the amount, use a deposit address that isn't one of yours, need no memo, and not expire too soon. Otherwise it refuses.</span></li>
+          <li><span>You approve one transaction: the amount to the order's one-time deposit address, plus the <span data-cfg="fee">0.5%</span> fee to the treasury. The terminal shows the SOL that will arrive and the route time first.</span></li>
+          <li><span>The route runs in the background, usually 10–40 minutes (exchange confirmations plus Monero's confirmation and lock time). The terminal stays usable, follows the order's status, and picks it back up if you reload.</span></li>
+          <li><span>When the SOL lands, Strong mode (the default) waits a random 30 seconds to 3 minutes, then the stealth wallet buys on Jupiter, keeping 0.01 SOL for network fees and token-account rent. Fast mode buys on arrival.</span></li>
         </ol>
         <h3>Exiting</h3>
         <figure class="fig mid">
-          <div class="art"><svg data-diagram="stealthExit" role="img" aria-label="The stealth wallet sells on Jupiter, then sends its SOL through NEAR Intents back to the main wallet"></svg></div>
-          <figcaption><b>Exit.</b> The stealth wallet sells, closes its empty token accounts to recover their rent, and routes all of its SOL back through NEAR Intents.</figcaption>
+          <div class="art"><svg data-diagram="stealthExit" role="img" aria-label="The stealth wallet sells on Jupiter, then sends its SOL through the Monero route back to the main wallet"></svg></div>
+          <figcaption><b>Exit.</b> The stealth wallet sells, closes its empty token accounts to recover their rent, and routes all of its SOL back through Monero. No Ardea fee on exits.</figcaption>
         </figure>
         <h3>What it costs</h3>
-        <p>The Privatus fee, Solana network fees, and NEAR Intents' route fee. Without a partner key, 1Click charges about 0.1–0.2% per route; with a key held by the proxy that fee goes away. Private buys are capped at <b data-cfg="stealthMax">5 SOL</b> while Private mode is in beta.</p>
+        <p>The Ardea fee, Solana network fees, and the route's own cost: two exchange swaps, network fees and Houdini's commission, all inside the quote. It's roughly double a single swap, so the terminal shows exactly how much SOL arrives before you sign, and each route has a minimum amount. Private buys are capped at <b data-cfg="stealthMax">5 SOL</b> while Private mode is in beta.</p>
         <h3>If something goes wrong</h3>
-        <p>A route that can't complete is refunded by NEAR Intents to the wallet that sent it. Stealth wallets can always be rebuilt by signing again, and Portfolio scans your stealth wallets on-chain and lists every one with funds, with buttons to exit or export its key, so nothing is stranded. If you've made many stealth wallets, Scan further looks deeper.</p>
+        <p>A route that can't complete is refunded by the exchange to the wallet that sent it, and Houdini's support can trace any order by its id, which Portfolio keeps. Stealth wallets can always be rebuilt by signing again, and Portfolio scans your stealth wallets on-chain and lists every one with funds, with buttons to exit or export its key, so nothing is stranded. If you've made many stealth wallets, Scan further looks deeper.</p>
         <div class="note ink">
-          <p><b>What Private mode does not do.</b> Nothing makes a wallet untraceable. NEAR's 1Click service sees both ends of a route. An observer who sees SOL leave your wallet and a similar amount reach a fresh wallet soon after can guess; Strong mode's split amounts and random timing make that harder, not impossible. Vary amounts, and don't send funds between stealth wallets and wallets you've used publicly. Private mode makes tracing expensive and uncertain; it doesn't make it impossible. Privatus doesn't run a mixer and never touches the funds in transit.</p>
+          <p><b>What Private mode does not do.</b> Nothing makes a wallet untraceable. Houdini sees both ends of a route and keeps order data for 72 hours; each exchange sees its own leg. An observer who sees SOL leave your wallet and a similar amount reach a fresh wallet later can guess; the route's fees change the amount and its 10–40 minutes plus Strong mode's random wait blur the timing, which makes that harder, not impossible. Vary amounts, and don't send funds between stealth wallets and wallets you've used publicly. Private mode makes tracing expensive and uncertain; it doesn't make it impossible. Ardea doesn't run a mixer and never touches the funds in transit.</p>
         </div>
-        <h3>Why NEAR Intents</h3>
-        <p>It settles quickly, needs no wallet or account on NEAR, pays out from bridge-owned addresses used by everyone, and offers Confidential Intents for keeping the request itself private. Monero would need a swap in and out through third-party exchanges, slower and with more counterparties.</p>
+        <h3>Why Monero</h3>
+        <p>Monero is the one widely used chain where sender, receiver and amount are hidden by default for everyone, so the hop in the middle isn't a public record a tracker can read. The trade-off is time and cost: two exchange hops and Monero's lock time make a route slower and pricier than a bridge. That's why the terminal funds a stealth wallet once and lets you keep trading while the route runs.</p>
       </section>
 
       <section id="proof">
@@ -325,14 +324,14 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%
         <h2>Don't take our word for it. <em>Check it.</em></h2>
         <p>Three things you can verify yourself, without trusting this page.</p>
         <h3>1. A live route, right now</h3>
-        <p>This asks NEAR Intents' 1Click API, from your browser through the Privatus gateway, for a real confidential SOL route of 0.1 SOL with the Privatus <span data-cfg="fee">0.5%</span> fee built in (<code>appFees</code>), exactly as a private buy does. It's a dry quote: nothing is created or sent.</p>
+        <p>This asks Houdini Swap, from your browser through the Ardea gateway, for a real private SOL → XMR → SOL quote with Monero forced as the bridge, exactly as a private buy does, and shows the raw answer: the route, what would arrive, how long it takes and the minimum. It's a quote only: no order is opened and nothing is sent.</p>
         <p><button class="proof-btn" id="proof-run" type="button">Run a live route check</button></p>
         <pre class="proof-out" id="proof-out" hidden></pre>
         <h3>2. Transactions on-chain</h3>
-        <p>Private buys and exits made through the terminal, each linked to Solscan so you can see what the chain shows: the funding is a plain transfer to a one-time NEAR address, and the stealth wallet is paid by NEAR's bridge.</p>
+        <p>Private buys and exits made through the terminal, each linked to Solscan so you can see what the chain shows: the funding goes to an exchange's one-time deposit address, and the stealth wallet is paid by a different exchange's wallet after the Monero hop.</p>
         <div class="tbl"><table id="proof-txs"><thead><tr><th>Step</th><th>What to look for</th><th>Transaction</th></tr></thead><tbody></tbody></table></div>
         <h3>3. The code</h3>
-        <p>Private mode is <code>stealth.js</code> (routing, quote checks, transactions) and the private-buy flow in <code>terminal.js</code>, served as plain files you can read in your browser: <a href="./stealth.js">stealth.js</a>, <a href="./terminal.js">terminal.js</a>, <a href="./config.js">config.js</a>.<span id="proof-repo"></span></p>
+        <p>Private mode is <code>stealth.js</code> (the Monero route, order checks, transactions) and the private-buy flow in <code>terminal.js</code>, served as plain files you can read in your browser: <a href="./stealth.js">stealth.js</a>, <a href="./terminal.js">terminal.js</a>, <a href="./config.js">config.js</a>.<span id="proof-repo"></span></p>
       </section>
 
       <section id="pulse">
@@ -385,7 +384,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%
       <section id="audit">
         <p class="eyebrow"><span data-glyph="clock"></span>Trail audit</p>
         <h2>What trackers <em>already know.</em></h2>
-        <p>The Trail audit reads any wallet's public history and scores how linkable it is, 0 to 100, the way commercial trackers score it. It's read-only: nothing to connect or sign. Your browser sends its queries through Privatus's gateway to the RPC node, or straight to your own node if you set one under RPC node.</p>
+        <p>The Trail audit reads any wallet's public history and scores how linkable it is, 0 to 100, the way commercial trackers score it. It's read-only: nothing to connect or sign. Your browser sends its queries through Ardea's gateway to the RPC node, or straight to your own node if you set one under RPC node.</p>
         <div class="icons">
           <div class="icon-card"><div class="art" data-icon="funding"></div><div class="t"><b>Funding</b><span>Who sent the first SOL, and which other wallets they funded.</span></div></div>
           <div class="icon-card"><div class="art" data-icon="serial"></div><div class="t"><b>Identity</b><span>Deposits to or withdrawals from known exchange wallets.</span></div></div>
@@ -399,10 +398,10 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%
       <section id="proxy">
         <p class="eyebrow"><span data-glyph="bolt"></span>Infrastructure</p>
         <h2>Keys stay <em>off the page.</em></h2>
-        <p>Anything in a static site is public, so API keys can't live in it. Instead every browser sends its requests to Privatus's gateway, a small server that holds the keys and forwards them, so all visitors share paid capacity instead of free, rate-limited endpoints:</p>
+        <p>Anything in a static site is public, so API keys can't live in it. Instead every browser sends its requests to Ardea's gateway, a small server that holds the keys and forwards them, so all visitors share paid capacity instead of free, rate-limited endpoints:</p>
         <figure class="fig">
-          <div class="art"><svg data-diagram="proxy" role="img" aria-label="The browser calls one gateway, which adds API keys and forwards to RPC, Jupiter, 1Click and X"></svg></div>
-          <figcaption><b>The gateway</b> adds a private RPC URL, the Jupiter key, the NEAR Intents partner key and an X token. It also serves token images from IPFS, cached on the gateway. It only forwards: it never sees a private key, signs anything or records which wallets you look up.</figcaption>
+          <div class="art"><svg data-diagram="proxy" role="img" aria-label="The browser calls one gateway, which adds API keys and forwards to RPC, Jupiter, Houdini and X"></svg></div>
+          <figcaption><b>The gateway</b> adds a private RPC URL, the Jupiter key, the Houdini partner key (with the IP, user agent and timezone headers Houdini requires) and an X token. It also serves token images from IPFS, cached on the gateway. It only forwards: it never sees a private key, signs anything or records which wallets you look up.</figcaption>
         </figure>
         <p>Rather not go through the gateway for reads? Paste your own RPC URL (Helius, Triton, QuickNode) in the terminal's Settings, or under RPC node in the Trail audit, and your browser reads the chain from that node directly.</p>
       </section>
@@ -426,17 +425,17 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%
           <thead><tr><th>Thing</th><th>Where it is</th></tr></thead>
           <tbody>
             <tr><td>Main wallet keys</td><td>Your wallet app. Never seen by the terminal.</td></tr>
-            <tr><td>Privatus signature, instant and stealth keys</td><td>This tab's memory only. Gone when you close the tab or disconnect; rebuilt by signing again.</td></tr>
+            <tr><td>Ardea signature, instant and stealth keys</td><td>This tab's memory only. Gone when you close the tab or disconnect; rebuilt by signing again.</td></tr>
             <tr><td>Settings, watchlist, tracked wallets, trade log, rules</td><td>This browser's local storage. Never uploaded.</td></tr>
             <tr><td>Stealth wallet list (addresses, route status)</td><td>This browser's local storage, under your main wallet's address. It links the two, so clear site data on a shared computer. The terminal can rebuild it from the chain.</td></tr>
             <tr><td>Limit orders</td><td>On-chain, in Jupiter's Trigger program, under your wallet.</td></tr>
-            <tr><td>Private routes in transit</td><td>NEAR Intents, refundable to the sender.</td></tr>
+            <tr><td>Private routes in transit</td><td>The route's exchanges (via Houdini), refundable to the sender.</td></tr>
           </tbody>
         </table></div>
         <ul class="list">
-          <li>Check the transaction preview in your wallet. A Privatus buy shows the swap, one fee transfer to the Privatus treasury, and a Jito tip if your preset sets one. Nothing else.</li>
+          <li>Check the transaction preview in your wallet. A Ardea buy shows the swap, one fee transfer to the Ardea treasury, and a Jito tip if your preset sets one. Nothing else.</li>
           <li>Keep the instant wallet to trading money. Its key sits in an open browser tab.</li>
-          <li>Bookmark the site. Never sign the Privatus message anywhere else.</li>
+          <li>Bookmark the site. Never sign the Ardea message anywhere else.</li>
         </ul>
       </section>
 
@@ -458,7 +457,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%
       <section id="faq">
         <p class="eyebrow"><span data-glyph="file"></span>FAQ</p>
         <h2>Questions.</h2>
-        <details class="faq"><summary>Can Privatus take my funds?</summary><div><p>No. It has no server holding funds or wallet keys, and its gateway only forwards requests: it never signs anything. Every transaction is built in your browser and signed by you or by a key derived from your own signature. Private funds in transit are held by NEAR Intents and refunded to you if a route fails.</p></div></details>
+        <details class="faq"><summary>Can Ardea take my funds?</summary><div><p>No. It has no server holding funds or wallet keys, and its gateway only forwards requests: it never signs anything. Every transaction is built in your browser and signed by you or by a key derived from your own signature. Private funds in transit are held by the route's exchanges and refunded to you if a route fails.</p></div></details>
         <details class="faq"><summary>Why did my trade fail?</summary><div><p>Usually the price moved past your slippage, or the transaction didn't land before it expired. Nothing but the network fee is spent when a swap fails. Try a faster preset or more slippage.</p></div></details>
         <details class="faq"><summary>Is Private mode anonymous?</summary><div><p>No tool makes you anonymous. Private mode removes the direct on-chain link between your wallet and the wallet that buys. Timing and amounts can still be matched by someone watching closely, so vary them.</p></div></details>
         <details class="faq"><summary>Where are my instant and stealth wallets if I clear my browser?</summary><div><p>Their keys were never stored, so nothing is lost. Connect the same main wallet, sign the same message, and they come back with their balances. Clearing the browser also deletes the local list linking your stealth wallets to your main wallet; the terminal finds them again on-chain.</p></div></details>
@@ -470,7 +469,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#B88A45,#8E6630 55%
 
   <footer>
     <p class="big">A wallet should only show <em>what you choose to sign.</em></p>
-    <a class="brand" href="./" aria-label="Privatus home"><span data-glyph="mark" data-tone="goldPaper" class="mark"></span><span data-glyph="word" class="word"></span></a>
+    <a class="brand" href="./" aria-label="Ardea home"><span data-glyph="mark" data-tone="orangePaper" class="mark"></span><span data-glyph="word" class="word"></span></a>
   </footer>
 </div>
 </body>

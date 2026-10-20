@@ -1,4 +1,4 @@
-// Privatus proxy (Cloudflare Worker). Keeps API keys server-side so the static site never ships them,
+// Ardea proxy (Cloudflare Worker). Keeps API keys server-side so the static site never ships them,
 // and gives every visitor the same paid capacity instead of per-browser free-tier limits.
 //   /rpc         Solana JSON-RPC (HTTP, method allowlist) and websocket subscriptions (Upgrade)
 //   /jup/*       Jupiter API with x-api-key; token lists and prices cached briefly
@@ -149,7 +149,7 @@ async function xsearch(env, url, cors, ctx) {
   if (!q || q.length > 200) return json({ error: "bad query" }, 400, cors);
   const target = `${X_SEARCH}?${new URLSearchParams({ query: `${q} -is:retweet`, max_results: "20", "tweet.fields": "created_at,public_metrics,author_id", expansions: "author_id", "user.fields": "username,name,profile_image_url,verified,public_metrics" })}`;
   const cache = typeof caches !== "undefined" ? caches.default : null;
-  const key = `https://x-cache.privatus/${encodeURIComponent(q)}`;
+  const key = `https://x-cache.ardea/${encodeURIComponent(q)}`;
   if (cache) { const hit = await cache.match(key); if (hit) return withCors(hit, cors); }
   const up = await fetch(target, { headers: { authorization: `Bearer ${env.X_BEARER}` } });
   const data = await up.json().catch(() => ({}));
@@ -170,7 +170,7 @@ async function xsearch(env, url, cors, ctx) {
 async function ipfsGet(url, cors, ctx) {
   const m = url.pathname.match(IPFS_PATH);
   if (!m) return json({ error: "bad ipfs path" }, 400, cors);
-  const cache = typeof caches !== "undefined" ? caches.default : null, key = `https://ipfs-cache.privatus/${m[1]}`;
+  const cache = typeof caches !== "undefined" ? caches.default : null, key = `https://ipfs-cache.ardea/${m[1]}`;
   if (cache) { const hit = await cache.match(key); if (hit) return withCors(hit, cors); }
   const ctls = GATEWAYS.map(() => new AbortController()), timer = setTimeout(() => ctls.forEach(c => c.abort()), 15000);
   let up;
@@ -195,7 +195,7 @@ const privateHost = h => /^(localhost|.*\.(localhost|local|internal|lan|home|cor
 async function metaGet(url, cors, ctx) {
   let target;
   try { target = new URL(url.searchParams.get("u") || ""); } catch (_) { return json({ error: "bad url" }, 400, cors); }
-  const cache = typeof caches !== "undefined" ? caches.default : null, key = `https://meta-cache.privatus/${encodeURIComponent(target.href)}`;
+  const cache = typeof caches !== "undefined" ? caches.default : null, key = `https://meta-cache.ardea/${encodeURIComponent(target.href)}`;
   if (cache) { const hit = await cache.match(key); if (hit) return withCors(hit, cors); }
   const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 6000);
   let body = null;

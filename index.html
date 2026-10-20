@@ -3,36 +3,35 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Privatus is a private execution terminal for Solana: live launches, one-click Jupiter trades, wallet tracking, and Private mode buys funded through NEAR Intents.">
+<meta name="description" content="Ardea is a Solana trading terminal whose Private mode funds every buy through Monero: live launches, one-click Jupiter trades, wallet tracking and orders.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://privatusterminal.xyz/">
-<meta property="og:site_name" content="Privatus">
-<meta property="og:title" content="Privatus · Trade without leaving a trail">
-<meta property="og:description" content="Private execution terminal for Solana. Private mode buys from fresh stealth wallets, funded confidentially through NEAR Intents.">
-<meta property="og:image" content="https://privatusterminal.xyz/media/banner.png?v=2">
+<meta property="og:url" content="https://ardea-production.up.railway.app/">
+<meta property="og:site_name" content="Ardea">
+<meta property="og:title" content="Ardea · Cross Monero, trade from a clean wallet">
+<meta property="og:description" content="A Solana trading terminal. Private mode sends your SOL through Monero to a fresh wallet, which makes the trade.">
+<meta property="og:image" content="https://ardea-production.up.railway.app/media/banner.png?v=1">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta name="twitter:site" content="@privatussol">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://privatusterminal.xyz/media/banner.png?v=2">
-<meta name="theme-color" content="#0A0E14">
-<title>Privatus</title>
+<meta name="twitter:image" content="https://ardea-production.up.railway.app/media/banner.png?v=1">
+<meta name="theme-color" content="#0B0F1A">
+<title>Ardea</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* Vault navy page, ivory type, one brass accent. Display type is a serif; numbers and labels are mono.
    Illustrations are fine-line guilloché engravings drawn in code (art.js). */
 :root{
-  --bg:#0A0E14;--bg-1:#0F141C;--bg-2:#141B26;--bg-3:#1C2533;--line:#263142;--line-2:#33405A;
-  --ivory:#EFE9DC;--ivory-2:#E2DACA;--ink:#0E1520;--mute:#8B93A1;--mute-2:#5E6878;--steel:#5D7596;
-  --brass:#DEB471;--brass-2:#C39653;--up:#43D19E;--down:#F06A6A;
-  --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
-  --sans:"Geist","Segoe UI",system-ui,sans-serif;
-  --mono:"Geist Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --bg:#0B0F1A;--bg-1:#111726;--bg-2:#161E30;--bg-3:#1E2840;--line:#27324C;--line-2:#35415F;
+  --ivory:#F1ECE4;--ivory-2:#E3DDD2;--ink:#0D1220;--mute:#8B93A1;--mute-2:#5E6878;--steel:#5D7596;
+  --brass:#FF6600;--brass-2:#D94F00;--up:#43D19E;--down:#F06A6A;
+  --serif:"Cormorant Garamond",Georgia,"Times New Roman",serif;
+  --sans:"Manrope","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -59,7 +58,7 @@ em{font-style:italic;color:var(--brass)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:600 .88rem var(--sans);border-radius:4px;padding:11px 18px;border:1px solid var(--line-2);background:transparent;color:var(--ivory);cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
 .btn:hover:not(:disabled){border-color:var(--ivory)}
 .btn.brass{background:var(--brass);border-color:var(--brass);color:var(--ink)}
-.btn.brass:hover:not(:disabled){background:#EBC584;border-color:#EBC584}
+.btn.brass:hover:not(:disabled){background:#FF8F47;border-color:#FF8F47}
 .btn .arr{font-family:var(--mono);font-weight:400}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .links .btn{padding:9px 14px;margin-left:8px;color:var(--ink)}
@@ -112,7 +111,7 @@ h2{font:400 clamp(2.2rem,4.6vw,3.7rem)/1.02 var(--serif);letter-spacing:-.01em;m
 .cert .eyebrow{color:#5B6170}
 .cert .eyebrow .beta{font:600 .62rem var(--mono);letter-spacing:.14em;color:var(--ink);background:var(--brass);border-radius:3px;padding:2px 7px}
 .cert h2{max-width:16ch}
-.cert h2 em{color:#93692D}
+.cert h2 em{color:#B84300}
 .cert .sub{max-width:58ch;color:#4A5160;margin:18px 0 0}
 .cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:40px;border-top:1px solid color-mix(in srgb,var(--ink) 18%,transparent)}
 .col{padding:20px 20px 0 0;min-width:0}
@@ -126,7 +125,7 @@ h2{font:400 clamp(2.2rem,4.6vw,3.7rem)/1.02 var(--serif);letter-spacing:-.01em;m
 .how h3{font:400 1.7rem var(--serif);margin:0 0 18px}
 .how ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;counter-reset:s}
 .how li{counter-increment:s;position:relative;padding-top:30px;font-size:.88rem;line-height:1.55;color:#4A5160;min-width:0}
-.how li::before{content:counter(s,upper-roman);position:absolute;top:0;left:0;font:400 1.2rem var(--serif);color:#93692D}
+.how li::before{content:counter(s,upper-roman);position:absolute;top:0;left:0;font:400 1.2rem var(--serif);color:#B84300}
 .how li::after{content:"";position:absolute;top:12px;left:30px;right:-10px;height:1px;background:color-mix(in srgb,var(--ink) 18%,transparent)}
 .how li:last-child::after{display:none}
 .how li b{display:block;color:var(--ink);font-weight:600;margin-bottom:4px}
@@ -246,20 +245,20 @@ footer .fine .brand .word{font-size:1.2rem;color:var(--ivory)}
 svg.inl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.18em;margin:0 .1em}
 
 /* the logo's metallic gold on buttons and headline accents */
-.btn.brass{background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 38%,#D2A55F 64%,#E9C88A 82%,#B98A48 100%);border-color:#D9B06A;box-shadow:inset 0 1px 0 rgba(255,244,218,.45),0 6px 22px -10px rgba(222,180,113,.55)}
-.btn.brass:hover:not(:disabled){background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 38%,#D2A55F 64%,#E9C88A 82%,#B98A48 100%);filter:brightness(1.06);border-color:#F2CF8E}
-h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 38%,#D2A55F 64%,#E9C88A 82%,#B98A48 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
-.ca-go{background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 38%,#D2A55F 64%,#E9C88A 82%,#B98A48 100%)}
-.eyebrow::before{background:linear-gradient(90deg,#F6D292,#C39653)}
+.btn.brass{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 38%,#F2620A 64%,#FF9447 82%,#C84800 100%);border-color:#F57018;box-shadow:inset 0 1px 0 rgba(255,244,218,.45),0 6px 22px -10px rgba(255,102,0,.55)}
+.btn.brass:hover:not(:disabled){background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 38%,#F2620A 64%,#FF9447 82%,#C84800 100%);filter:brightness(1.06);border-color:#FF9A57}
+h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 38%,#F2620A 64%,#FF9447 82%,#C84800 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ca-go{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 38%,#F2620A 64%,#FF9447 82%,#C84800 100%)}
+.eyebrow::before{background:linear-gradient(90deg,#FF8A3D,#D94F00)}
 .ca-row{display:flex;gap:12px;align-items:stretch}.ca-row .ca{flex:1;min-width:0}.ca-trade{flex:none;border-radius:12px;padding:0 24px}
 @media (max-width:760px){.ca-row{flex-direction:column}.ca-trade{padding:14px 20px}}
-.limits{margin-top:22px;padding:14px 18px;border-left:2px solid #93692D;background:color-mix(in srgb,var(--ink) 5%,transparent);font-size:.9rem;color:#4A5160;max-width:78ch}.limits b{color:var(--ink)}.limits a{color:#93692D}
+.limits{margin-top:22px;padding:14px 18px;border-left:2px solid #B84300;background:color-mix(in srgb,var(--ink) 5%,transparent);font-size:.9rem;color:#4A5160;max-width:78ch}.limits b{color:var(--ink)}.limits a{color:#B84300}
 </style>
 </head>
 <body>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="#top" aria-label="Privatus home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
+    <a class="brand" href="#top" aria-label="Ardea home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
     <nav class="links" aria-label="Sections">
       <a class="sec" href="#record">The record</a>
       <a class="sec" href="#private">Private mode</a>
@@ -267,7 +266,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 
       <a class="sec" href="#audit">Trail audit</a>
       <a class="sec" href="#token">Token</a>
       <a href="./docs.html">Docs</a>
-      <a class="x" href="https://x.com/privatussol" target="_blank" rel="noopener" aria-label="Privatus on X" title="Privatus on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+      <a class="x" href="#" data-x hidden target="_blank" rel="noopener" aria-label="Ardea on X" title="Ardea on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
       <a class="btn brass" href="./app.html">Open terminal</a>
     </nav>
   </div>
@@ -277,33 +276,33 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 
   <div class="wrap">
     <section class="hero">
       <div>
-        <p class="eyebrow">Private execution for Solana</p>
-        <h1>Trade without leaving <em>a trail.</em></h1>
-        <p class="lede">Privatus is a full trading terminal: live launches, one-click buys, wallet tracking and orders. With <b>Private mode</b>, each buy is made by a fresh wallet that NEAR Intents funds for you, so no transfer ever runs from your wallet to the wallet that buys.</p>
+        <p class="eyebrow">A Solana terminal, routed through Monero</p>
+        <h1>Cross Monero. <em>Trade from a clean wallet.</em></h1>
+        <p class="lede">Ardea is a full trading terminal: live launches, one-click buys, wallet tracking and orders. In <b>Private mode</b>, your SOL is swapped to XMR, crosses Monero, and is swapped back to SOL by an unrelated exchange, which pays a fresh wallet. That wallet makes the buy, so no transfer runs from your wallet to it.</p>
         <div class="ctas">
           <a class="btn brass" href="./app.html">Open terminal <span class="arr">→</span></a>
           <a class="btn" href="./docs.html">How it works</a>
         </div>
         <div class="facts">
           <div><b>Non-custodial</b><span>You sign every trade, in your own wallet</span></div>
-          <div><b>NEAR Intents</b><span>Confidential routing into fresh wallets</span></div>
+          <div><b>Through Monero</b><span>SOL → XMR → SOL into a fresh wallet</span></div>
           <div><b><bdi data-cfg="fee">0.5%</bdi> flat</b><span>One fee, charged once, in SOL</span></div>
         </div>
       </div>
       <div class="seal-wrap">
-        <svg id="seal" class="seal" viewBox="0 0 600 540" role="img" aria-label="Your wallet's dotted trail runs into an engraved seal marked NEAR Intents and stops; a new wallet's line leaves through a gap cut in the seal, and the readout shows no on-chain link"></svg>
+        <svg id="seal" class="seal" viewBox="0 0 600 540" role="img" aria-label="Your wallet's dotted trail runs into an engraved ring marked Monero and stops; a new wallet's line leaves through a gap in the ring, and the readout shows no direct transfer"></svg>
       </div>
     </section>
   </div>
 
-  <div class="rail"><div class="wrap"><span>Built on</span><span>Solana</span><span>Jupiter</span><span>NEAR Intents</span><span>Jito</span><span>PumpPortal</span></div></div>
+  <div class="rail"><div class="wrap"><span>Built on</span><span>Solana</span><span>Jupiter</span><span>Monero</span><span>Houdini Swap</span><span>Jito</span><span>PumpPortal</span></div></div>
 
   <div class="wrap">
     <section id="record">
       <div class="head">
         <div>
           <p class="eyebrow">The record</p>
-          <h2>Your wallet is a public ledger. <em>Anyone can read it.</em></h2>
+          <h2>Every wallet keeps a ledger. <em>Trackers read all of it.</em></h2>
         </div>
         <p>Wallet trackers don't break into anything. They read the same public chain you do and join the entries together, for every wallet, around the clock. These are the four entries they read first.</p>
       </div>
@@ -316,34 +315,34 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 
     </section>
 
     <section id="private" class="cert" aria-labelledby="pm-h">
-      <p class="eyebrow"><span class="beta">BETA</span> Private mode · powered by NEAR Intents</p>
-      <h2 id="pm-h">Cut the line between <em>you and your trades.</em></h2>
-      <p class="sub">A private buy never comes from your wallet. Your wallet pays a one-time deposit address, NEAR Intents pays a brand-new stealth wallet from its own liquidity, and that stealth wallet makes the trade.</p>
+      <p class="eyebrow"><span class="beta">BETA</span> Private mode · routed through Monero</p>
+      <h2 id="pm-h">Your SOL goes in. <em>A stranger's wallet buys.</em></h2>
+      <p class="sub">A private buy never comes from your wallet. Your wallet pays a one-time deposit address at one exchange; the SOL becomes XMR and crosses Monero; an unrelated exchange swaps it back and pays a brand-new stealth wallet, and that wallet makes the trade.</p>
       <div class="cols">
         <div class="col"><span data-glyph="stealth"></span><h3>A new wallet each buy</h3><p>Every private buy runs from a stealth wallet with no history, so trackers see a stranger every time.</p></div>
-        <div class="col"><span data-glyph="lock"></span><h3>Confidential routing</h3><p>Funds reach the stealth wallet through NEAR's Confidential Intents and are paid out by NEAR's bridge. Privatus doesn't run a mixer.</p></div>
+        <div class="col"><span data-glyph="lock"></span><h3>A real Monero hop</h3><p>Every route is forced through Monero, where ring signatures, stealth addresses and RingCT hide sender, receiver and amount. Houdini Swap runs the route; Ardea never holds your funds or XMR.</p></div>
         <div class="col"><span data-glyph="key"></span><h3>Recoverable anywhere</h3><p>Stealth wallets come from one signature of your wallet. Sign again on any device to restore them. Nothing secret is stored.</p></div>
-        <div class="col"><span data-glyph="fuel"></span><h3>No fee trail</h3><p>The fee is taken inside the NEAR route, not paid from your wallet. Your funding is one plain transfer to a one-time address, with nothing on it that points at Privatus.</p></div>
+        <div class="col"><span data-glyph="fuel"></span><h3>One clear transaction</h3><p>You sign once: the amount to the route's one-time address and the <span data-cfg="fee">0.5%</span> fee to Ardea's treasury. The treasury never pays a stealth wallet, so the fee links nothing.</p></div>
       </div>
       <div class="how">
-        <h3>How Private mode uses NEAR Intents</h3>
+        <h3>How a private buy crosses Monero</h3>
         <ol>
-          <li><b>Ask for a route.</b> The terminal asks NEAR Intents' 1Click API to deliver SOL to a new stealth wallet, and gets back a one-time deposit address.</li>
-          <li><b>Fund it.</b> You approve plain transfers from your wallet to those one-time addresses. In Strong mode the amount is split into up to three uneven routes sent at random intervals. Privatus's <span data-cfg="fee">0.5%</span> fee is taken inside the route.</li>
-          <li><b>Solvers pay the stealth wallet.</b> NEAR Intents fills the intent from its own liquidity, using Confidential Intents (advanced first, then basic). If neither is available, nothing is sent unless you choose a public route.</li>
-          <li><b>The stealth wallet buys.</b> After a random pause, it swaps through Jupiter. Exits run the same route in reverse, back to your wallet.</li>
+          <li><b>Ask for a route.</b> The terminal asks Houdini Swap for a SOL → XMR → SOL route to a new stealth wallet, forced through Monero, and checks the order: right wallet, right amount, a private route, or it refuses.</li>
+          <li><b>Fund it.</b> You approve one transaction: the amount to a one-time deposit address, plus Ardea's <span data-cfg="fee">0.5%</span> fee to the treasury. You see the SOL that will arrive and the route time before you sign.</li>
+          <li><b>It crosses Monero.</b> One exchange swaps the SOL to XMR, the XMR moves on Monero, and an unrelated exchange swaps it back and pays the stealth wallet from its own funds. It takes 10–40 minutes. If no Monero route is available, nothing is sent.</li>
+          <li><b>The stealth wallet buys.</b> When the SOL lands it waits a random 30 seconds to 3 minutes, then swaps through Jupiter. Exits run the same Monero route in reverse, back to your wallet.</li>
         </ol>
       </div>
       <figure class="route">
-        <div class="art"><svg data-diagram="stealthRoute" role="img" aria-label="Your wallet pays a one-time deposit address; NEAR Intents takes the fee inside the route and routes it confidentially; the bridge pays a fresh stealth wallet, which swaps on Jupiter"></svg></div>
-        <figcaption><b>A private buy.</b> Your wallet pays a one-time deposit address. NEAR's bridge pays the stealth wallet. No on-chain transfer runs from you to it.</figcaption>
+        <div class="art"><svg data-diagram="stealthRoute" role="img" aria-label="Your wallet pays a one-time deposit address; the SOL is swapped to XMR, crosses Monero, and an unrelated exchange swaps it back and pays a fresh stealth wallet, which swaps on Jupiter"></svg></div>
+        <figcaption><b>A private buy.</b> Your wallet pays a one-time deposit address. An unrelated exchange pays the stealth wallet after the Monero hop. No on-chain transfer runs from you to it.</figcaption>
       </figure>
       <div class="acts">
         <a class="btn dark" href="./app.html">Try Private mode <span class="arr">→</span></a>
         <a class="btn" href="./docs.html#private">Read the details</a>
-        <p class="note">On by default in the terminal. Switch it off when you need raw speed.</p>
+        <p class="note">On by default in the terminal. A route takes 10–40 minutes; switch it off when you need raw speed.</p>
       </div>
-      <div class="limits"><b>What it doesn't hide.</b> NEAR's service sees both ends of each route, and a determined observer can still try to match amounts and timing. Strong mode splits amounts and randomizes timing to make that harder; it can't make it impossible. <a href="./docs.html#proof">See the proof</a>.
+      <div class="limits"><b>What it doesn't hide.</b> Houdini Swap sees both ends of each route (it keeps order data for 72 hours), and each exchange sees its own leg. A determined observer can still try to match the amount you send with the amount that arrives, and their timing. The Monero hop, its fees and the random wait before buying make that harder; they can't make it impossible. <a href="./docs.html#proof">See the proof</a>.
       </div>
     </section>
 
@@ -357,7 +356,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 
       </div>
       <div class="desk">
         <div class="tile wide"><span data-glyph="flame" class="gl"></span><h3>Pulse</h3><p>New pairs, final stretch and migrated tokens stream in live, with bonding-curve progress read straight from the chain. <span data-glyph="bolt" class="inl" aria-hidden="true"></span> buys in one click.</p><span class="k">Live · pump.fun</span></div>
-        <div class="tile wide"><span data-glyph="bolt" class="gl"></span><h3>Instant wallet</h3><p>Trade with no wallet popups from a wallet derived from one signature of yours. Fund it directly, or privately through NEAR Intents.</p><span class="k">One signature</span></div>
+        <div class="tile wide"><span data-glyph="bolt" class="gl"></span><h3>Instant wallet</h3><p>Trade with no wallet popups from a wallet derived from one signature of yours. Fund it directly, or through Monero so the two wallets never touch.</p><span class="k">One signature</span></div>
         <div class="tile"><span data-glyph="chart" class="gl"></span><h3>Token pages</h3><p>Chart, live trades decoded on-chain, top holders, mint and freeze authority, dev holdings and P1–P3 presets.</p><span class="k">Audit built in</span></div>
         <div class="tile"><span data-glyph="target" class="gl"></span><h3>Orders</h3><p>Limit orders that fill with the tab closed, plus take-profit, stop-loss, trailing stops and a migration sniper.</p><span class="k">Jupiter Trigger</span></div>
         <div class="tile"><span data-glyph="stack" class="gl"></span><h3>Tracker and PnL</h3><p>Follow any wallet's swaps and copy them in one click. Portfolio shows positions, average cost and realized and unrealized PnL.</p><span class="k">Average cost</span></div>
@@ -425,7 +424,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 
         <span class="ca-k">Contract</span>
         <span class="ca-v" id="ca-v">FepxP15gLqWBW3pHV9Mmcb625UtPst7dFk1v2Ffhpump</span>
         <span class="ca-go" id="ca-go">Copy</span>
-      </button><a class="btn brass ca-trade" href="./app.html#/token/FepxP15gLqWBW3pHV9Mmcb625UtPst7dFk1v2Ffhpump">Trade on Privatus <span class="arr">→</span></a></div>
+      </button><a class="btn brass ca-trade" href="./app.html#/token/FepxP15gLqWBW3pHV9Mmcb625UtPst7dFk1v2Ffhpump">Trade on Ardea <span class="arr">→</span></a></div>
     </section>
   </div>
 </main>
@@ -433,9 +432,9 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 
 <footer>
   <div class="wrap">
     <p class="big">A wallet should only show <em>what you choose to sign.</em></p>
-    <nav aria-label="Footer"><a href="./app.html">Terminal</a><a href="./docs.html">Docs</a><a href="#audit">Trail audit</a><a href="https://x.com/privatussol" target="_blank" rel="noopener">X</a><a href="#private">Private mode</a></nav>
+    <nav aria-label="Footer"><a href="./app.html">Terminal</a><a href="./docs.html">Docs</a><a href="#audit">Trail audit</a><a href="#" data-x hidden target="_blank" rel="noopener">X</a><a href="#private">Private mode</a></nav>
     <div class="fine">
-      <a class="brand" href="#top" aria-label="Privatus home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
+      <a class="brand" href="#top" aria-label="Ardea home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
       <span>Non-custodial software. Privacy on a public chain is never perfect; read the limits in the docs.</span>
     </div>
   </div>

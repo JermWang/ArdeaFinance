@@ -1,4 +1,4 @@
-// node media/demo/source/record.mjs  — records media/demo/privatus-demo.mp4: one continuous take of a person making a
+// node media/demo/source/record.mjs  — records media/demo/ardea-demo.mp4: one continuous take of a person making a
 // Private mode trade in the live terminal, start to finish, then the outro slide for five seconds.
 //
 // Everything on screen is the real app at ORIGIN (the live site by default) against live data: PumpPortal, Jupiter,
@@ -24,7 +24,7 @@ const here = fileURLToPath(new URL(".", import.meta.url)), out = resolve(here, "
 const W = 1920, H = 1080, FPS = 30, WALLET = process.env.WALLET || "Phantom";
 const START_SOL = BigInt(Math.round(Number(process.env.START_SOL || 3.2146) * 1e9));
 const BUY = process.env.BUY || "0.5";
-const ORIGIN = (process.env.ORIGIN || "https://privatus.up.railway.app").replace(/\/$/, "");
+const ORIGIN = (process.env.ORIGIN || "https://ardea-production.up.railway.app").replace(/\/$/, "");
 const RPC = `${ORIGIN}/rpc`, JUP = `${ORIGIN}/jup`;
 const ZOOM = 1.45, EASE = .5, OUTRO_HOLD = 5, FADE = .7;
 const BROWSER = process.env.BROWSER || ["C:/Program Files/Google/Chrome/Application/chrome.exe", "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
@@ -269,7 +269,7 @@ try {
   await sleep(14000);
 
   // pick the token: a migrated pair Jupiter routes well, biggest first (deep pools barely move on a 0.5 SOL buy)
-  const cands = await evaluate(`[...document.querySelectorAll('.pcol[data-col="migrated"] .pcard')].map(e => ({ m: e.dataset.mint, mc: window.__privatus.board.tokens.get(e.dataset.mint)?.mcapUsd || 0 })).sort((a, b) => b.mc - a.mc).slice(0, 6).map(x => x.m)`);
+  const cands = await evaluate(`[...document.querySelectorAll('.pcol[data-col="migrated"] .pcard')].map(e => ({ m: e.dataset.mint, mc: window.__ardea.board.tokens.get(e.dataset.mint)?.mcapUsd || 0 })).sort((a, b) => b.mc - a.mc).slice(0, 6).map(x => x.m)`);
   let mint = process.env.MINT || null;
   for (const m of mint ? [] : cands) {
     const q = await (await fetch(`${JUP}/swap/v1/quote?inputMint=${SOL_MINT}&outputMint=${m}&amount=${Math.round(Number(BUY) * 0.985e9)}&slippageBps=300&restrictIntermediateTokens=true&maxAccounts=54`, { headers: { origin: ORIGIN } })).json().catch(() => ({}));
@@ -376,7 +376,7 @@ await writeFile(join(framesDir, "graph.txt"), graph);
 log(`encoding ${dur.toFixed(1)}s with ${segs.length} zooms`);
 const args = ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", join(framesDir, "list.txt")];
 if (hasEnd) args.push("-loop", "1", "-t", String(OUTRO_HOLD + FADE), "-framerate", String(FPS), "-i", END);
-args.push("-filter_complex_script", join(framesDir, "graph.txt"), "-map", "[v]", "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-movflags", "+faststart", join(out, "privatus-demo.mp4"));
+args.push("-filter_complex_script", join(framesDir, "graph.txt"), "-map", "[v]", "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-movflags", "+faststart", join(out, "ardea-demo.mp4"));
 execFileSync(FFMPEG, args, { stdio: "inherit" });
 await rm(framesDir, { recursive: true, force: true });
-log("wrote", join(out, "privatus-demo.mp4"), `${(dur + (hasEnd ? OUTRO_HOLD : 0)).toFixed(1)}s`);
+log("wrote", join(out, "ardea-demo.mp4"), `${(dur + (hasEnd ? OUTRO_HOLD : 0)).toFixed(1)}s`);

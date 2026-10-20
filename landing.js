@@ -4,6 +4,7 @@ import { RPC_URL, PROXY_URL, FEE_BPS, TOKEN_CA } from "./config.js";
 const DEFAULT_RPC = PROXY_URL ? `${PROXY_URL.replace(/\/$/, "")}/rpc` : RPC_URL || PUBLIC_RPC;
 import { C, REDUCE, renderGlyphs, renderIcons, hero } from "./art.js";
 import { renderDiagrams } from "./diagrams.js";
+import { X_URL } from "./config.js";
 
 renderGlyphs(document);
 renderIcons(document);
@@ -90,23 +91,23 @@ function frame(now) {
       const a = tracing && !REDUCE ? t * 2.4 : -.8;
       ctx.strokeStyle = C.BRASS; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 7, a + .5, a + 6.283 - .5); ctx.stroke();
     }
-    ctx.font = "500 9px 'Geist Mono', monospace"; ctx.textAlign = "center"; ctx.fillStyle = n.kind === "exchange" ? C.DOWN : C.MUTE;
+    ctx.font = "500 9px 'IBM Plex Mono', monospace"; ctx.textAlign = "center"; ctx.fillStyle = n.kind === "exchange" ? C.DOWN : C.MUTE;
     if (!tracing) { const w = ctx.measureText(n.label).width / 2 + 4, ly = n.kind === "deposit" ? n.y - n.r - 7 : n.y + n.r + (n.kind === "siblings" ? 24 : n.kind === "you" ? 22 : 13); ctx.fillText(n.label, Math.min(W - w, Math.max(w, n.x)), Math.min(H - 4, ly)); }
   }
   ctx.globalAlpha = 1;
   // while reading, a sweep ring runs out from the wallet
   if (tracing && !REDUCE) { const max = Math.hypot(W, H) * .6, r = ((now - G.start) / 1400 % 1) * max; ctx.strokeStyle = C.BRASS; ctx.globalAlpha = .5 * (1 - r / max); ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(G.you.x, G.you.y, r, 0, 6.283); ctx.stroke(); ctx.globalAlpha = 1; }
   // readout
-  ctx.textAlign = "left"; ctx.fillStyle = C.MUTE; ctx.font = "500 9px 'Geist Mono', monospace";
+  ctx.textAlign = "left"; ctx.fillStyle = C.MUTE; ctx.font = "500 9px 'IBM Plex Mono', monospace";
   ctx.fillText(tracing ? "READING" : "EXPOSURE", 14, 20);
-  ctx.font = "400 36px 'Instrument Serif', Georgia, serif";
+  ctx.font = "400 36px 'Cormorant Garamond', Georgia, serif";
   if (tracing) { ctx.fillStyle = C.IVORY; ctx.fillText(`${Math.round(G.frac * 100)}%`, 14, 52); }
   else if (G.result.score !== undefined) {
     G.shown += (G.result.score - G.shown) * (REDUCE ? 1 : .08);
     if (Math.abs(G.result.score - G.shown) < .5) G.shown = G.result.score;
     ctx.fillStyle = G.result.score >= 50 ? C.DOWN : G.result.score >= 25 ? C.BRASS : C.UP;
     ctx.fillText(String(Math.round(G.shown)), 14, 52);
-    ctx.font = "500 9px 'Geist Mono', monospace"; ctx.fillStyle = C.MUTE;
+    ctx.font = "500 9px 'IBM Plex Mono', monospace"; ctx.fillStyle = C.MUTE;
     ctx.fillText(`/100 · ${G.result.grade.toUpperCase()}`, 14, 68);
   } else { ctx.fillStyle = C.LINE; ctx.fillText("—", 14, 52); }
   if (!REDUCE) kick();
@@ -180,7 +181,7 @@ function ready() {
   copyBtn.disabled = true;
 }
 
-const RPC_KEY = "privatus-rpc";
+const RPC_KEY = "ardea-rpc";
 try { rpcIn.value = localStorage.getItem(RPC_KEY) || DEFAULT_RPC; } catch (_) { rpcIn.value = DEFAULT_RPC; }
 rpcIn.addEventListener("change", () => { try { localStorage.setItem(RPC_KEY, rpcIn.value.trim()); } catch (_) {} });
 const rpcUrl = () => /^https?:\/\/\S+$/.test(rpcIn.value.trim()) ? rpcIn.value.trim() : DEFAULT_RPC;
@@ -223,7 +224,7 @@ copyBtn.addEventListener("click", async () => {
   const r = G.result;
   if (!r || !r.findings) return;
   const mask = s => s.replace(/[1-9A-HJ-NP-Za-km-z]{4,8}…[1-9A-HJ-NP-Za-km-z]{4}/g, "••••");
-  const text = [`My Solana wallet exposure (Privatus trail audit): ${r.score}/100 (${r.grade})`, ...r.findings.map(f => `· ${f.k}: ${mask(f.v)}`), location.href.split("#")[0]].join("\n");
+  const text = [`My Solana wallet exposure (Ardea trail audit): ${r.score}/100 (${r.grade})`, ...r.findings.map(f => `· ${f.k}: ${mask(f.v)}`), location.href.split("#")[0]].join("\n");
   try { await navigator.clipboard.writeText(text); setMeta(["Copied. Wallet addresses are masked."]); }
   catch (_) { setMeta(["Couldn't reach the clipboard in this view."]); }
 });
@@ -251,3 +252,6 @@ const ca = $("ca");
 
 /* ---------- boot ---------- */
 ready();
+
+// X links stay hidden until the account exists (X_URL in config.js).
+if (X_URL) document.querySelectorAll("[data-x]").forEach(a => { a.href = X_URL; a.hidden = false; });

@@ -1,4 +1,4 @@
-// Privatus terminal. Views: Pulse, Trending, token page, Tracker, Portfolio. All data comes from public
+// Ardea terminal. Views: Pulse, Trending, token page, Tracker, Portfolio. All data comes from public
 // sources in the browser (PumpPortal, Jupiter, DexScreener, your Solana RPC, Houdini's Monero route); every trade is
 // signed by your wallet, or locally by your instant/stealth wallets which are derived from one signature of it.
 import { RPC_URL, TREASURY, FEE_BPS, JUP_BASE, JUP_API_KEY, DEFAULT_SLIPPAGE_BPS, PRIORITY_MAX_LAMPORTS, STEALTH_MAX_SOL, STEALTH_GAS_RESERVE, PROXY_URL } from "./config.js";
@@ -9,6 +9,7 @@ import { trace, DEFAULT_RPC, short, isAddress, base58Encode } from "./trace.js";
 import { createBoard, fromPumpPortal, fromJupiter, fromStonk, STONK, pnl, isPumpMint, mergeHistory, pushSample, momentum } from "./market.js";
 import { pumpPortal, stonkFun, tokenTrades, readCurves, metadata, holders, recentSwaps, walletHistory, onchainMeta, imageSources, identicon, setMediaProxy } from "./feeds.js";
 import { renderGlyphs, emblem, glyphSVG } from "./art.js";
+import { X_URL } from "./config.js";
 
 const web3 = window.solanaWeb3;
 const $ = id => document.getElementById(id);
@@ -122,18 +123,18 @@ const DEFAULTS = {
   stealth: true, // Private mode on by default for buys from the main wallet; the trade panel switch saves the choice
   privacy: "strong" // "strong": a random wait between the SOL landing and the buy; "fast": buy as soon as it lands
 };
-const settings = Object.assign(structuredClone(DEFAULTS), store.get("privatus-settings", {}));
-const saveSettings = () => store.set("privatus-settings", settings);
+const settings = Object.assign(structuredClone(DEFAULTS), store.get("ardea-settings", {}));
+const saveSettings = () => store.set("ardea-settings", settings);
 const preset = () => settings.presets[settings.preset] || DEFAULTS.presets[0];
 // Private mode timing: the random wait (ms) between the SOL landing in the stealth wallet and its buy.
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const PRIVACY = { strong: { settle: [30000, 180000] }, fast: { settle: [0, 0] } };
 
 /* ---------- services ---------- */
-// With PROXY_URL set, RPC, Jupiter, the Monero route (Houdini), Jito and X go through the Privatus proxy, which holds the keys.
+// With PROXY_URL set, RPC, Jupiter, the Monero route (Houdini), Jito and X go through the Ardea proxy, which holds the keys.
 const PROXY = (PROXY_URL || "").replace(/\/$/, "");
 setMediaProxy(PROXY);
-const rpcUrl = (() => { const v = store.get("privatus-rpc-url", null) || (() => { try { return localStorage.getItem("privatus-rpc"); } catch (_) { return null; } })(); return typeof v === "string" && /^https?:\/\/\S+$/.test(v.trim()) ? v.trim() : PROXY ? `${PROXY}/rpc` : RPC_URL || DEFAULT_RPC; })();
+const rpcUrl = (() => { const v = store.get("ardea-rpc-url", null) || (() => { try { return localStorage.getItem("ardea-rpc"); } catch (_) { return null; } })(); return typeof v === "string" && /^https?:\/\/\S+$/.test(v.trim()) ? v.trim() : PROXY ? `${PROXY}/rpc` : RPC_URL || DEFAULT_RPC; })();
 const connection = new web3.Connection(rpcUrl, "confirmed");
 const jup = jupiter({ base: PROXY ? `${PROXY}/jup` : JUP_BASE, apiKey: PROXY ? "" : JUP_API_KEY, minInterval: PROXY ? 300 : JUP_API_KEY ? 1050 : 2050 });
 const hd = houdini({ base: PROXY ? `${PROXY}/houdini` : "" });
@@ -246,7 +247,7 @@ async function walletSeed() {
   const r = await S.wallet.p.signMessage(new TextEncoder().encode(STEALTH_MESSAGE), "utf8");
   const sig = r instanceof Uint8Array ? r : r.signature;
   if (!sig || sig.length !== 64) throw new StealthError("The wallet returned an unexpected signature.");
-  const fp = await seedFingerprint(sig), key = `privatus-stealthfp-${S.wallet.pk}`, known = store.get(key, null);
+  const fp = await seedFingerprint(sig), key = `ardea-stealthfp-${S.wallet.pk}`, known = store.get(key, null);
   if (known && known !== fp) throw new StealthError("This wallet signed differently than last time, so it would open different instant and stealth wallets. Use the same wallet app as before, or export keys from the device you used.");
   store.set(key, fp);
   return (S.seed = sig);
@@ -291,7 +292,7 @@ function checkTransfer(a) {
 }
 
 /* ---------- trades ---------- */
-const TKEY = pk => `privatus-trades-${pk}`;
+const TKEY = pk => `ardea-trades-${pk}`;
 const tradesOf = pk => store.get(TKEY(pk), []);
 function logTrade(pk, t) { const l = tradesOf(pk); l.unshift(t); store.set(TKEY(pk), l.slice(0, 500)); }
 const tradedMints = () => { const s = new Set(); for (const pk of [S.wallet?.pk, S.instant?.pk]) if (pk) tradesOf(pk).forEach(t => s.add(t.mint)); return s; };
@@ -341,11 +342,11 @@ function route() {
   S.route = name;
   VIEWS.forEach(v => { $(`v-${v}`).hidden = v !== name; });
   document.querySelectorAll(".nav a").forEach(a => a.setAttribute("aria-current", a.dataset.route === name ? "page" : "false"));
-  if (name === "pulse") { document.title = "Pulse · Privatus"; renderPulse(true); }
-  if (name === "trending") { document.title = "Trending · Privatus"; loadTrending(); }
+  if (name === "pulse") { document.title = "Pulse · Ardea"; renderPulse(true); }
+  if (name === "trending") { document.title = "Trending · Ardea"; loadTrending(); }
   if (name === "token") openToken(arg);
-  if (name === "tracker") { document.title = "Tracker · Privatus"; renderTracker(); }
-  if (name === "portfolio") { document.title = "Portfolio · Privatus"; renderPortfolio(); }
+  if (name === "tracker") { document.title = "Tracker · Ardea"; renderTracker(); }
+  if (name === "portfolio") { document.title = "Portfolio · Ardea"; renderPortfolio(); }
   window.scrollTo(0, 0);
 }
 addEventListener("hashchange", route);
@@ -393,7 +394,7 @@ function setRing(av, t, column) {
 
 /* ---------- Pulse ---------- */
 const board = createBoard({ finalStretch: settings.finalStretch });
-const filters = store.get("privatus-pulse-filters", { new: {}, final: {}, migrated: {} });
+const filters = store.get("ardea-pulse-filters", { new: {}, final: {}, migrated: {} });
 const cardEls = new Map();
 const paused = new Set();
 let pulseDirty = true;
@@ -664,7 +665,7 @@ document.querySelectorAll(".pcol").forEach(col => {
   col.querySelectorAll("[data-f]").forEach(inp => {
     const k = inp.dataset.f;
     if (inp.type === "checkbox") inp.checked = !!f[k]; else inp.value = f[k] || "";
-    inp.addEventListener("input", () => { f[k] = inp.type === "checkbox" ? inp.checked : k === "minMcap" ? Number(inp.value) || 0 : inp.value.trim(); store.set("privatus-pulse-filters", filters); pulseDirty = true; paused.delete(key); renderPulse(); paused.add(key); });
+    inp.addEventListener("input", () => { f[k] = inp.type === "checkbox" ? inp.checked : k === "minMcap" ? Number(inp.value) || 0 : inp.value.trim(); store.set("ardea-pulse-filters", filters); pulseDirty = true; paused.delete(key); renderPulse(); paused.add(key); });
   });
 });
 $("mobcols").addEventListener("click", e => {
@@ -728,7 +729,7 @@ async function openToken(mint) {
   $("curvebar").hidden = true;
   renderStar(); renderTrades(); renderMine(); renderTradePanel(); selectTokenTab("tt-trades"); renderOrdersPanel();
   $("audit").textContent = ""; $("audit").append(make("h3", "", "Token info"), make("span", "muted", "Loading…"));
-  document.title = `${b.symbol || short(mint)} · Privatus`;
+  document.title = `${b.symbol || short(mint)} · Ardea`;
 
   if (!hasMeta(mint)) { metaTried.delete(mint); needMeta([mint]); }
   decimalsOf(mint).then(d => { T.decimals = d; renderTradePanel(); }).catch(e => setTradeStatus(errMsg(e), "err"));
@@ -756,7 +757,7 @@ function renderTokenHead() {
   text($("t-sym"), sym); text($("t-name"), t?.name || b.name || "");
   icon($("t-icon"), t?.icon || b.image, mint);
   setRing($("t-av"), { ...b, pump: b.pump || isPumpMint(mint, t?.launchpad), progress: T.curve ? T.curve.progress : b.progress, complete: T.curve?.complete || b.complete || !!t?.graduatedPool }, b.migratedAt || t?.graduatedPool ? "migrated" : "");
-  document.title = `${sym} · Privatus`;
+  document.title = `${sym} · Ardea`;
   const soc = { twitter: t?.twitter || b.twitter, telegram: t?.telegram || b.telegram, website: t?.website || b.website, launchpad: t?.launchpad || b.launchpad, pump: b.pump, stonk: b.stonk };
   const links = $("t-links"), sig = JSON.stringify(soc);
   if (links.dataset.sig !== sig || !links.childElementCount) { links.dataset.sig = sig; links.textContent = ""; tokenLinks(mint, soc).forEach(l => links.append(linkBtn(l, true))); }
@@ -1140,7 +1141,7 @@ function orderRow(o, after) {
 }
 
 /* ---------- autopilot: TP / SL / trailing stop (instant wallet, while open) ---------- */
-const RKEY = "privatus-autopilot";
+const RKEY = "ardea-autopilot";
 const rules = () => store.get(RKEY, []);
 const saveRules = l => { store.set(RKEY, l.slice(-200)); updateAutoChip(); };
 document.querySelectorAll("#op-auto [data-add]").forEach(b => b.addEventListener("click", async () => {
@@ -1207,7 +1208,7 @@ function updateAutoChip() {
 $("autochip").addEventListener("click", async () => { if (!S.instant) { try { await instantWallet(); updateAutoChip(); toast("Autopilot resumed.", "ok"); } catch (e) { toast(errMsg(e), "err"); } } else location.hash = "#/portfolio"; });
 
 /* ---------- migration sniper ---------- */
-const SKEY = "privatus-snipes";
+const SKEY = "ardea-snipes";
 const snipes = () => store.get(SKEY, []);
 const saveSnipes = l => { store.set(SKEY, l.slice(-100)); updateAutoChip(); pulseDirty = true; };
 async function toggleSnipe(mint) {
@@ -1246,7 +1247,7 @@ async function fireSnipe(mint) {
 async function loadPosts() {
   const host = $("tp-posts"), mint = S.tokenMint, sym = symbolOf(mint);
   host.textContent = "";
-  if (!PROXY) { host.append(make("div", "tdempty", "Posts from X need the Privatus proxy with an X API key (see worker/README.md). X charges per post read, so they only load here.")); return; }
+  if (!PROXY) { host.append(make("div", "tdempty", "Posts from X need the Ardea proxy with an X API key (see worker/README.md). X charges per post read, so they only load here.")); return; }
   host.append(make("div", "tdempty", "Loading posts…"));
   try {
     const q = /^[A-Za-z][A-Za-z0-9_]{0,15}$/.test(sym) ? `(${mint} OR $${sym})` : mint;
@@ -1271,7 +1272,7 @@ async function loadPosts() {
 
 /* ---------- Private mode ---------- */
 let solToken = null;
-const GKEY = pk => `privatus-stealths-${pk}`;
+const GKEY = pk => `ardea-stealths-${pk}`;
 const stealthRecords = () => S.wallet ? store.get(GKEY(S.wallet.pk), []) : [];
 function saveStealth(rec) { const list = stealthRecords().filter(g => g.index !== rec.index); list.push(rec); list.sort((a, b) => a.index - b.index); store.set(GKEY(S.wallet.pk), list); }
 // Any signature at all means the address has history. RPC errors throw: better no buy than a reused stealth.
@@ -1298,7 +1299,7 @@ async function stealthBuy() {
   S.busy = true; go.disabled = true;
   let rec = null;
   try {
-    text(go, "Sign in wallet…"); setTradeStatus("Sign the Privatus message so the terminal can open a fresh stealth wallet. It sends nothing.");
+    text(go, "Sign in wallet…"); setTradeStatus("Sign the Ardea message so the terminal can open a fresh stealth wallet. It sends nothing.");
     const seed = await walletSeed();
     text(go, "Finding a fresh stealth wallet…");
     const { index, stealth } = await nextUnusedStealth(web3, seed, { isUsed: usedOnChain, start: stealthRecords().reduce((m, g) => Math.max(m, g.index + 1), 0) });
@@ -1435,11 +1436,11 @@ $("g-unlock").addEventListener("click", async () => {
 });
 
 /* ---------- Tracker ---------- */
-const tracked = () => store.get("privatus-tracked", []);
+const tracked = () => store.get("ardea-tracked", []);
 function addTracked(address, label) {
   if (!isAddress(address)) return toast("That isn't a Solana address.", "err");
   const l = tracked().filter(w => w.address !== address); l.push({ address, label: label || short(address) });
-  store.set("privatus-tracked", l); renderTracker(); startTracker();
+  store.set("ardea-tracked", l); renderTracker(); startTracker();
 }
 const feed = [];
 const seenSigs = new Map();
@@ -1475,7 +1476,7 @@ function renderTracker() {
   for (const w of tracked()) {
     const li = make("li"), info = make("div"), x = make("button", "icon-btn"); x.append(svgIcon("close")); x.type = "button"; x.setAttribute("aria-label", `Stop tracking ${w.label}`);
     info.append(make("div", "lab", w.label), link(solscan("account", w.address), short(w.address)));
-    x.addEventListener("click", () => { store.set("privatus-tracked", tracked().filter(t => t.address !== w.address)); seenSigs.delete(w.address); renderTracker(); });
+    x.addEventListener("click", () => { store.set("ardea-tracked", tracked().filter(t => t.address !== w.address)); seenSigs.delete(w.address); renderTracker(); });
     li.append(info, x); ul.append(li);
   }
   renderFeed();
@@ -1500,7 +1501,7 @@ $("tk-form").addEventListener("submit", e => { e.preventDefault(); addTracked($(
 let pfWallet = "main";
 let pfRun = 0;
 // Allocation colours: the art palette, so the dashboard matches the drawings.
-const ALLOC = ["#8B93A1", "#DEB471", "#43D19E", "#5D7596", "#E8A35A", "#B9A3E3", "#EFE9DC", "#3A4659"];
+const ALLOC = ["#8B93A1", "#FF6600", "#43D19E", "#5D7596", "#F2C14E", "#B9A3E3", "#F1ECE4", "#3A4659"];
 // A PnL value with a small bar under it, scaled to the biggest win or loss in the table.
 function pnlCell(v, max) {
   const td = make("td", "num pnl");
@@ -1642,12 +1643,12 @@ $("x-run").addEventListener("click", async () => {
 });
 
 /* ---------- watchlist ---------- */
-const watchlist = () => store.get("privatus-watchlist", []);
+const watchlist = () => store.get("ardea-watchlist", []);
 let watchPrices = {};
 function renderStar() { const on = watchlist().some(w => w.mint === S.tokenMint); $("t-star").setAttribute("aria-pressed", on); $("t-star").setAttribute("aria-label", on ? "Remove from watchlist" : "Add to watchlist"); }
 $("t-star").addEventListener("click", () => {
   const l = watchlist(), on = l.some(w => w.mint === S.tokenMint);
-  store.set("privatus-watchlist", on ? l.filter(w => w.mint !== S.tokenMint) : [...l, { mint: S.tokenMint, symbol: symbolOf(S.tokenMint), icon: iconOf(S.tokenMint) }]);
+  store.set("ardea-watchlist", on ? l.filter(w => w.mint !== S.tokenMint) : [...l, { mint: S.tokenMint, symbol: symbolOf(S.tokenMint), icon: iconOf(S.tokenMint) }]);
   renderStar(); renderWatchbar(); refreshWatch();
 });
 function renderWatchbar() {
@@ -1823,7 +1824,7 @@ $("settingsbtn").addEventListener("click", () => openModal("Settings", body => {
     settings.privacy = pvSel.value;
     saveSettings();
     const newRpc = rpcIn.value.trim();
-    if (newRpc !== rpcUrl && /^https?:\/\/\S+$/.test(newRpc)) { store.set("privatus-rpc-url", newRpc); location.reload(); return; }
+    if (newRpc !== rpcUrl && /^https?:\/\/\S+$/.test(newRpc)) { store.set("ardea-rpc-url", newRpc); location.reload(); return; }
     modal.close(); pulseDirty = true; renderPulse(true); if (S.route === "token") renderTradePanel();
     toast("Settings saved.", "ok");
   });
@@ -1881,7 +1882,7 @@ document.addEventListener("visibilitychange", () => {
 });
 // reconnect silently if a wallet already trusts this site
 for (const w of providers()) { if (w.p.isConnected || w.p.publicKey) { w.p.connect?.({ onlyIfTrusted: true }).then(() => connect(w)).catch(() => {}); break; } }
-window.__privatus = { board, settings, S, T }; // handy for debugging from the console
+window.__ardea = { board, settings, S, T }; // handy for debugging from the console
 
 /* ---------- status bar ---------- */
 // Mirrors the stream chips, times a getSlot round trip to the RPC every 15 s while the tab is visible,
@@ -1906,3 +1907,6 @@ function tickStatus() {
 ["sb-rpc", "sb-slot", "sb-sol"].forEach(id => { const b = $(id).querySelector("b"); b.remove(); $(id).append(b); });
 setInterval(tickStatus, 1000); tickStatus();
 setInterval(pingRpc, 15000); pingRpc();
+
+// X links stay hidden until the account exists (X_URL in config.js).
+if (X_URL) document.querySelectorAll("[data-x]").forEach(a => { a.href = X_URL; a.hidden = false; });

@@ -1,4 +1,4 @@
-// Privatus on a plain Node server (Railway): serves the static site and runs the same proxy as the
+// Ardea on a plain Node server (Railway): serves the static site and runs the same proxy as the
 // Cloudflare Worker in worker/ on the same origin. Env vars are the worker's secrets and vars:
 // RPC_URL, RPC_WS_URL, JUP_API_KEY, HOUDINI_API_KEY, HOUDINI_API_SECRET, X_BEARER, JITO_URL, ALLOWED_ORIGINS. No dependencies.
 import http from "node:http";
@@ -144,4 +144,4 @@ server.on("upgrade", (req, socket, head) => {
   socket.on("error", () => up.destroy());
 });
 
-server.listen(PORT, () => console.log(`privatus on :${PORT}`));
+server.listen(PORT, () => console.log(`ardea on :${PORT}`));

@@ -4,38 +4,41 @@ import { schematic, ledger, curveChart, fit } from "./art.js";
 
 const n = (id, x, y, label, sub, o = {}) => ({ id, x, y, label, sub, ...o });
 
-// Main wallet → 1Click deposit → NEAR Intents (fee taken inside the route) → stealth wallet → Jupiter.
+// Main wallet → one-time deposit at exchange A (SOL → XMR) → Monero → exchange B (XMR → SOL) → stealth wallet →
+// Jupiter. The fee goes from the main wallet to the treasury in the same transaction, and nowhere else.
 export function stealthRoute(svg, narrow = false) {
   const at = narrow
-    ? { main: [0, 0], dep: [0, 110], near: [0, 220], stealth: [0, 330], jup: [0, 440] }
-    : { main: [0, 0], dep: [220, 0], near: [440, 0], stealth: [660, 0], jup: [660, 104] };
+    ? { main: [0, 0], fee: [0, 110], dep: [0, 220], xmr: [0, 330], exb: [0, 440], stealth: [0, 550], jup: [0, 660] }
+    : { main: [0, 0], fee: [0, 110], dep: [220, 0], xmr: [440, 0], exb: [660, 0], stealth: [660, 110], jup: [440, 110] };
   schematic(svg, {
     nodes: [
-      n("main", ...at.main, "Your wallet", "plain transfers", { glyph: "key" }),
-      n("dep", ...at.dep, "Deposit", "one-time address", { glyph: "file" }),
-      n("near", ...at.near, "NEAR Intents", "confidential · fee in route", { glyph: "lock", tone: "core" }),
+      n("main", ...at.main, "Your wallet", "signs once", { glyph: "key" }),
+      n("fee", ...at.fee, "Treasury", "0.5% fee", { glyph: "fuel" }),
+      n("dep", ...at.dep, "Exchange A", "SOL → XMR", { glyph: "file" }),
+      n("xmr", ...at.xmr, "Monero", "ring sigs · RingCT", { glyph: "lock", tone: "core" }),
+      n("exb", ...at.exb, "Exchange B", "XMR → SOL", { glyph: "file" }),
       n("stealth", ...at.stealth, "Stealth", "fresh wallet", { glyph: "stealth", tone: "brass" }),
       n("jup", ...at.jup, "Jupiter", "swap", { glyph: "route" })
     ],
-    links: [{ from: "main", to: "dep" }, { from: "dep", to: "near" }, { from: "near", to: "stealth" }, { from: "stealth", to: "jup" }],
-    sequence: [[0], [1], [2], [3]],
-    tags: [{ link: 0, text: "SOL" }, { link: 2, text: "BRIDGE PAYS", accent: true }]
+    links: [{ from: "main", to: "dep" }, { from: "dep", to: "xmr" }, { from: "xmr", to: "exb" }, { from: "exb", to: "stealth" }, { from: "stealth", to: "jup" }, { from: "main", to: "fee" }],
+    sequence: [[0, 5], [1], [2], [3], [4]],
+    tags: [{ link: 0, text: "SOL" }, { link: 1, text: "XMR", accent: true }, { link: 3, text: "B PAYS" }]
   });
   return fit(svg);
 }
 
-// Stealth exit: sell on Jupiter, then back to the main wallet through NEAR Intents.
+// Stealth exit: sell on Jupiter, then back to the main wallet through the same Monero route.
 export function stealthExit(svg, narrow = false) {
-  const at = narrow ? { jup: [0, 0], stealth: [0, 110], near: [0, 220], main: [0, 330] }
-    : { jup: [0, 0], stealth: [220, 0], near: [440, 0], main: [660, 0] };
+  const at = narrow ? { jup: [0, 0], stealth: [0, 110], xmr: [0, 220], main: [0, 330] }
+    : { jup: [0, 0], stealth: [220, 0], xmr: [440, 0], main: [660, 0] };
   schematic(svg, {
     nodes: [
       n("jup", ...at.jup, "Jupiter", "sell", { glyph: "route" }),
       n("stealth", ...at.stealth, "Stealth", "holds SOL", { glyph: "stealth", tone: "brass" }),
-      n("near", ...at.near, "NEAR Intents", "confidential", { glyph: "lock", tone: "core" }),
+      n("xmr", ...at.xmr, "Monero route", "SOL → XMR → SOL", { glyph: "lock", tone: "core" }),
       n("main", ...at.main, "Your wallet", "receives", { glyph: "key" })
     ],
-    links: [{ from: "jup", to: "stealth" }, { from: "stealth", to: "near" }, { from: "near", to: "main" }],
+    links: [{ from: "jup", to: "stealth" }, { from: "stealth", to: "xmr" }, { from: "xmr", to: "main" }],
     tags: [{ link: 2, text: "NO FEE" }]
   });
   return fit(svg);
@@ -64,12 +67,12 @@ export function overview(svg, narrow = false) {
   const nodes = narrow ? [
     n("you", 0, 0, "Your browser", "keys + signing", { glyph: "globe", tone: "core" }),
     n("rpc", -86, 120, "Solana RPC", "chain reads", { glyph: "stack", w: 156 }), n("jup", 86, 120, "Jupiter", "routes, prices", { glyph: "route", w: 156 }),
-    n("near", -86, 200, "NEAR 1Click", "stealth routes", { glyph: "lock", w: 156 }), n("pump", 86, 200, "PumpPortal", "new launches", { glyph: "flame", w: 156 }),
+    n("near", -86, 200, "Houdini", "Monero routes", { glyph: "lock", w: 156 }), n("pump", 86, 200, "PumpPortal", "new launches", { glyph: "flame", w: 156 }),
     n("jito", -86, 280, "Jito", "block engine", { glyph: "shield", w: 156 }), n("dex", 86, 280, "DexScreener", "charts", { glyph: "chart", w: 156 })
   ] : [
     n("you", 0, 0, "Your browser", "keys + signing", { glyph: "globe", tone: "core" }),
     n("rpc", 280, -100, "Solana RPC", "chain reads", { glyph: "stack" }), n("jup", 280, 0, "Jupiter", "routes, prices", { glyph: "route" }), n("jito", 280, 100, "Jito", "block engine", { glyph: "shield" }),
-    n("pump", -280, -100, "PumpPortal", "new launches", { glyph: "flame" }), n("dex", -280, 0, "DexScreener", "charts", { glyph: "chart" }), n("near", -280, 100, "NEAR 1Click", "stealth routes", { glyph: "lock" })
+    n("pump", -280, -100, "PumpPortal", "new launches", { glyph: "flame" }), n("dex", -280, 0, "DexScreener", "charts", { glyph: "chart" }), n("near", -280, 100, "Houdini", "Monero routes", { glyph: "lock" })
   ];
   const links = ["rpc", "jup", "jito", "pump", "dex", "near"].map(id => narrow ? { from: "you", to: id, axis: "y", mid: 60 } : { from: "you", to: id, axis: "x" });
   schematic(svg, { nodes, links, sequence: [[0, 3], [1, 4], [2, 5]] });
@@ -83,7 +86,7 @@ export function proxy(svg) {
       n("you", 0, 0, "Browser", "no keys", { glyph: "globe" }),
       n("gw", 230, 0, "Gateway", "holds the keys", { glyph: "key", tone: "core" }),
       n("rpc", 470, -114, "RPC", "", { glyph: "stack" }), n("jup", 470, -38, "Jupiter", "", { glyph: "route" }),
-      n("near", 470, 38, "1Click", "", { glyph: "lock" }), n("x", 470, 114, "X posts", "", { glyph: "file" })
+      n("near", 470, 38, "Houdini", "", { glyph: "lock" }), n("x", 470, 114, "X posts", "", { glyph: "file" })
     ],
     links: [{ from: "you", to: "gw" }, ...["rpc", "jup", "near", "x"].map(id => ({ from: "gw", to: id, axis: "x", mid: 350 }))],
     sequence: [[0], [1, 2, 3, 4]],
@@ -142,7 +145,7 @@ export function tradeTx(svg) {
     rows: [
       { label: "COMPUTE BUDGET", note: "limit + priority" },
       { label: "TOKEN ACCOUNT", note: "opened if needed" },
-      { label: "PRIVATUS FEE", note: "0.5% → treasury", accent: true },
+      { label: "ARDEA FEE", note: "0.5% → treasury", accent: true },
       { label: "JUPITER SWAP", note: "best route" },
       { label: "CLEANUP", note: "unwrap SOL" },
       { label: "JITO TIP", note: "if the preset sets one" }

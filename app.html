@@ -3,33 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Privatus terminal: live pump.fun Pulse, one-click trading through Jupiter, wallet tracking, orders, and Private mode over NEAR Intents.">
+<meta name="description" content="Ardea terminal: live pump.fun Pulse, one-click trading through Jupiter, wallet tracking, orders, and Private mode routed through Monero.">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Privatus">
-<meta property="og:title" content="Privatus Terminal">
-<meta property="og:description" content="Live launches, one-click Jupiter trading, wallet tracking, limit orders and Private mode over NEAR Intents.">
-<meta property="og:image" content="https://privatusterminal.xyz/media/banner.png?v=2">
+<meta property="og:site_name" content="Ardea">
+<meta property="og:title" content="Ardea Terminal">
+<meta property="og:description" content="Live launches, one-click Jupiter trading, wallet tracking, limit orders and Private mode routed through Monero.">
+<meta property="og:image" content="https://ardea-production.up.railway.app/media/banner.png?v=1">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta name="twitter:site" content="@privatussol">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://privatusterminal.xyz/media/banner.png?v=2">
-<meta name="theme-color" content="#080B10">
-<title>Privatus Terminal</title>
+<meta name="twitter:image" content="https://ardea-production.up.railway.app/media/banner.png?v=1">
+<meta name="theme-color" content="#080B13">
+<title>Ardea Terminal</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* Terminal: a vault-navy trading desk. Ruled panels, squared controls, mono numbers; brass marks what is
    live or selected, green is a gain, red is a loss or a risk. */
 :root{
-  --paper:#EFE9DC;--ink:#0A0E14;--ink-0:#080B10;--ink-1:#0E131B;--ink-2:#151C27;--ink-3:#212A38;--line:#1C2431;
-  --mute:#5E6878;--mute-ink:#8B93A1;--accent:#DEB471;--down:#F06A6A;--up:#43D19E;--warn:#E8A35A;
-  --font-display:"Geist","Segoe UI",system-ui,sans-serif;--font-mono:"Geist Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
-  --serif:"Instrument Serif",Georgia,serif;
+  --paper:#F1ECE4;--ink:#0B0F1A;--ink-0:#080B13;--ink-1:#0F1422;--ink-2:#161D2E;--ink-3:#222B42;--line:#1D2538;
+  --mute:#5E6878;--mute-ink:#8B93A1;--accent:#FF6600;--down:#F06A6A;--up:#43D19E;--warn:#F2C14E;
+  --font-display:"Manrope","Segoe UI",system-ui,sans-serif;--font-mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --serif:"Cormorant Garamond",Georgia,serif;
   --r:6px;color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -396,7 +395,7 @@ td.pnl .pb{display:block;height:3px;border-radius:2px;margin:4px 0 0 auto;opacit
 .pb.pos{background:var(--up)}.pb.neg{background:var(--down)}
 @media (prefers-reduced-motion:reduce){.pcard,.lk,.mbar i{transition:none}.pcard:hover{transform:none}}
 
-/* Privatus desk finish: hairline rules, brass for the selected state, an engraved backdrop behind the views */
+/* Ardea desk finish: hairline rules, brass for the selected state, an engraved backdrop behind the views */
 body{background:var(--ink-0) radial-gradient(1200px 500px at 70% -10%,color-mix(in srgb,var(--accent) 5%,transparent),transparent 70%) no-repeat}
 .bar{background:color-mix(in srgb,var(--ink-0) 90%,transparent)}
 .nav a[aria-current="page"]{background:none;color:var(--paper);box-shadow:inset 0 -2px 0 var(--accent);border-radius:0}
@@ -493,7 +492,7 @@ a.txl{display:inline-flex;color:var(--mute-ink);padding:2px}a.txl:hover{color:va
 .go{border-radius:6px;font-weight:600;letter-spacing:.01em;transition:filter .15s,transform .1s}
 .go:active:not(:disabled){transform:translateY(1px)}
 .btn.buy{background:linear-gradient(180deg,#52DBA8,var(--up));border-color:var(--up)}
-.btn.primary{background:linear-gradient(180deg,#F2CF8E,var(--accent))}
+.btn.primary{background:linear-gradient(180deg,#FF9A57,var(--accent))}
 
 /* loading: skeleton cards with a brass-tinted shimmer */
 .skel{display:grid;grid-template-columns:48px minmax(0,1fr) 54px;gap:11px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--ink-1)}
@@ -569,27 +568,27 @@ a.txl{display:inline-flex;color:var(--mute-ink);padding:2px}a.txl:hover{color:va
 .pc-curve .cbar i{display:block;height:100%;border-radius:3px;background:var(--up);transition:width .4s ease}
 .pc-curve b{font:600 .6rem var(--font-mono);letter-spacing:.06em;color:var(--up);text-align:center;font-variant-numeric:tabular-nums}
 .pc-curve.hot .cbar i{background:var(--accent)}.pc-curve.hot b{color:var(--accent)}
-.pc-curve.done .cbar i{background:linear-gradient(90deg,var(--accent),#F0D49C)}.pc-curve.done b{color:var(--accent);font-size:.54rem}
+.pc-curve.done .cbar i{background:linear-gradient(90deg,var(--accent),#FFA466)}.pc-curve.done b{color:var(--accent);font-size:.54rem}
 @media (max-width:520px){.pcard{grid-template-columns:56px minmax(0,1fr)}.pcard .av,.pcard .av.ring,.pcard .av.grad{width:56px;height:56px}}
 @media (prefers-reduced-motion:reduce){.pc-curve .cbar i{transition:none}}
 
 /* the logo's metallic gold on primary actions */
-.btn.primary{background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 38%,#D2A55F 64%,#E9C88A 82%,#B98A48 100%);border-color:#D9B06A;box-shadow:inset 0 1px 0 rgba(255,244,218,.4)}
+.btn.primary{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 38%,#F2620A 64%,#FF9447 82%,#C84800 100%);border-color:#F57018;box-shadow:inset 0 1px 0 rgba(255,244,218,.4)}
 .btn.primary:hover:not(:disabled){filter:brightness(1.06)}
-.pulse-top h1{background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 38%,#D2A55F 64%,#E9C88A 82%,#B98A48 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
-.switch[aria-checked="true"]{background:linear-gradient(135deg,#F8DEA4 0%,#E6BF7C 38%,#D2A55F 64%,#E9C88A 82%,#B98A48 100%)}
+.pulse-top h1{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 38%,#F2620A 64%,#FF9447 82%,#C84800 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.switch[aria-checked="true"]{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 38%,#F2620A 64%,#FF9447 82%,#C84800 100%)}
 </style>
 </head>
 <body>
 <header class="bar">
-  <a class="brand" href="./" aria-label="Privatus home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
+  <a class="brand" href="./" aria-label="Ardea home"><span data-glyph="mark" class="mark"></span><span data-glyph="word" class="word"></span></a>
   <nav class="nav" aria-label="Terminal">
     <a href="#/" data-route="pulse">Pulse</a>
     <a href="#/trending" data-route="trending">Trending</a>
     <a href="#/tracker" data-route="tracker">Tracker</a>
     <a href="#/portfolio" data-route="portfolio">Portfolio</a>
     <a href="./docs.html" class="docs-link">Docs</a>
-    <a class="x-link" href="https://x.com/privatussol" target="_blank" rel="noopener" aria-label="Privatus on X" title="Privatus on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+    <a class="x-link" href="#" data-x hidden target="_blank" rel="noopener" aria-label="Ardea on X" title="Ardea on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
   </nav>
   <div class="search">
     <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -691,10 +690,10 @@ a.txl{display:inline-flex;color:var(--mute-ink);padding:2px}a.txl:hover{color:va
         <div class="quick" id="quick"></div>
         <div class="presets" id="presets" role="group" aria-label="Trade presets"></div>
         <div class="stealth-toggle" id="stealth-box">
-          <div><b>Private mode<span class="tag">BETA</span></b><span id="stealth-sub">Buy from a fresh wallet via NEAR Intents</span></div>
+          <div><b>Private mode<span class="tag">BETA</span></b><span id="stealth-sub">Buy from a fresh wallet funded through Monero</span></div>
           <button class="switch" id="stealth-switch" type="button" role="switch" aria-checked="false" aria-label="Private mode"></button>
         </div>
-        <ol class="gsteps" id="gsteps" hidden><li>Fund the route from your wallet</li><li>NEAR Intents pays a fresh stealth wallet</li><li>Stealth wallet buys</li></ol>
+        <ol class="gsteps" id="gsteps" hidden><li>Fund the Monero route from your wallet</li><li>SOL crosses Monero to a fresh stealth wallet (10–40 min)</li><li>Stealth wallet buys</li></ol>
         <div class="quote" id="quote" hidden></div>
         <button class="btn primary go" id="go" type="button">Connect wallet</button>
         <p class="status" id="status" aria-live="polite"></p>
@@ -771,7 +770,7 @@ a.txl{display:inline-flex;color:var(--mute-ink);padding:2px}a.txl:hover{color:va
 
 <dialog id="modal" aria-labelledby="m-title"><div class="mhead"><h2 id="m-title"></h2><button class="btn small" id="m-close" type="button">Close</button></div><div class="mbody" id="m-body"></div></dialog>
 <footer class="statusbar" id="statusbar" aria-label="Status">
-  <span class="sb brandmini">PRIVATUS</span>
+  <span class="sb brandmini">ARDEA</span>
   <span class="sb" id="sb-stream"><span class="dot"></span>Stream</span>
   <span class="sb hide-sm" id="sb-curves"><span class="dot"></span>Curves</span>
   <span class="sb lat" id="sb-rpc" title="Round trip to the Solana RPC through the gateway">RPC <b>—</b></span>

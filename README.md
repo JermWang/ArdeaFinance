@@ -1,4 +1,4 @@
-# Privatus
+# Ardea
 
 A private execution terminal for Solana. Trade without leaving a trail.
 

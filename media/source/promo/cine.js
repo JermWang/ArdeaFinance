@@ -1,8 +1,8 @@
-// Cinematic scene kit for Privatus's promo images. Same engraving language as art.js (guilloché bands,
+// Cinematic scene kit for Ardea's promo images. Same engraving language as art.js (guilloché bands,
 // banknote waves, the vault dial), lit like a film still: light pools and beams, perspective floors,
 // depth-of-field blur, bokeh, an anamorphic flare, grain and a vignette. Self-contained on purpose so
 // the renders don't shift when the site's art.js changes.
-export const C = { BG: "#05080D", NAVY: "#0A0E14", NAVY2: "#101722", LINE: "#263142", IVORY: "#EFE9DC", MUTE: "#8B93A1", STEEL: "#5D7596", STEEL2: "#8FA9CC", BRASS: "#DEB471", BRASS2: "#F6D292", DOWN: "#F06A6A" };
+export const C = { BG: "#05080D", NAVY: "#0B0F1A", NAVY2: "#101722", LINE: "#27324C", IVORY: "#F1ECE4", MUTE: "#8B93A1", STEEL: "#5D7596", STEEL2: "#8FA9CC", BRASS: "#FF6600", BRASS2: "#FF8A3D", DOWN: "#F06A6A" };
 const NS = "http://www.w3.org/2000/svg", TAU = Math.PI * 2, f2 = n => n.toFixed(2);
 let uid = 0;
 export function el(tag, attrs = {}, parent) {
@@ -64,7 +64,7 @@ export function seal({ gap = true, gapA = -0.9, gapW = .34, label = true, glow =
     el("circle", { r: 70, fill: C.BG, stroke: C.LINE, "stroke-width": 1.5 }, svg);
     el("circle", { r: 70, fill: "none", stroke: C.BRASS, "stroke-width": 1.6, opacity: .8, filter: gb }, svg);
     if (label) {
-      const t = (y, s, size, fill, ls, w = 400) => { const e = el("text", { x: 0, y, "text-anchor": "middle", "font-family": "'Geist Mono', monospace", "font-size": size, "font-weight": w, fill, "letter-spacing": ls }, svg); e.textContent = s; };
+      const t = (y, s, size, fill, ls, w = 400) => { const e = el("text", { x: 0, y, "text-anchor": "middle", "font-family": "'IBM Plex Mono', monospace", "font-size": size, "font-weight": w, fill, "letter-spacing": ls }, svg); e.textContent = s; };
       t(-2, "NEAR", 19, C.IVORY, ".26em", 600); t(20, "INTENTS", 11, C.MUTE, ".3em");
     } else el("circle", { r: 14, fill: C.BRASS, filter: gb }, svg);
   }
@@ -75,7 +75,7 @@ export function seal({ gap = true, gapA = -0.9, gapW = .34, label = true, glow =
 export function mark({ outerRot = 0, innerRot = 0 } = {}) {
   const svg = el("svg", { viewBox: "0 0 32 32", overflow: "visible" }), defs = el("defs", {}, svg);
   const lg = "met" + uid++, g = el("linearGradient", { id: lg, x1: 0, y1: 0, x2: 1, y2: 1 }, defs);
-  [[0, "#FFF8EA"], [.45, "#EFE9DC"], [.7, "#B9B1A0"], [1, "#F5EEDF"]].forEach(([o, c]) => el("stop", { offset: o, "stop-color": c }, g));
+  [[0, "#FFF8EA"], [.45, "#F1ECE4"], [.7, "#B9B1A0"], [1, "#F5EEDF"]].forEach(([o, c]) => el("stop", { offset: o, "stop-color": c }, g));
   const rg = "core" + uid++, r = el("radialGradient", { id: rg }, defs);
   [[0, "#FFF1C8"], [.55, C.BRASS], [1, "#8C6C33"]].forEach(([o, c]) => el("stop", { offset: o, "stop-color": c }, r));
   const glow = glowFilter(defs, .9, 1.6), soft = glowFilter(defs, .35, .8);

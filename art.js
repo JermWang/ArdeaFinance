@@ -1,4 +1,4 @@
-// Privatus art. Everything visual is drawn in code in one style: fine-line guilloché engraving, the woven
+// Ardea art. Everything visual is drawn in code in one style: fine-line guilloché engraving, the woven
 // line patterns printed on banknotes and bond certificates. Steel and ivory lines on a vault-navy ground,
 // one brass accent, and a deliberate gap cut into the pattern wherever a trail should end.
 // One shared animation clock drives it all; it pauses off-screen and respects prefers-reduced-motion.
@@ -7,11 +7,11 @@ import { logoMark } from "./logo.js";
 export const NS = "http://www.w3.org/2000/svg";
 export const REDUCE = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 export const C = {
-  BG: "#0A0E14", BG1: "#0F141C", BG2: "#141B26", BG3: "#1C2533", LINE: "#263142",
-  IVORY: "#EFE9DC", MUTE: "#8B93A1", STEEL: "#5D7596", BRASS: "#DEB471", BRASS2: "#C39653",
+  BG: "#0B0F1A", BG1: "#111726", BG2: "#161E30", BG3: "#1E2840", LINE: "#27324C",
+  IVORY: "#F1ECE4", MUTE: "#8B93A1", STEEL: "#5D7596", BRASS: "#FF6600", BRASS2: "#D94F00",
   UP: "#43D19E", DOWN: "#F06A6A"
 };
-const MONO = "'Geist Mono', ui-monospace, monospace";
+const MONO = "'IBM Plex Mono', ui-monospace, monospace";
 const TAU = Math.PI * 2, f2 = n => n.toFixed(2);
 
 export function el(tag, attrs, parent) {
@@ -158,7 +158,7 @@ export function chameleon(parent, { host, fg = "currentColor", line = C.BG, engr
   const token = tongue ? el("path", { d: "M0 -3.4L3.4 0L0 3.4L-3.4 0Z", fill: C.BRASS, opacity: 0 }, g) : null;
   const eye = el("g", { transform: "translate(53.2 24.6)" }, g);
   el("circle", { r: 5, fill: C.IVORY, stroke: line, "stroke-width": 1.4 }, eye);
-  const lid = el("g", {}, eye), pupil = el("circle", { r: 2, fill: C.BG }, lid), glint = el("circle", { r: .65, fill: "#F6D292" }, lid);
+  const lid = el("g", {}, eye), pupil = el("circle", { r: 2, fill: C.BG }, lid), glint = el("circle", { r: .65, fill: "#FF8A3D" }, lid);
   const look = ([x, y]) => { pupil.setAttribute("cx", x); pupil.setAttribute("cy", y); glint.setAttribute("cx", f2(x + .7)); glint.setAttribute("cy", f2(y - .7)); };
   look([1.4, -.3]);
   const blink = (t, every, off) => { const c = (t + off) % every; return c < .12 ? 1 - Math.sin(c / .12 * Math.PI) * .92 : 1; };
@@ -179,8 +179,8 @@ export function chameleon(parent, { host, fg = "currentColor", line = C.BG, engr
   }, host || svg, 1);
   return g;
 }
-// The logo: the gold chameleon curled into a ring (logo.js). On paper pages pass { tone: "goldPaper" }.
-export function mark(cls, { tone = "gold", animate = true } = {}) {
+// The logo: the Ardea heron in its ring (logo.js), always clean. On paper pages pass { tone: "orangePaper" }.
+export function mark(cls, { tone = "orange", animate = true } = {}) {
   const svg = svgEl("0 0 10 10");
   if (cls) svg.setAttribute("class", cls);
   logoMark(svg, { tone, sheen: false });
@@ -233,13 +233,13 @@ function glyphAt(parent, kind, x, y, size, color = C.IVORY) {
 export function renderGlyphs(root = document) {
   root.querySelectorAll("[data-glyph]").forEach(host => {
     const kind = host.dataset.glyph, cls = host.getAttribute("class");
-    if (kind === "word") { host.removeAttribute("data-glyph"); host.textContent = "Privatus"; return; }
-    host.replaceWith(kind === "mark" ? mark(cls, { tone: host.dataset.tone || "gold" }) : glyphSVG(kind, cls));
+    if (kind === "word") { host.removeAttribute("data-glyph"); host.textContent = "Ardea"; return; }
+    host.replaceWith(kind === "mark" ? mark(cls, { tone: host.dataset.tone || "orange" }) : glyphSVG(kind, cls));
   });
 }
 
 /* ---------- the hero: a seal with a gap cut in it ---------- */
-// Your wallet's trail runs into a guilloché seal (NEAR Intents) and stops. A fresh wallet's line leaves
+// Your wallet's trail runs into a guilloché ring (the Monero hop) and stops. A fresh wallet's line leaves
 // through the gap cut in the seal, with nothing drawn between the two.
 export function hero(svg) {
   const cx = 300, cy = 296, R = 150, gapA = -0.92, gapW = .3;
@@ -249,7 +249,7 @@ export function hero(svg) {
   el("rect", { x: 16, y: 16, width: 568, height: 508, rx: 12, fill: "none", stroke: C.LINE, "stroke-width": .8, "stroke-dasharray": "1 4" }, svg);
   [[16, 16, 1, 1], [584, 16, -1, 1], [16, 524, 1, -1], [584, 524, -1, -1]].forEach(([x, y, sx, sy]) => el("path", { d: `M${x} ${y + sy * 22}V${y}H${x + sx * 22}`, fill: "none", stroke: C.BRASS, "stroke-width": 1.6 }, svg));
   text(svg, 36, 44, "Nº 0001 · SOLANA MAINNET", { "font-size": 9, fill: C.MUTE, "letter-spacing": ".14em" });
-  text(svg, 564, 508, "ROUTED VIA NEAR INTENTS", { "font-size": 9, fill: C.MUTE, "letter-spacing": ".14em", "text-anchor": "end" });
+  text(svg, 564, 508, "SOL → XMR → SOL", { "font-size": 9, fill: C.MUTE, "letter-spacing": ".14em", "text-anchor": "end" });
 
   // banknote waves everywhere except under the seal
   const m = el("mask", { id: "hero-wm" }, defs);
@@ -277,8 +277,8 @@ export function hero(svg) {
   // core
   el("circle", { r: 46, fill: C.BG, stroke: C.LINE, "stroke-width": 1 }, seal);
   const pulse = el("circle", { r: 46, fill: "none", stroke: C.BRASS, "stroke-width": 1.4 }, seal);
-  text(seal, 0, -4, "NEAR", { "font-size": 12, "font-weight": 600, fill: C.IVORY, "text-anchor": "middle", "letter-spacing": ".22em" });
-  text(seal, 0, 12, "INTENTS", { "font-size": 8.5, fill: C.MUTE, "text-anchor": "middle", "letter-spacing": ".24em" });
+  text(seal, 0, -4, "MONERO", { "font-size": 12, "font-weight": 600, fill: C.IVORY, "text-anchor": "middle", "letter-spacing": ".22em" });
+  text(seal, 0, 12, "XMR HOP", { "font-size": 8.5, fill: C.MUTE, "text-anchor": "middle", "letter-spacing": ".24em" });
 
   // trails: your wallet's history comes in from the lower left; the fresh wallet's line leaves the gap
   const entryA = Math.PI * .86, ex = cx + Math.cos(entryA) * (R + 16), ey = cy + Math.sin(entryA) * (R + 16);

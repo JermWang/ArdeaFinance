@@ -20,7 +20,7 @@
     // the beat where a person reads the wallet prompt and approves
     async signTransaction(tx) { await sleep(window.__approveMs ?? 1300); tx.sign([key()]); return tx; },
     async signAllTransactions(txs) { await sleep(window.__approveMs ?? 1300); txs.forEach(t => t.sign([key()])); return txs; },
-    // the Privatus message that derives the instant and stealth wallets: a real ed25519 signature (WebCrypto)
+    // the Ardea message that derives the instant and stealth wallets: a real ed25519 signature (WebCrypto)
     async signMessage(msg) {
       await sleep(window.__approveMs ?? 1300);
       const pkcs8 = Uint8Array.from([0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x04, 0x22, 0x04, 0x20, ...SEED]);

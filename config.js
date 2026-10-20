@@ -29,15 +29,15 @@ export const STEALTH_GAS_RESERVE = 10_000_000n;       // 0.01 SOL kept in each s
 export const RPC_URL = "";
 
 // After deploying worker/ (see worker/README.md), set this to the worker URL, e.g.
-// "https://privatus-proxy.<you>.workers.dev". RPC, Jupiter, the Monero route, Jito and X then go through
+// "https://ardea-proxy.<you>.workers.dev". RPC, Jupiter, the Monero route, Jito and X then go through
 // the proxy, which holds the keys. Empty = browsers talk to the public endpoints directly.
 // Served from one of the site's own domains, the gateway is that same origin (server.mjs runs both), so
 // the custom domain and the Railway domain each work on their own. Anywhere else (local preview, another
 // static host) it's the Railway deployment.
-const OWN_HOSTS = ["privatusterminal.xyz", "www.privatusterminal.xyz", "privatus.up.railway.app"];
-export const PROXY_URL = typeof location !== "undefined" && OWN_HOSTS.includes(location.hostname) ? location.origin : "https://privatusterminal.xyz";
+const OWN_HOSTS = ["ardea-production.up.railway.app"];
+export const PROXY_URL = typeof location !== "undefined" && OWN_HOSTS.includes(location.hostname) ? location.origin : "https://ardea-production.up.railway.app";
 
-// The Privatus token's mint. Shown on the landing page (copy bar and a Trade button) from launch.
+// The Ardea token's mint. Shown on the landing page (copy bar and a Trade button) from launch.
 export const TOKEN_CA = ""; // set at launch
 
 // Public proof of Private mode working: real transaction signatures shown in the docs' Proof section, each linked to
@@ -45,3 +45,6 @@ export const TOKEN_CA = ""; // set at launch
 export const PROOF_TXS = [];
 // The public source repository, linked from the docs' Proof section once it exists ("" hides the link).
 export const SOURCE_REPO = "";
+
+// The project's X account, e.g. "https://x.com/ardea". Empty hides every X link on the site until it exists.
+export const X_URL = "";

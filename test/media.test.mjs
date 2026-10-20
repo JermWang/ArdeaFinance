@@ -32,13 +32,13 @@ test("imageSources: proxy first, then the original, then other gateways, then De
 });
 
 test("socialUrl: handles, bare domains and full links become safe https links", () => {
-  assert.equal(socialUrl("twitter", "@privatus"), "https://x.com/privatus");
-  assert.equal(socialUrl("twitter", "x.com/privatus/status/1"), "https://x.com/privatus/status/1");
+  assert.equal(socialUrl("twitter", "@ardea"), "https://x.com/ardea");
+  assert.equal(socialUrl("twitter", "x.com/ardea/status/1"), "https://x.com/ardea/status/1");
   assert.equal(socialUrl("twitter", "http://twitter.com/abc"), "https://twitter.com/abc");
   assert.equal(socialUrl("twitter", "https://evil.test/x.com"), null);
   assert.equal(socialUrl("telegram", "t.me/stealthchat"), "https://t.me/stealthchat");
   assert.equal(socialUrl("telegram", "@stealthchat"), "https://t.me/stealthchat");
-  assert.equal(socialUrl("website", "privatus.app"), "https://privatus.app/");
+  assert.equal(socialUrl("website", "ardea.app"), "https://ardea.app/");
   assert.equal(socialUrl("website", "javascript:alert(1)"), null);
   assert.equal(socialUrl("website", "not a site"), null);
   assert.equal(socialUrl("website", ""), null);

@@ -34,32 +34,36 @@ const io = new IntersectionObserver(es => {
 document.querySelectorAll("article section[id]").forEach(s => io.observe(s));
 
 /* ---------- proof ---------- */
-import { PROXY_URL, PROOF_TXS, SOURCE_REPO, TREASURY, FEE_BPS as FEE } from "./config.js";
+import { PROXY_URL, PROOF_TXS, SOURCE_REPO } from "./config.js";
+import { houdini, SOL_QUERY, solTokenId } from "./stealth.js";
+import { X_URL } from "./config.js";
 {
-  const base = `${(PROXY_URL || "").replace(/\/$/, "")}/1click`, out = document.getElementById("proof-out"), btn = document.getElementById("proof-run");
-  const b58hex = s => { const A = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"; let n = 0n; for (const c of s) n = n * 58n + BigInt(A.indexOf(c)); return n.toString(16).padStart(64, "0"); };
-  const b58 = bytes => { const A = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"; let n = 0n; for (const x of bytes) n = n * 256n + BigInt(x); let s = ""; while (n > 0n) { s = A[Number(n % 58n)] + s; n /= 58n; } for (const x of bytes) { if (x) break; s = "1" + s; } return s; };
+  const out = document.getElementById("proof-out"), btn = document.getElementById("proof-run");
+  const hd = houdini({ base: PROXY_URL ? `${PROXY_URL.replace(/\/$/, "")}/houdini` : "" });
   const line = (k, v) => { const b = document.createElement("b"); b.textContent = k; out.append(b, ` ${v}\n`); };
+  // the same calls a private buy makes, minus opening the order: find SOL, then quote SOL → XMR → SOL
   btn?.addEventListener("click", async () => {
-    btn.disabled = true; out.hidden = false; out.textContent = "Asking NEAR Intents…\n";
+    btn.disabled = true; out.hidden = false; out.textContent = "Asking Houdini for a Monero route…\n";
     try {
-      const tokens = await (await fetch(`${base}/v0/tokens`)).json();
-      const sol = tokens.find(t => t.blockchain === "sol" && t.symbol === "SOL" && !t.contractAddress)?.assetId || "nep141:sol.omft.near";
-      const req = { dry: true, swapType: "EXACT_INPUT", slippageTolerance: 100, originAsset: sol, depositType: "ORIGIN_CHAIN", destinationAsset: sol,
-        amount: "100000000", refundTo: TREASURY, refundType: "ORIGIN_CHAIN", recipient: b58(crypto.getRandomValues(new Uint8Array(32))), recipientType: "DESTINATION_CHAIN",
-        deadline: new Date(Date.now() + 1800e3).toISOString(), confidentiality: "advanced", referral: "privatus", appFees: [{ recipient: b58hex(TREASURY), fee: FEE }] };
-      const t0 = performance.now(), res = await fetch(`${base}/v0/quote`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(req) });
-      const body = await res.json(), q = body.quote || {};
+      const token = solTokenId(await hd.tokens(SOL_QUERY)), amount = 0.5;
+      const t0 = performance.now(), { quotes = [] } = (await hd.quote({ token, amount, useXmr: true })) || {};
+      const ms = Math.round(performance.now() - t0), priv = quotes.filter(q => q && q.quoteId && !q.error && (!q.type || q.type === "private"));
+      const best = priv.sort((a, b) => Number(b.amountOut) - Number(a.amountOut))[0];
       out.textContent = "";
-      line("POST", "1click.chaindefuser.com/v0/quote (dry run, via the Privatus gateway)");
-      line("HTTP", `${res.status} in ${Math.round(performance.now() - t0)} ms`);
-      line("confidentiality", req.confidentiality);
-      line("recipient", `${req.recipient} (a fresh random address, like a stealth wallet)`);
-      line("appFees", JSON.stringify(req.appFees));
-      if (res.ok) { line("amountIn", `${q.amountIn} lamports (0.1 SOL)`); line("amountOut", `${q.amountOut} lamports (${(q.amountOut / 1e9).toFixed(6)} SOL, after the fee and NEAR's spread)`); line("minAmountOut", q.minAmountOut); line("timeEstimate", `${q.timeEstimate} s`); }
-      else line("error", JSON.stringify(body).slice(0, 300));
+      line("GET", "api-partner.houdiniswap.com/v2/quotes/private-send (via the Ardea gateway, quote only, no order)");
+      line("answered in", `${ms} ms`);
+      line("route", `SOL → XMR → SOL, Monero forced as the bridge (useXmr=true), ${amount} SOL in`);
+      line("private quotes", String(priv.length));
+      if (best) {
+        line("best route", `${best.swap || "private"} (quote ${best.quoteId})`);
+        line("SOL out", `${Number(best.amountOut).toFixed(6)} SOL (after both exchange hops, network fees and Houdini's commission)`);
+        if (best.duration) line("route time", `about ${Math.round(best.duration)} min`);
+      } else {
+        const lim = quotes.find(q => q && (q.min || q.max)) || {};
+        line("no private route", lim.min ? `the minimum right now is ${lim.min} SOL` : "none available at this moment, so a private buy would stop without sending anything");
+      }
       line("checked at", new Date().toISOString());
-    } catch (e) { out.textContent = `Couldn't reach NEAR Intents: ${e.message}`; }
+    } catch (e) { out.textContent = `Couldn't reach the Monero route: ${e.message}`; }
     btn.disabled = false;
   });
   const tb = document.querySelector("#proof-txs tbody");
@@ -70,3 +74,6 @@ import { PROXY_URL, PROOF_TXS, SOURCE_REPO, TREASURY, FEE_BPS as FEE } from "./c
   const repo = document.getElementById("proof-repo");
   if (repo && SOURCE_REPO) { repo.append(" The full source is public on "); const a = document.createElement("a"); a.href = SOURCE_REPO; a.target = "_blank"; a.rel = "noopener"; a.textContent = "GitHub"; repo.append(a, "."); }
 }
+
+// X links stay hidden until the account exists (X_URL in config.js).
+if (X_URL) document.querySelectorAll("[data-x]").forEach(a => { a.href = X_URL; a.hidden = false; });
