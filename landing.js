@@ -268,7 +268,7 @@ const ca = $("ca");
   if (r && r.routeId && !r.delivered && !r.error) item("Proof route crossing Monero now · ", b(`${r.amountSol} SOL`), " · ", a(`./track.html#${r.routeId}`, "track it live →"));
   else if (r && r.delivered) item("Last proof route delivered · ", b(`${r.amountSol} → ≈${r.amountOutSol} SOL`), " through Monero", r.routeId ? " · " : "", ...(r.routeId ? [a(`./track.html#${r.routeId}`, "see the route →")] : []));
   item("Proof wallets ", a(`https://solscan.io/account/${st.wallets[0]}`, short(st.wallets[0])), " ⇄ ", a(`https://solscan.io/account/${st.wallets[1]}`, short(st.wallets[1])), " · never a direct transfer between them");
-  item("A real Monero route ", b(st.everyHours ? `every ${st.everyHours} h` : `every day at ${String(st.utcHour).padStart(2, "0")}:00 UTC`), " · ", a("./docs.html#proof", "all proof →"));
+  item("A real Monero route ", b(st.everyHours ? `every ${st.everyHours} h` : `every day at ${String(st.utcHour).padStart(2, "0")}:00 UTC`), " · ", a("/proof", "all proof →"));
   item("Track any Ardea route from its link · ", a("./track.html", "route tracker →"));
   // twice, so the scroll loops without a gap
   track.append(...items, ...items.map(n => n.cloneNode(true)));

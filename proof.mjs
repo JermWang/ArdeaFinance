@@ -47,23 +47,35 @@ export function msUntil(hour, now = Date.now()) {
 // so every proof transfer is matched to its Monero route by Houdini's data, and the history survives restarts.
 // Only orders touching the two proof wallets are kept; nothing about anyone else's orders is published.
 export function proofRoutesFrom(orders, wallets) {
-  const [A, B] = wallets, mine = o => wallets.includes(o?.receiverAddress) || wallets.includes(o?.refundAddress);
-  return (orders || []).filter(o => o && o.houdiniId && o.anonymous !== false && mine(o)).map(o => ({
-    routeId: o.houdiniId, startedAt: o.created, endedAt: o.orderFinishedReceived || null,
-    from: o.refundAddress === A ? "a" : o.refundAddress === B ? "b" : null, to: o.receiverAddress === A ? "a" : o.receiverAddress === B ? "b" : null,
-    amountSol: o.inAmount != null ? String(o.inAmount) : null, amountOutSol: o.outAmount != null ? String(o.outAmount) : null,
-    status: o.status, delivered: o.status === 4, fundingSig: o.inHash || null, deliverySig: o.status === 4 ? (o.transactionHash || null) : null,
-    refundSig: o.refundHash || null, viaMonero: true
-  })).sort((x, y) => String(y.startedAt).localeCompare(String(x.startedAt)));
+  const [A, B] = wallets;
+  // proof routes always pay one proof wallet and are funded by the other; no user order ever pays a proof wallet
+  return (orders || []).filter(o => o && o.houdiniId && o.anonymous !== false && wallets.includes(o.receiverAddress)).map(o => {
+    const to = o.receiverAddress === A ? "a" : "b";
+    return {
+      routeId: o.houdiniId, startedAt: o.created, endedAt: o.orderFinishedReceived || null,
+      from: to === "a" ? "b" : "a", to, fromAddress: to === "a" ? B : A, toAddress: o.receiverAddress, depositAddress: o.depositAddress || null,
+      amountSol: o.inAmount != null ? String(o.inAmount) : null, amountOutSol: o.outAmount != null ? String(o.outAmount) : null,
+      status: o.status, statusLabel: o.displayStatus || o.statusLabel || null, anonymous: o.anonymous === true, delivered: o.status === 4,
+      fundingSig: o.inHash || o.inTransactionInHash || null,
+      deliverySig: o.status === 4 ? (o.transactionHash || o.outTransactionOutHash || null) : null,
+      refundSig: o.refundHash || null
+    };
+  }).sort((x, y) => String(y.startedAt).localeCompare(String(x.startedAt)));
+}
+const H = env => ({ authorization: `${env.HOUDINI_API_KEY}:${env.HOUDINI_API_SECRET}`, "x-user-ip": "0.0.0.0", "x-user-agent": "ardea-proof", "x-user-timezone": "UTC" });
+export const HOUDINI_ORDERS = "https://api-partner.houdiniswap.com/v2/orders";
+// The fields of Houdini's own record that show what a proof route did. Only for orders paying a proof wallet.
+export const RECORD_FIELDS = ["houdiniId", "created", "orderFinishedReceived", "status", "displayStatus", "anonymous", "isDex", "inSymbol", "outSymbol", "inAmount", "outAmount", "depositAddress", "receiverAddress", "inHash", "inTransactionInHash", "transactionHash", "outTransactionOutHash", "hashUrl", "inStatus", "outStatus", "eta"];
+export async function houdiniRecord({ env, id, fetchFn = fetch }) {
+  const d = await (await fetchFn(`${HOUDINI_ORDERS}/${encodeURIComponent(id)}`, { headers: H(env) })).json();
+  return Object.fromEntries(RECORD_FIELDS.filter(k => d?.[k] !== undefined).map(k => [k, d[k]]));
 }
 export async function houdiniProofRoutes({ env, wallets, fetchFn = fetch }) {
   if (!env.HOUDINI_API_KEY || !env.HOUDINI_API_SECRET) return [];
-  const headers = { authorization: `${env.HOUDINI_API_KEY}:${env.HOUDINI_API_SECRET}`, "x-user-ip": "0.0.0.0", "x-user-agent": "ardea-proof", "x-user-timezone": "UTC" };
-  const base = "https://api-partner.houdiniswap.com/v2/orders";
-  const list = await (await fetchFn(`${base}?pageSize=100&anonymous=true&sortBy=created&sortOrder=desc`, { headers })).json();
+  const list = await (await fetchFn(`${HOUDINI_ORDERS}?pageSize=100&anonymous=true&sortBy=created&sortOrder=desc`, { headers: H(env) })).json();
   const rows = [];
-  for (const o of (list.orders || []).filter(o => wallets.includes(o.receiverAddress) || wallets.includes(o.refundAddress))) {
-    try { rows.push(await (await fetchFn(`${base}/${encodeURIComponent(o.houdiniId)}`, { headers })).json()); } catch (_) { rows.push(o); }
+  for (const o of (list.orders || []).filter(o => wallets.includes(o.receiverAddress))) {
+    try { rows.push(await houdiniRecord({ env, id: o.houdiniId, fetchFn })); } catch (_) { rows.push(o); }
   }
   return proofRoutesFrom(rows, wallets);
 }
@@ -74,14 +86,28 @@ export function startProof({ env = process.env, gateway, log = console.log } = {
   (async () => {
     const { a, b } = await proofWallets(env.PROOF_WALLET_SECRET);
     state.a = a.publicKey.toBase58(); state.b = b.publicKey.toBase58();
+    const connection = new web3.Connection(env.RPC_URL || "https://api.mainnet-beta.solana.com", "confirmed");
     const sync = async () => {
       try {
         const routes = await houdiniProofRoutes({ env, wallets: [state.a, state.b] });
-        if (routes.length) { state.routes = routes; }
+        const known = new Map((state.routes || []).map(r => [r.routeId, r]));
+        for (const r of routes) {
+          const old = known.get(r.routeId);
+          if (old?.paidBy) r.paidBy = old.paidBy;
+          else if (r.deliverySig) {
+            try {
+              const tx = await connection.getParsedTransaction(r.deliverySig, { maxSupportedTransactionVersion: 0 });
+              const t = tx?.transaction.message.instructions.find(ix => ix.parsed?.type === "transfer" && ix.parsed.info.destination === r.toAddress);
+              if (t) r.paidBy = t.parsed.info.source;
+            } catch (_) {}
+          }
+          known.set(r.routeId, r);
+        }
+        state.routes = [...known.values()].sort((x, y) => String(y.startedAt).localeCompare(String(x.startedAt))).slice(0, 50);
       } catch (e) { log(`proof: history sync failed (${e.message})`); }
     };
     sync(); setInterval(sync, 10 * 60_000);
-    const keys = { a, b }, connection = new web3.Connection(env.RPC_URL || "https://api.mainnet-beta.solana.com", "confirmed");
+    const keys = { a, b };
     // Houdini through the gateway in-process, so the key and compliance headers are added exactly as for users
     const hd = houdini({ base: "http://gateway.internal/houdini", fetch: gateway, timezone: "UTC" });
     const run = async () => {

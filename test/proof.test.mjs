@@ -35,7 +35,7 @@ test("the public state never includes a key", () => {
   assert.ok(!JSON.stringify(s).includes("secret"));
 });
 
-test("proof history keeps only orders touching the proof wallets and matches their Solana hashes", () => {
+test("proof history keeps only orders paying a proof wallet and matches their Solana hashes", () => {
   const W = ["AAA", "BBB"];
   const orders = [
     { houdiniId: "r1", anonymous: true, refundAddress: "AAA", receiverAddress: "BBB", status: 4, inAmount: 0.3, outAmount: 0.2975, inHash: "fund1", transactionHash: "paid1", created: "2026-10-20T14:32:00Z", orderFinishedReceived: "2026-10-20T15:53:00Z" },
@@ -47,4 +47,19 @@ test("proof history keeps only orders touching the proof wallets and matches the
   assert.equal(r[1].fundingSig, "fund1"); assert.equal(r[1].deliverySig, "paid1"); assert.equal(r[1].from, "a"); assert.equal(r[1].to, "b");
   assert.equal(r[0].deliverySig, null); assert.equal(r[0].delivered, false);
   assert.ok(!JSON.stringify(r).includes("someone"));
+});
+
+test("the proof page is plain HTML with every route matched, and escapes what it shows", async () => {
+  const { renderProofPage } = await import("../proofpage.mjs");
+  const html = renderProofPage({ wallets: ["AAAA1111AAAA", "BBBB2222BBBB"], everyHours: 6, routes: [
+    { routeId: "r1", startedAt: "2026-10-20T14:32:00Z", endedAt: "2026-10-20T15:53:00Z", from: "a", to: "b", amountSol: "0.3", amountOutSol: "0.2975", delivered: true, fundingSig: "fundSIG123456", deliverySig: "paidSIG123456", depositAddress: "DEP0000000000", paidBy: "EXCH000000000" },
+    { routeId: "<x>", from: "b", to: "a", delivered: false }
+  ] }, { now: new Date("2026-10-20T16:00:00Z") });
+  assert.match(html, /<b>1<\/b><span>completed routes/);
+  assert.match(html, /solscan\.io\/tx\/fundSIG123456/);
+  assert.match(html, /solscan\.io\/tx\/paidSIG123456/);
+  assert.match(html, /\/proof\/route\/r1\.json/);
+  assert.match(html, /81 min/);
+  assert.match(html, /every 6 hours/);
+  assert.ok(!html.includes("<x>") && html.includes("&lt;x&gt;"));
 });

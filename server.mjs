@@ -10,6 +10,7 @@ import { extname, join, normalize, sep } from "node:path";
 import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
 import worker from "./worker/src/index.js";
+import { renderProofPage } from "./proofpage.mjs";
 
 // Stand-in for Cloudflare's edge cache (caches.default), which the worker uses for Jupiter token lists and
 // prices, X searches and IPFS reads. In memory, honors max-age, evicts the oldest entries past the cap.
@@ -39,7 +40,7 @@ globalThis.caches ??= { default: {
 const ROOT = fileURLToPath(new URL(".", import.meta.url));
 const PORT = Number(process.env.PORT) || 5178;
 const PROXY_PATH = /^\/(rpc|jito|health|x\/search|meta)$|^\/(jup|houdini|ipfs)\//;
-const HIDDEN = /^(\.|node_modules$|test$|worker$|server\.mjs$|package(-lock)?\.json$)/;
+const HIDDEN = /^(\.|node_modules$|test$|worker$|motion-studio$|server\.mjs$|package(-lock)?\.json$)/;
 const TYPES = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".mjs": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8", ".json": "application/json", ".md": "text/markdown; charset=utf-8", ".svg": "image/svg+xml",
@@ -117,13 +118,29 @@ async function serveEnv(req, res) {
 
 // Continuous proof (proof.mjs): loaded only when the team's proof wallet key is set. /proof.json shows the two wallet
 // addresses and the schedule so the docs can read their history from the chain; it never shows the key.
-let proof = { enabled: false }, proofPublic = s => ({ enabled: false, wallets: [] });
+let proof = { enabled: false }, proofPublic = s => ({ enabled: false, wallets: [], routes: [] }), houdiniRecord = null;
 if (process.env.PROOF_WALLET_SECRET) {
-  import("./proof.mjs").then(({ startProof, publicState }) => {
+  import("./proof.mjs").then(({ startProof, publicState, houdiniRecord: record }) => {
     const origin = (process.env.ALLOWED_ORIGINS || "").split(",")[0].trim();
     const gateway = (url, init = {}) => worker.fetch(new Request(url, { ...init, headers: { ...(init.headers || {}), origin, "cf-connecting-ip": "0.0.0.0", "user-agent": "ardea-proof" } }), process.env, { waitUntil: p => Promise.resolve(p).catch(() => {}) });
-    proof = startProof({ gateway }); proofPublic = publicState;
+    proof = startProof({ gateway }); proofPublic = publicState; houdiniRecord = record;
   }).catch(e => console.log(`proof: off (${e.message})`));
+}
+// /proof: the proof page as plain HTML. /proof/route/<id>.json: Houdini's own record of one proof route, only for
+// routes that pay a proof wallet, so no user's order can be looked up here.
+function serveProofPage(req, res) {
+  res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache", "x-content-type-options": "nosniff" });
+  res.end(req.method === "HEAD" ? undefined : renderProofPage(proofPublic(proof)));
+}
+const records = new Map();
+async function serveRecord(req, res, id) {
+  const json = (code, body) => { res.writeHead(code, { "content-type": "application/json", "cache-control": "no-cache", "access-control-allow-origin": "*" }); res.end(JSON.stringify(body, null, 1)); };
+  if (!houdiniRecord || !(proof.routes || []).some(r => r.routeId === id)) return json(404, { error: "not a proof route in the last 48 hours" });
+  const hit = records.get(id);
+  if (hit && Date.now() - hit.at < 60_000) return json(200, hit.body);
+  const body = { note: "Houdini's own order record for this Ardea proof route, forwarded unchanged (selected fields). inHash is the funding transaction on Solana, transactionHash the delivery.", record: await houdiniRecord({ env: process.env, id }) };
+  records.set(id, { at: Date.now(), body });
+  json(200, body);
 }
 function serveProof(req, res) {
   res.writeHead(200, { "content-type": "application/json", "cache-control": "no-cache", "access-control-allow-origin": "*" });
@@ -142,7 +159,7 @@ function notFound(res) { res.writeHead(404, { "content-type": "text/plain; chars
 
 const server = http.createServer((req, res) => {
   const { pathname } = new URL(req.url, "http://x");
-  Promise.resolve().then(() => pathname === "/env.js" ? serveEnv(req, res) : pathname === "/proof.json" ? serveProof(req, res) : PROXY_PATH.test(pathname) ? proxy(req, res) : serveStatic(req, res)).catch(() => {
+  Promise.resolve().then(() => pathname === "/env.js" ? serveEnv(req, res) : pathname === "/proof.json" ? serveProof(req, res) : pathname === "/proof" || pathname === "/proof/" ? serveProofPage(req, res) : /^\/proof\/route\/[A-Za-z0-9_-]{4,64}\.json$/.test(pathname) ? serveRecord(req, res, pathname.slice(13, -5)) : PROXY_PATH.test(pathname) ? proxy(req, res) : serveStatic(req, res)).catch(() => {
     if (!res.headersSent) res.writeHead(502, { "content-type": "application/json" });
     res.end(JSON.stringify({ error: "upstream error" }));
   });
