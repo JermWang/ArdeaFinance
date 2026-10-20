@@ -4,7 +4,8 @@
 import http from "node:http";
 import net from "node:net";
 import tls from "node:tls";
-import { createReadStream, statSync } from "node:fs";
+import { createReadStream, readFileSync, statSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { extname, join, normalize, sep } from "node:path";
 import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
@@ -73,7 +74,11 @@ function serveStatic(req, res) {
   if (!st && !extname(rel)) { file += ".html"; st = stat(file); }
   if (!st || !file.startsWith(ROOT.replace(/[\\/]$/, "") + sep)) return notFound(res);
   const type = TYPES[extname(file).toLowerCase()] || "application/octet-stream";
-  const headers = { "content-type": type, "cache-control": /\.html$/.test(file) ? "no-cache" : "public, max-age=300", "accept-ranges": "bytes", "x-content-type-options": "nosniff" };
+  // Pages and code always revalidate (a quick 304 when unchanged), so a browser never mixes a new page with old
+  // scripts after a deploy. Images and media can be cached for a few minutes.
+  const code = /\.(html|m?js|css|json)$/.test(file), tag = etag(file, st);
+  const headers = { "content-type": type, "cache-control": code ? "no-cache" : "public, max-age=300", etag: tag, "accept-ranges": "bytes", "x-content-type-options": "nosniff" };
+  if (req.headers["if-none-match"] === tag) { res.writeHead(304, headers); return res.end(); }
   const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || "");
   if (range && (range[1] || range[2])) {
     const start = range[1] ? Number(range[1]) : Math.max(0, st.size - Number(range[2]));
@@ -126,6 +131,13 @@ function serveProof(req, res) {
 }
 
 function stat(file) { try { return statSync(file); } catch (_) { return null; } }
+// A content hash per file, so the tag changes exactly when the file does (build timestamps can't be trusted).
+const tags = new Map();
+function etag(file, st) {
+  const key = `${file}:${st.size}:${st.mtimeMs}`;
+  if (!tags.has(key)) tags.set(key, `"${createHash("sha1").update(readFileSync(file)).digest("base64url").slice(0, 16)}"`);
+  return tags.get(key);
+}
 function notFound(res) { res.writeHead(404, { "content-type": "text/plain; charset=utf-8" }); res.end("Not found"); }
 
 const server = http.createServer((req, res) => {

@@ -174,7 +174,8 @@ function draw(svg) {
 // width crosses over. A redraw swaps in a fresh <svg> so the old drawing's animation stops with it.
 export function renderDiagrams(root = document) {
   const live = [...root.querySelectorAll("svg[data-diagram]")].filter(svg => DIAGRAMS[svg.dataset.diagram] && !svg.childNodes.length);
-  live.forEach(draw);
+  // each diagram on its own: one that fails to draw must not leave the others blank
+  live.forEach(svg => { try { draw(svg); } catch (e) { console.error(`diagram ${svg.dataset.diagram}:`, e); } });
   const flip = live.filter(svg => NARROW.has(svg.dataset.diagram));
   if (!flip.length || typeof ResizeObserver !== "function") return;
   const ro = new ResizeObserver(() => flip.forEach((svg, i) => {
