@@ -13,7 +13,7 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://ardea-production.up.railway.app/media/banner.png?v=1">
-<meta name="theme-color" content="#F1EEE8">
+<meta name="theme-color" content="#F4F4F4">
 <title>Ardea · Documentation</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
@@ -26,8 +26,8 @@
 /* The docs read like a prospectus: ivory paper, ink type, serif headings, hairline rules.
    Every figure is a live engraving from diagrams.js, printed on a navy plate. */
 :root{
-  --paper:#F1EEE8;--paper-2:#E7E2D9;--paper-3:#D9D2C6;--ink:#0D1220;--ink-2:#353D4B;--mute:#687080;
-  --rule:rgba(14,21,32,.14);--rule-2:rgba(14,21,32,.26);--brass:#FF6600;--brass-d:#B84300;--plate:#0B0F1A;--plate-line:#27324C;--ivory:#F1ECE4;--plate-mute:#8B93A1;
+  --paper:#F4F4F4;--paper-2:#E8E8E8;--paper-3:#D6D6D6;--ink:#161616;--ink-2:#3D3D3D;--mute:#767676;
+  --rule:rgba(22,22,22,.14);--rule-2:rgba(22,22,22,.26);--brass:#FF6600;--brass-d:#B84300;--plate:#141414;--plate-line:#363636;--ivory:#F2F2F2;--plate-mute:#9A9A9A;
   --serif:"Cormorant Garamond",Georgia,"Times New Roman",serif;
   --sans:"Manrope","Segoe UI",system-ui,sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
@@ -51,7 +51,7 @@ em{font-style:italic;color:var(--brass-d)}
 .links a{font:500 .84rem var(--sans);text-decoration:none;padding:8px 12px;border-radius:4px;white-space:nowrap;color:var(--ink-2)}
 .links a:hover{color:var(--ink)}
 .links a.cta{background:var(--ink);color:var(--paper);margin-left:6px}
-.links a.cta:hover{background:#1F283B}
+.links a.cta:hover{background:#2B2B2B}
 @media (max-width:600px){.links a:not(.cta){display:none}.brand .tag{display:none}}
 
 .hero{padding-block:clamp(36px,6vw,72px) 28px;border-bottom:1px solid var(--rule);margin-bottom:28px}
@@ -119,7 +119,7 @@ b{color:var(--ink);font-weight:600}
 .note{border-left:2px solid var(--brass-d);background:var(--paper-2);padding:14px 18px;margin:18px 0;max-width:76ch;font-size:.92rem}
 .note p:last-child{margin:0}
 .note.ink{background:var(--ink);border-left-color:var(--brass)}
-.note.ink p,.note.ink li{color:#B8BDC6}
+.note.ink p,.note.ink li{color:#BDBDBD}
 .note.ink b{color:var(--ivory)}
 
 .steps{counter-reset:s;list-style:none;padding:0;margin:16px 0 20px;display:grid;gap:0;max-width:76ch;border-top:1px solid var(--rule)}
@@ -165,7 +165,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#C24A00,#933800 55%
 .links a.x{display:inline-flex;padding:8px 10px}.links a.x svg{width:14px;height:14px}
 @media (max-width:600px){.links a.x{display:inline-flex}}
 .proof-btn{font:600 .9rem var(--sans);background:var(--ink);color:var(--paper);border:0;border-radius:6px;padding:11px 18px;cursor:pointer}.proof-btn:disabled{opacity:.6;cursor:wait}
-.proof-out{background:var(--plate);color:#D9DEE6;border-radius:10px;padding:16px;font:.76rem/1.6 var(--mono);white-space:pre-wrap;overflow-x:auto;max-width:76ch}.proof-out b{color:#FF9A57;font-weight:500}
+.proof-out{background:var(--plate);color:#E0E0E0;border-radius:10px;padding:16px;font:.76rem/1.6 var(--mono);white-space:pre-wrap;overflow-x:auto;max-width:76ch}.proof-out b{color:#FF9A57;font-weight:500}
 </style>
 <script type="module" src="./docs.js"></script>
 </head>

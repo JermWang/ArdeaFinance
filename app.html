@@ -13,7 +13,7 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://ardea-production.up.railway.app/media/banner.png?v=1">
-<meta name="theme-color" content="#080B13">
+<meta name="theme-color" content="#0E0E0E">
 <title>Ardea Terminal</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
@@ -26,8 +26,8 @@
 /* Terminal: a vault-navy trading desk. Ruled panels, squared controls, mono numbers; brass marks what is
    live or selected, green is a gain, red is a loss or a risk. */
 :root{
-  --paper:#F1ECE4;--ink:#0B0F1A;--ink-0:#080B13;--ink-1:#0F1422;--ink-2:#161D2E;--ink-3:#222B42;--line:#1D2538;
-  --mute:#5E6878;--mute-ink:#8B93A1;--accent:#FF6600;--down:#F06A6A;--up:#43D19E;--warn:#F2C14E;
+  --paper:#F2F2F2;--ink:#141414;--ink-0:#0E0E0E;--ink-1:#171717;--ink-2:#202020;--ink-3:#2E2E2E;--line:#272727;
+  --mute:#6E6E6E;--mute-ink:#9A9A9A;--accent:#FF6600;--down:#F06A6A;--up:#43D19E;--warn:#F2C14E;
   --font-display:"Manrope","Segoe UI",system-ui,sans-serif;--font-mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
   --serif:"Cormorant Garamond",Georgia,serif;
   --r:6px;color-scheme:dark;
@@ -462,8 +462,8 @@ a.txl{display:inline-flex;color:var(--mute-ink);padding:2px}a.txl:hover{color:va
 .watchbar{background:var(--ink-0);min-height:32px}
 
 /* panels: a hairline of light along the top edge, quieter heads */
-.panel{box-shadow:inset 0 1px 0 rgba(239,233,220,.035),0 1px 0 rgba(0,0,0,.4)}
-.phead{padding:9px 12px;background:linear-gradient(180deg,rgba(239,233,220,.025),transparent)}
+.panel{box-shadow:inset 0 1px 0 rgba(242,242,242,.035),0 1px 0 rgba(0,0,0,.4)}
+.phead{padding:9px 12px;background:linear-gradient(180deg,rgba(242,242,242,.025),transparent)}
 .phead .count{font:500 .62rem var(--font-mono);color:var(--mute-ink);background:var(--ink-2);border:1px solid var(--line);border-radius:3px;padding:1px 6px}
 .pulse-top{gap:8px;margin-bottom:12px}
 .pulse-top .chip{font-size:.64rem;color:var(--mute-ink);border-color:var(--line);background:var(--ink-1)}
@@ -533,7 +533,7 @@ a.txl{display:inline-flex;color:var(--mute-ink);padding:2px}a.txl:hover{color:va
 .pc-row{display:flex;align-items:center;gap:10px;margin-top:3px;min-width:0}
 .pc-row i{font:500 .58rem var(--font-mono);font-style:normal;letter-spacing:.1em;color:var(--mute);margin-right:4px}
 .pc-row .mc b{font:600 1.04rem var(--font-mono);font-variant-numeric:tabular-nums;color:var(--paper);letter-spacing:-.02em}
-.pc-row .vol b{font:500 .78rem var(--font-mono);font-variant-numeric:tabular-nums;color:#C9CDD4}
+.pc-row .vol b{font:500 .78rem var(--font-mono);font-variant-numeric:tabular-nums;color:#CFCFCF}
 .pc-row .spark{width:64px;height:18px;flex:none;overflow:visible}
 .pc-row .spark .line{fill:none;stroke:var(--mute-ink);stroke-width:1.3;stroke-linejoin:round;vector-effect:non-scaling-stroke}
 .pc-row .spark .area{fill:var(--mute-ink);opacity:.08}
@@ -574,7 +574,7 @@ a.txl{display:inline-flex;color:var(--mute-ink);padding:2px}a.txl:hover{color:va
 @media (prefers-reduced-motion:reduce){.pc-curve .cbar i{transition:none}}
 
 /* the logo's metallic gold on primary actions */
-.btn.primary{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 38%,#F2620A 64%,#FF9447 82%,#C84800 100%);border-color:#F57018;box-shadow:inset 0 1px 0 rgba(255,244,218,.4)}
+.btn.primary{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 38%,#F2620A 64%,#FF9447 82%,#C84800 100%);border-color:#F57018;box-shadow:inset 0 1px 0 rgba(255,240,228,.4)}
 .btn.primary:hover:not(:disabled){filter:brightness(1.06)}
 .pulse-top h1{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 38%,#F2620A 64%,#FF9447 82%,#C84800 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .switch[aria-checked="true"]{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 38%,#F2620A 64%,#FF9447 82%,#C84800 100%)}

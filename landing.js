@@ -63,10 +63,6 @@ function frame(now) {
   if (!visible || document.hidden) return;
   const { W, H } = G, t = REDUCE ? 2 : now / 1000, tracing = G.phase === "tracing", age = REDUCE ? 9 : (now - G.born) / 1000;
   ctx.clearRect(0, 0, W, H);
-  // banknote waves, drifting
-  ctx.strokeStyle = C.STEEL; ctx.globalAlpha = .16; ctx.lineWidth = .7; ctx.beginPath();
-  for (let y = 10, i = 0; y < H; y += 11, i++) for (let x = 0; x <= W; x += 4) { const yy = y + Math.sin(x / 46 + i * .5 - t * .5) * 3.5; if (x) ctx.lineTo(x, yy); else ctx.moveTo(x, yy); }
-  ctx.stroke(); ctx.globalAlpha = 1;
   // edges, each carrying a brass tick along the way funds moved
   for (const e of G.edges) {
     ctx.strokeStyle = C.STEEL; ctx.lineWidth = 1; ctx.globalAlpha = Math.min(1, age * 2) * .9;

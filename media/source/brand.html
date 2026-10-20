@@ -5,7 +5,7 @@
 <html><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0B0F1A;--bg-1:#111726;--line:#27324C;--ivory:#F1ECE4;--mute:#8B93A1;--or:#FF6600;--or-l:#FF8A3D}
+:root{--bg:#141414;--bg-1:#1B1B1B;--line:#363636;--ivory:#F2F2F2;--mute:#9A9A9A;--or:#FF6600;--or-l:#FF8A3D}
 *{box-sizing:border-box;margin:0}
 html,body{background:var(--bg);overflow:hidden}
 body{width:100vw;height:100vh;position:relative;color:var(--ivory);font-family:Manrope,sans-serif}
@@ -24,10 +24,10 @@ h1 em{font-style:italic;color:var(--or)}
 .node small{display:block;font-weight:400;color:var(--mute);letter-spacing:.06em;margin-top:4px}
 .node.core{border-color:var(--ivory)}
 .node.hot{border-color:var(--or);color:var(--or)}
-.arrow{flex:1;height:1px;border-top:1px dashed #4A5878;position:relative}
+.arrow{flex:1;height:1px;border-top:1px dashed #5A5A5A;position:relative}
 .arrow i{position:absolute;top:-12px;left:50%;transform:translateX(-50%);font:600 11px "IBM Plex Mono",monospace;letter-spacing:.14em;padding:3px 9px;border-radius:99px;border:1px solid var(--line);background:var(--bg);font-style:normal}
 .arrow i.hot{border-color:var(--or);color:var(--or)}
-pre{font:400 17px/1.75 "IBM Plex Mono",monospace;color:#C9CDD4;white-space:pre-wrap}
+pre{font:400 17px/1.75 "IBM Plex Mono",monospace;color:#CFCFCF;white-space:pre-wrap}
 pre b{color:var(--or-l);font-weight:500}
 </style></head><body>
 <script type="module">
@@ -54,13 +54,12 @@ if (s === "pfp") {
 }
 if (s === "xbanner") {
   glow("80%", "70%");
-  ripples({ cx: W * .86, cy: H * .9, rx0: 60, ry0: 16, n: 24, step: 34, fade: .7, tilt: .26 });
   const b = box(`left:${W * .3}px;top:50%;transform:translateY(-50%)`);
   b.innerHTML = `<p class="kick">A Solana terminal · <b>routed through Monero</b></p><h1 style="font-size:76px;margin-top:18px">Cross Monero.<br><em>Trade from a clean wallet.</em></h1>`;
+  const xm = mark(300); xm.style.cssText = `position:absolute;left:${W * .82 - 150}px;top:${H / 2 - 150}px`; document.body.append(xm);
 }
 if (s === "og") {
   glow("78%", "70%");
-  ripples({ cx: W * .82, cy: H * .9, rx0: 50, ry0: 14, n: 18, step: 36, fade: .6, tilt: .26 });
   const top = box("left:80px;top:72px;display:flex;align-items:center;gap:20px");
   top.append(mark(76)); top.insertAdjacentHTML("beforeend", `<span class="word" style="font-size:58px">Ardea</span>`);
   box("left:80px;top:210px", `<h1 style="font-size:84px">Cross Monero.<br><em>Trade from a clean wallet.</em></h1>`);
@@ -71,7 +70,7 @@ if (s === "hero") {
   const m = mark(500); m.style.cssText = `position:absolute;left:${W * .76 - 250}px;top:${H / 2 - 250}px`; document.body.append(m);
   const top = box("left:110px;top:96px;display:flex;align-items:center;gap:16px");
   top.append(mark(44)); top.insertAdjacentHTML("beforeend", `<span class="word" style="font-size:38px">Ardea</span>`);
-  box("left:110px;top:270px;width:760px", `<p class="kick">Private mode · <b>routed through Monero</b></p><h1 style="font-size:104px;margin-top:22px">Cross Monero.<br><em>Trade from a clean wallet.</em></h1><p style="font-size:22px;line-height:1.6;color:#B8BDC6;margin-top:30px;max-width:640px">A full Solana trading terminal. In Private mode your SOL becomes XMR, crosses Monero, and an unrelated exchange pays a fresh wallet that makes the buy.</p>`);
+  box("left:110px;top:270px;width:760px", `<p class="kick">Private mode · <b>routed through Monero</b></p><h1 style="font-size:104px;margin-top:22px">Cross Monero.<br><em>Trade from a clean wallet.</em></h1><p style="font-size:22px;line-height:1.6;color:#BDBDBD;margin-top:30px;max-width:640px">A full Solana trading terminal. In Private mode your SOL becomes XMR, crosses Monero, and an unrelated exchange pays a fresh wallet that makes the buy.</p>`);
 }
 if (s === "route") {
   glow("50%", "40%");
@@ -84,14 +83,13 @@ if (s === "route") {
     <div class="node core">MONERO<small>ring sigs · RingCT</small></div><div class="arrow"></div>
     <div class="node">EXCHANGE B<small>XMR → SOL</small></div><div class="arrow"><i>PAYS</i></div>
     <div class="node hot">STEALTH<small>fresh wallet · buys</small></div>`);
-  box("left:110px;right:110px;top:640px", `<div class="rule"></div><p style="font-size:21px;line-height:1.6;color:#B8BDC6;margin-top:28px;max-width:1150px">No transfer runs from your wallet to the wallet that buys. Routes take 10–40 minutes and run in the background. Houdini sees both ends of a route; amounts and timing can still be guessed at, and the docs say so.</p>`);
+  box("left:110px;right:110px;top:640px", `<div class="rule"></div><p style="font-size:21px;line-height:1.6;color:#BDBDBD;margin-top:28px;max-width:1150px">No transfer runs from your wallet to the wallet that buys. Routes take 10–40 minutes and run in the background. Houdini sees both ends of a route; amounts and timing can still be guessed at, and the docs say so.</p>`);
 }
 if (s === "proof") {
   glow("70%", "50%");
-  ripples({ cx: W * .1, cy: H * .95, rx0: 50, ry0: 14, n: 16, step: 36, fade: .45, tilt: .26 });
   const top = box("left:110px;top:90px;display:flex;align-items:center;gap:16px");
   top.append(mark(44)); top.insertAdjacentHTML("beforeend", `<span class="word" style="font-size:38px">Ardea</span>`);
-  box("left:110px;top:220px;width:600px", `<p class="kick">Proof</p><h1 style="font-size:86px;margin-top:18px">Don't take our word. <em>Check it.</em></h1><p style="font-size:21px;line-height:1.6;color:#B8BDC6;margin-top:28px">The docs run a real Monero route quote from your browser, list on-chain transactions, and serve the code as plain files.</p>`);
+  box("left:110px;top:220px;width:600px", `<p class="kick">Proof</p><h1 style="font-size:86px;margin-top:18px">Don't take our word. <em>Check it.</em></h1><p style="font-size:21px;line-height:1.6;color:#BDBDBD;margin-top:28px">The docs run a real Monero route quote from your browser, list on-chain transactions, and serve the code as plain files.</p>`);
   box("right:110px;top:220px;width:760px;padding:34px 38px", "").className = "card";
   document.querySelectorAll(".card")[0].innerHTML = `<pre><b>GET</b> houdini /v2/quotes/private-send
 <b>route</b>      SOL → XMR → SOL (useXmr=true)

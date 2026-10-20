@@ -87,21 +87,12 @@ export function decodeToken2022Meta(bytes) {
   return null;
 }
 
-// A small rosette avatar derived from the mint, as an SVG data URI. Shown at once while the real
-// image loads, and kept if none does, so no token is ever a blank square.
-const AVATAR = ["#FF6600", "#43D19E", "#8FA9CC", "#F2C14E", "#B9A3E3", "#F1ECE4"];
+// A flat placeholder derived from the mint, as an SVG data URI: a charcoal tile with one solid dot whose colour and
+// size come from a hash of the mint. Shown at once while the real image loads, and kept if none does.
+const AVATAR = ["#FF6600", "#43D19E", "#B3B3B3", "#F2C14E", "#B9A3E3", "#F2F2F2"];
 export function identicon(seed = "") {
-  // a small guilloché rosette: lobe count, phase and colour all come from a hash of the mint
   let h = 2166136261;
   for (let i = 0; i < seed.length; i++) { h ^= seed.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
-  const fg = AVATAR[h % AVATAR.length], k = 3 + (h >>> 4) % 7, amp = 1.2 + ((h >>> 9) % 5) * .35, ph = ((h >>> 13) % 360) * Math.PI / 180;
-  let d = "";
-  for (let c = 0; c < 3; c++) {
-    for (let i = 0; i <= 96; i++) {
-      const a = i / 96 * Math.PI * 2, r = 6.2 + amp * Math.sin(k * a + ph + c * 2.0944);
-      d += `${i ? "L" : "M"}${(12 + Math.cos(a) * r).toFixed(2)} ${(12 + Math.sin(a) * r).toFixed(2)}`;
-    }
-    d += "Z";
-  }
-  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' fill='#161D2E'/><path d='${d}' fill='none' stroke='${fg}' stroke-width='.7'/><circle cx='12' cy='12' r='1.6' fill='${fg}'/></svg>`)}`;
+  const fg = AVATAR[h % AVATAR.length], r = 4 + (h >>> 5) % 3;
+  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' fill='#202020'/><circle cx='12' cy='12' r='${r}' fill='${fg}' opacity='.85'/></svg>`)}`;
 }

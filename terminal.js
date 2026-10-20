@@ -41,7 +41,7 @@ const count = n => n == null || !isFinite(n) ? "—" : n < 1e3 ? String(Math.rou
 const ago = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return s < 60 ? `${s}s` : s < 3600 ? `${Math.floor(s / 60)}m` : s < 86400 ? `${Math.floor(s / 3600)}h` : `${Math.floor(s / 86400)}d`; };
 const cls = (el, n) => { el.classList.toggle("up", n > 0); el.classList.toggle("down", n < 0); return el; };
 const safeUrl = u => typeof u === "string" && /^https:\/\//.test(u) ? u : null;
-// Token images: a rosette avatar from the mint shows at once; each source (proxy, original, other IPFS
+// Token images: a flat placeholder from the mint shows at once; each source (proxy, original, other IPFS
 // gateways, DexScreener) is probed off-screen with a timeout, and the first one that loads replaces it.
 const resolvedImg = new Map();
 const refPolicy = src => PROXY && src.startsWith(PROXY) ? "strict-origin-when-cross-origin" : "no-referrer";
@@ -1524,7 +1524,7 @@ $("tk-form").addEventListener("submit", e => { e.preventDefault(); addTracked($(
 let pfWallet = "main";
 let pfRun = 0;
 // Allocation colours: the art palette, so the dashboard matches the drawings.
-const ALLOC = ["#8B93A1", "#FF6600", "#43D19E", "#5D7596", "#F2C14E", "#B9A3E3", "#F1ECE4", "#3A4659"];
+const ALLOC = ["#9A9A9A", "#FF6600", "#43D19E", "#8C8C8C", "#F2C14E", "#B9A3E3", "#F2F2F2", "#4C4C4C"];
 // A PnL value with a small bar under it, scaled to the biggest win or loss in the table.
 function pnlCell(v, max) {
   const td = make("td", "num pnl");

@@ -1,14 +1,13 @@
-// Ardea art. Everything visual is drawn in code in one style: fine-line guilloché engraving, the woven
-// line patterns printed on banknotes and bond certificates. Steel and ivory lines on a vault-navy ground,
-// one brass accent, and a deliberate gap cut into the pattern wherever a trail should end.
+// Ardea art, drawn in code in one flat, minimal style: fine lines, solid dots, the heron mark kept clean, and the
+// Monero palette (orange on charcoal). No engraved patterns or textures.
 // One shared animation clock drives it all; it pauses off-screen and respects prefers-reduced-motion.
 
 import { logoMark } from "./logo.js";
 export const NS = "http://www.w3.org/2000/svg";
 export const REDUCE = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 export const C = {
-  BG: "#0B0F1A", BG1: "#111726", BG2: "#161E30", BG3: "#1E2840", LINE: "#27324C",
-  IVORY: "#F1ECE4", MUTE: "#8B93A1", STEEL: "#5D7596", BRASS: "#FF6600", BRASS2: "#D94F00",
+  BG: "#141414", BG1: "#1B1B1B", BG2: "#212121", BG3: "#2A2A2A", LINE: "#363636",
+  IVORY: "#F2F2F2", MUTE: "#9A9A9A", STEEL: "#8C8C8C", BRASS: "#FF6600", BRASS2: "#D94F00",
   UP: "#43D19E", DOWN: "#F06A6A"
 };
 const MONO = "'IBM Plex Mono', ui-monospace, monospace";
@@ -93,32 +92,6 @@ export function arc(cx, cy, r, a0, a1) {
   const large = ((a1 - a0) % TAU + TAU) % TAU > Math.PI ? 1 : 0;
   return `M${f2(cx + Math.cos(a0) * r)} ${f2(cy + Math.sin(a0) * r)}A${r} ${r} 0 ${large} 1 ${f2(cx + Math.cos(a1) * r)} ${f2(cy + Math.sin(a1) * r)}`;
 }
-// Guilloché band: `copies` phase-shifted waves r(θ) = r + amp·sin(kθ + iφ) drawn as one path, so the
-// lines weave into the lattice you see on banknotes.
-export function guilloche(parent, { r, amp, k, copies = 16, stroke = C.STEEL, sw = .55, opacity = .7, steps = 540, shape = Math.sin }) {
-  let d = "";
-  for (let i = 0; i < copies; i++) { const ph = i / copies * TAU; d += polar(a => r + amp * shape(k * a + ph), steps); }
-  return el("path", { d, fill: "none", stroke, "stroke-width": sw, opacity, "vector-effect": "non-scaling-stroke" }, parent);
-}
-// A small rosette that slowly turns: the seal used on nodes and medallions.
-export function rosette(parent, cx, cy, R, { host, stroke = C.STEEL, accent = C.BRASS, speed = 6, k = 9, lines = 10 } = {}) {
-  const g = el("g", { transform: `translate(${cx} ${cy})` }, parent), spin = el("g", {}, g);
-  guilloche(spin, { r: R * .72, amp: R * .2, k, copies: lines, stroke, sw: .6, opacity: .85, steps: 240 });
-  el("circle", { r: R, fill: "none", stroke: accent, "stroke-width": 1 }, g);
-  if (host) animate(t => spin.setAttribute("transform", `rotate(${f2(t * speed)})`), host);
-  return g;
-}
-// Horizontal banknote waves across a box; they drift slowly sideways.
-export function waves(parent, { x0, y0, x1, y1, gap = 9, amp = 4, period = 64, stroke = C.STEEL, opacity = .25, host, speed = 9 }) {
-  const g = el("g", { opacity, "data-anim": "" }, parent), inner = el("g", {}, g);
-  let d = "";
-  for (let y = y0, i = 0; y <= y1; y += gap, i++) {
-    for (let x = x0 - period; x <= x1 + period; x += 3) d += (x === x0 - period ? "M" : "L") + f2(x) + " " + f2(y + Math.sin((x / period) * TAU + i * .55) * amp);
-  }
-  el("path", { d, fill: "none", stroke, "stroke-width": .6, "vector-effect": "non-scaling-stroke" }, inner);
-  if (host) animate(t => inner.setAttribute("transform", `translate(${f2(-(t * speed) % period)} 0)`), host);
-  return g;
-}
 function diamond(parent, size = 4.5, fill = C.BRASS) {
   return el("path", { d: `M0 ${-size}L${size} 0L0 ${size}L${-size} 0Z`, fill, stroke: C.BG, "stroke-width": 1 }, parent);
 }
@@ -182,99 +155,29 @@ export function renderGlyphs(root = document) {
   });
 }
 
-/* ---------- the hero: a seal with a gap cut in it ---------- */
-// Your wallet's trail runs into a guilloché ring (the Monero hop) and stops. A fresh wallet's line leaves
-// through the gap cut in the seal, with nothing drawn between the two.
+/* ---------- the hero: the heron, and the route under it ---------- */
+// No frame and no pattern: the mark stands on the page, clean. Under it, one line: your wallet, the Monero hop, a new
+// wallet. A small marker walks the route; the readout says what the chain shows between the two ends.
 export function hero(svg) {
-  const cx = 300, cy = 296, R = 150, gapA = -0.92, gapW = .3;
-  const defs = el("defs", {}, svg);
-  // frame: an engraved certificate border with brass corner brackets
-  el("rect", { x: 8, y: 8, width: 584, height: 524, rx: 18, fill: "none", stroke: C.LINE, "stroke-width": 1 }, svg);
-  el("rect", { x: 16, y: 16, width: 568, height: 508, rx: 12, fill: "none", stroke: C.LINE, "stroke-width": .8, "stroke-dasharray": "1 4" }, svg);
-  [[16, 16, 1, 1], [584, 16, -1, 1], [16, 524, 1, -1], [584, 524, -1, -1]].forEach(([x, y, sx, sy]) => el("path", { d: `M${x} ${y + sy * 22}V${y}H${x + sx * 22}`, fill: "none", stroke: C.BRASS, "stroke-width": 1.6 }, svg));
-  text(svg, 36, 44, "Nº 0001 · SOLANA MAINNET", { "font-size": 9, fill: C.MUTE, "letter-spacing": ".14em" });
-  text(svg, 564, 508, "SOL → XMR → SOL", { "font-size": 9, fill: C.MUTE, "letter-spacing": ".14em", "text-anchor": "end" });
-
-  // banknote waves everywhere except under the seal
-  const m = el("mask", { id: "hero-wm" }, defs);
-  el("rect", { x: 0, y: 0, width: 600, height: 540, fill: "#fff" }, m);
-  el("circle", { cx, cy, r: R + 16, fill: "#000" }, m);
-  const wv = waves(svg, { x0: 24, y0: 70, x1: 576, y1: 486, gap: 11, amp: 5, period: 90, opacity: .2, host: svg, speed: 7 });
-  wv.setAttribute("mask", "url(#hero-wm)");
-
-  // the seal, with a wedge cut out of every layer
-  const gm = el("mask", { id: "hero-gap" }, defs);
-  el("rect", { x: -300, y: -300, width: 600, height: 600, fill: "#fff" }, gm);
-  const wedge = (a, w, r) => `M0 0L${f2(Math.cos(a - w) * r)} ${f2(Math.sin(a - w) * r)}A${r} ${r} 0 0 1 ${f2(Math.cos(a + w) * r)} ${f2(Math.sin(a + w) * r)}Z`;
-  el("path", { d: wedge(gapA, gapW / 2, 260), fill: "#000" }, gm);
-  const seal = el("g", { transform: `translate(${cx} ${cy})` }, svg), cut = el("g", { mask: "url(#hero-gap)" }, seal);
-  const L1 = el("g", {}, cut), L2 = el("g", {}, cut), L3 = el("g", {}, cut), bezel = el("g", {}, cut);
-  guilloche(L1, { r: R - 20, amp: 15, k: 12, copies: 10, stroke: C.STEEL, sw: .7, opacity: .9 });
-  guilloche(L2, { r: R - 58, amp: 12, k: 9, copies: 8, stroke: C.BRASS, sw: .7, opacity: .75 });
-  guilloche(L3, { r: 64, amp: 12, k: 7, copies: 7, stroke: C.IVORY, sw: .6, opacity: .45, shape: Math.cos });
-  el("circle", { r: R, fill: "none", stroke: C.IVORY, "stroke-width": .9, opacity: .7 }, bezel);
-  let ticks = "";
-  for (let i = 0; i < 144; i++) { const a = i / 144 * TAU, r1 = R + 5, r2 = R + (i % 12 ? 9 : 14); ticks += `M${f2(Math.cos(a) * r1)} ${f2(Math.sin(a) * r1)}L${f2(Math.cos(a) * r2)} ${f2(Math.sin(a) * r2)}`; }
-  el("path", { d: ticks, stroke: C.MUTE, "stroke-width": .8 }, bezel);
-  // the cut's edges, in brass
-  [gapA - gapW / 2, gapA + gapW / 2].forEach(a => el("line", { x1: f2(Math.cos(a) * 46), y1: f2(Math.sin(a) * 46), x2: f2(Math.cos(a) * (R + 14)), y2: f2(Math.sin(a) * (R + 14)), stroke: C.BRASS, "stroke-width": 1.2 }, seal));
-  // core
-  el("circle", { r: 46, fill: C.BG, stroke: C.LINE, "stroke-width": 1 }, seal);
-  const pulse = el("circle", { r: 46, fill: "none", stroke: C.BRASS, "stroke-width": 1.4 }, seal);
-  text(seal, 0, -4, "MONERO", { "font-size": 12, "font-weight": 600, fill: C.IVORY, "text-anchor": "middle", "letter-spacing": ".22em" });
-  text(seal, 0, 12, "XMR HOP", { "font-size": 8.5, fill: C.MUTE, "text-anchor": "middle", "letter-spacing": ".24em" });
-
-  // trails: your wallet's history comes in from the lower left; the fresh wallet's line leaves the gap
-  const entryA = Math.PI * .86, ex = cx + Math.cos(entryA) * (R + 16), ey = cy + Math.sin(entryA) * (R + 16);
-  const gx = cx + Math.cos(gapA) * (R + 18), gy = cy + Math.sin(gapA) * (R + 18);
-  const inPath = el("path", { d: `M70 452C112 452 112 ${f2(ey + 40)} ${f2(ex)} ${f2(ey)}`, fill: "none", stroke: C.IVORY, "stroke-width": 1.1, "stroke-dasharray": "1 6", "stroke-linecap": "round", opacity: .8 }, svg);
-  const outPath = el("path", { d: `M${f2(gx)} ${f2(gy)}C${f2(gx + 40)} ${f2(gy - 50)} 470 104 528 98`, fill: "none", stroke: C.BRASS, "stroke-width": 1.4 }, svg);
-  const node = (x, y, col, lab, sub, anchor) => {
-    const g = el("g", { transform: `translate(${x} ${y})` }, svg);
-    el("circle", { r: 15, fill: C.BG, stroke: col, "stroke-width": 1.4 }, g);
-    el("path", { d: arc(0, 0, 8.5, .5, TAU - .5), fill: "none", stroke: col, "stroke-width": 1.4, "stroke-linecap": "round" }, g);
-    el("circle", { r: 2.4, fill: col }, g);
-    const tx = anchor === "end" ? -24 : 24;
-    text(g, tx, -2, lab, { "font-size": 10, "font-weight": 600, fill: C.IVORY, "letter-spacing": ".12em", "text-anchor": anchor });
-    text(g, tx, 12, sub, { "font-size": 9, fill: C.MUTE, "letter-spacing": ".06em", "text-anchor": anchor });
-    return g;
-  };
-  node(56, 452, C.IVORY, "YOUR WALLET", "public history", "start");
-  const fresh = node(540, 98, C.BRASS, "NEW WALLET", "no history", "end");
-  // a small ledger readout under the seal
-  const ro = el("g", { transform: "translate(300 488)" }, svg);
-  el("rect", { x: -104, y: -14, width: 208, height: 26, rx: 13, fill: C.BG1, stroke: C.LINE }, ro);
-  text(ro, -88, 3.5, "DIRECT TRANSFER", { "font-size": 9, fill: C.MUTE, "letter-spacing": ".14em" });
-  const roV = text(ro, 88, 3.5, "NONE", { "font-size": 9.5, "font-weight": 600, fill: C.BRASS, "letter-spacing": ".14em", "text-anchor": "end" });
-
-  const pk = el("g", { "data-anim": "" }, svg); diamond(pk, 5);
-  const inLen = inPath.getTotalLength ? inPath.getTotalLength() : 0, outLen = outPath.getTotalLength ? outPath.getTotalLength() : 0;
-  outPath.setAttribute("stroke-dasharray", `${f2(outLen)} ${f2(outLen)}`);
-  animate(t => {
-    L1.setAttribute("transform", `rotate(${f2(t * 2.2)})`);
-    L2.setAttribute("transform", `rotate(${f2(-t * 3.4)})`);
-    L3.setAttribute("transform", `rotate(${f2(t * 5)})`);
-    bezel.setAttribute("transform", `rotate(${f2(-t * 1.1)})`);
-    const c = t % 7;
-    let pos = null;
-    if (c < 2.4 && inLen) { const p = inPath.getPointAtLength(ease(c / 2.4) * inLen); pos = [p.x, p.y]; }
-    const hold = clamp((c - 2.4) / 1.2);
-    pulse.setAttribute("r", f2(46 + Math.sin(hold * Math.PI) * 10));
-    pulse.setAttribute("opacity", f2(c > 2.4 && c < 3.6 ? 1 - hold * .6 : .35));
-    const draw = clamp((c - 3.6) / 2);
-    outPath.setAttribute("stroke-dashoffset", f2(outLen * (1 - ease(draw))));
-    outPath.setAttribute("opacity", f2(c > 6.4 ? 1 - (c - 6.4) / .6 : 1));
-    if (c >= 3.6 && c < 5.6 && outLen) { const p = outPath.getPointAtLength(ease(draw) * outLen); pos = [p.x, p.y]; }
-    pk.setAttribute("opacity", pos ? 1 : 0);
-    if (pos) pk.setAttribute("transform", `translate(${f2(pos[0])} ${f2(pos[1])})`);
-    roV.textContent = "NONE";
-  }, svg, 4.6);
+  const m = el("svg", { x: 160, y: 20, width: 280, height: 280, overflow: "visible" }, svg);
+  logoMark(m, { tone: "orange" });
+  const y = 420, xs = [70, 300, 530], labels = [["YOUR WALLET", "public history"], ["MONERO", "SOL → XMR → SOL"], ["NEW WALLET", "no history"]];
+  const line = el("path", { d: `M${xs[0]} ${y}H${xs[2]}`, stroke: C.LINE, "stroke-width": 1.2 }, svg);
+  xs.forEach((x, i) => {
+    el("circle", { cx: x, cy: y, r: i === 1 ? 7 : 5, fill: i === 0 ? C.IVORY : C.BRASS }, svg);
+    text(svg, x, y + 30, labels[i][0], { "font-size": 10.5, "font-weight": 600, fill: C.IVORY, "letter-spacing": ".14em", "text-anchor": "middle" });
+    text(svg, x, y + 46, labels[i][1], { "font-size": 9.5, fill: C.MUTE, "letter-spacing": ".06em", "text-anchor": "middle" });
+  });
+  text(svg, 300, y - 26, "DIRECT TRANSFER: NONE", { "font-size": 9.5, "font-weight": 600, fill: C.BRASS, "letter-spacing": ".16em", "text-anchor": "middle" });
+  const pk = el("circle", { r: 3.2, fill: C.BRASS, cy: y }, svg);
+  animate(t => { const q = (t % 5) / 5; pk.setAttribute("cx", f2(xs[0] + (xs[2] - xs[0]) * ease(q))); pk.setAttribute("opacity", f2(Math.sin(q * Math.PI))); }, svg, 1);
+  return line;
 }
 
 /* ---------- illustrations for the "what trackers see" cards ---------- */
 export const ICONS = {
   funding(svg) {
-    rosette(svg, 54, 75, 22, { host: svg });
+    el("circle", { cx: 54, cy: 75, r: 14, fill: "none", stroke: C.IVORY, "stroke-width": 1.2 }, svg); el("circle", { cx: 54, cy: 75, r: 4, fill: C.IVORY }, svg);
     const ys = [28, 60, 92, 124], paths = ys.map((y, i) => el("path", { d: `M78 75C130 75 128 ${y} 182 ${y}`, fill: "none", stroke: i === 1 ? C.BRASS : C.STEEL, "stroke-width": i === 1 ? 1.3 : 1, opacity: i === 1 ? 1 : .8 }, svg));
     ys.forEach((y, i) => { el("circle", { cx: 192, cy: y, r: 8, fill: C.BG1, stroke: i === 1 ? C.BRASS : C.IVORY, "stroke-width": 1.1 }, svg); el("circle", { cx: 192, cy: y, r: 2, fill: i === 1 ? C.BRASS : C.IVORY }, svg); });
     text(svg, 208, 63, "YOU", { "font-size": 8, fill: C.BRASS, "letter-spacing": ".12em" });
@@ -287,7 +190,6 @@ export const ICONS = {
     for (let i = 0; i < 9; i++) { const rx = 5 + i * 3.6, ry = 7 + i * 4.2, a0 = .4 + (i % 3) * .5; fp += polarArc(78, 78, rx, ry, a0, a0 + TAU - .9 - (i % 2) * .5); }
     el("path", { d: fp, fill: "none", stroke: C.STEEL, "stroke-width": 1.1, "stroke-linecap": "round" }, svg);
     [[116, 54, 64], [116, 68, 46], [116, 82, 56], [116, 96, 34]].forEach(([x, y, w], i) => el("rect", { x, y, width: w, height: 3.4, rx: 1.7, fill: i ? C.MUTE : C.IVORY, opacity: i ? .6 : .9 }, svg));
-    rosette(svg, 184, 106, 11, { host: svg, k: 7, lines: 7 });
     const scan = el("g", {}, svg);
     el("line", { x1: 0, y1: 30, x2: 0, y2: 122, stroke: C.BRASS, "stroke-width": 1.2 }, scan);
     el("rect", { x: -16, y: 30, width: 16, height: 92, fill: C.BRASS, opacity: .08 }, scan);
@@ -300,7 +202,7 @@ export const ICONS = {
       const [ax, ay] = P[a], [bx, by] = P[b], mx = (ax + bx) / 2, my = (ay + by) / 2, nx = -(by - ay), ny = bx - ax, L = Math.hypot(nx, ny);
       for (const s of [1, -1]) curves.push({ p: el("path", { d: `M${ax} ${ay}Q${f2(mx + nx / L * 14 * s)} ${f2(my + ny / L * 14 * s)} ${bx} ${by}`, fill: "none", stroke: C.STEEL, "stroke-width": 1, opacity: .85 }, svg), rev: s < 0 });
     });
-    P.forEach(([x, y], i) => { el("circle", { cx: x, cy: y, r: 17, fill: C.BG1, stroke: i ? C.IVORY : C.BRASS, "stroke-width": 1.2 }, svg); rosette(svg, x, y, 10, { host: svg, accent: i ? C.IVORY : C.BRASS, k: 6, lines: 6, speed: i % 2 ? -8 : 8 }); });
+    P.forEach(([x, y], i) => { el("circle", { cx: x, cy: y, r: 17, fill: C.BG1, stroke: i ? C.IVORY : C.BRASS, "stroke-width": 1.2 }, svg); el("circle", { cx: x, cy: y, r: 4, fill: i ? C.IVORY : C.BRASS }, svg); });
     const dots = curves.map(c => el("circle", { r: 2.2, fill: c.rev ? C.IVORY : C.BRASS }, svg));
     animate(t => curves.forEach((c, i) => { const L = c.p.getTotalLength?.() || 0, q = (t * .4 + i * .17) % 1, pt = L ? c.p.getPointAtLength((c.rev ? 1 - q : q) * L) : { x: 0, y: 0 }; dots[i].setAttribute("cx", f2(pt.x)); dots[i].setAttribute("cy", f2(pt.y)); dots[i].setAttribute("opacity", f2(Math.sin(q * Math.PI))); }), svg);
   },
@@ -312,10 +214,9 @@ export const ICONS = {
     const h = n => n / 24 * TAU - Math.PI / 2;
     el("path", { d: arc(0, 0, R - 15, h(5), h(12)), fill: "none", stroke: C.BRASS, "stroke-width": 5, opacity: .75 }, g);
     ["00", "06", "12", "18"].forEach((s, i) => { const a = h(i * 6); text(g, Math.cos(a) * (R + 10), Math.sin(a) * (R + 10) + 3, s, { "font-size": 8, fill: C.MUTE, "text-anchor": "middle" }); });
-    const spin = el("g", {}, g); guilloche(spin, { r: 22, amp: 5, k: 8, copies: 8, stroke: C.STEEL, sw: .6, opacity: .8, steps: 240 });
     const hand = el("line", { x1: 0, y1: 0, x2: 0, y2: -(R - 12), stroke: C.IVORY, "stroke-width": 1.4, "stroke-linecap": "round" }, g);
     el("circle", { r: 3, fill: C.BRASS }, g);
-    animate(t => { hand.setAttribute("transform", `rotate(${f2(t * 30 % 360)})`); spin.setAttribute("transform", `rotate(${f2(-t * 8)})`); }, svg);
+    animate(t => { hand.setAttribute("transform", `rotate(${f2(t * 30 % 360)})`); }, svg);
   }
 };
 function polarArc(cx, cy, rx, ry, a0, a1, steps = 48) {
@@ -327,7 +228,6 @@ export function renderIcons(root = document) {
   root.querySelectorAll("[data-icon]").forEach(host => {
     const svg = svgEl("0 0 240 150");
     host.appendChild(svg); // in the document first, so paths can be measured
-    waves(svg, { x0: 0, y0: 8, x1: 240, y1: 146, gap: 10, amp: 3, period: 70, opacity: .12, host: svg, speed: 5 });
     ICONS[host.dataset.icon](svg);
   });
 }
@@ -485,7 +385,6 @@ export function curveChart(svg) {
 // The Ardea heron mark (or, for "chart", a line that keeps drawing itself).
 export function emblem(kind = "stream") {
   const svg = svgEl("0 0 200 120");
-  waves(svg, { x0: 0, y0: 10, x1: 200, y1: 112, gap: 9, amp: 3, period: 60, opacity: .14, host: svg, speed: 5 });
   if (kind === "chart") {
     el("path", { d: "M30 96H170", stroke: C.LINE, "stroke-width": 1.2 }, svg);
     const pts = [[30, 84], [52, 78], [70, 86], [92, 62], [112, 68], [132, 44], [150, 50], [170, 30]];
