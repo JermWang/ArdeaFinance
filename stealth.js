@@ -88,7 +88,9 @@ export function houdini({ base, fetch: f = globalThis.fetch.bind(globalThis), ti
   const json = body => ({ method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
   return {
     tokens: params => call(`/v2/tokens?${new URLSearchParams(params)}`),
-    quote: ({ token, amount, useXmr = true }) => call(`/v2/quotes/private-send?${new URLSearchParams({ token, amount: String(amount), useXmr: String(!!useXmr) })}`),
+    // markup: Ardea's fee as a percentage per leg (a private route has two legs, each charged), taken inside the route.
+    // rotatePayoutWallets asks Houdini to vary the payout wallet, falling back to a normal route if it can't.
+    quote: ({ token, amount, useXmr = true, markup }) => call(`/v2/quotes/private-send?${new URLSearchParams({ token, amount: String(amount), useXmr: String(!!useXmr), rotatePayoutWallets: "true", rotateFallback: "true", ...(markup != null ? { markup: String(markup) } : {}) })}`),
     create: req => call("/v2/exchanges/private-send", json(req)),
     order: id => call(`/v2/orders/${encodeURIComponent(id)}`)
   };
@@ -107,11 +109,15 @@ export function solTokenId(res) {
 
 // Quote a private SOL → XMR → SOL send and open the order. Monero is always forced as the bridge: if no Monero route
 // is available, this stops rather than use any other path. Throws rather than return anything we didn't ask for.
-export async function routeQuote({ hd, token, amount, from, to, now = Date.now() }) {
+// The per-leg markup (in %) that takes `bps` of the routed amount in total: a private route charges it on both legs.
+export const legMarkup = bps => Math.round(Number(bps) / 2) / 100;
+
+export async function routeQuote({ hd, token, amount, from, to, feeBps = 0, now = Date.now() }) {
   amount = BigInt(amount);
   const sol = lamportsToSol(amount);
-  const { quotes = [] } = (await hd.quote({ token, amount: sol, useXmr: true })) || {};
-  const usable = quotes.filter(q => q && q.quoteId && !q.error && !q.filtered && (!q.type || q.type === "private") && Number(q.amountOut) > 0);
+  const markup = legMarkup(feeBps);
+  const { quotes = [] } = (await hd.quote({ token, amount: sol, useXmr: true, markup })) || {};
+  const usable = quotes.filter(q => q && q.quoteId && !q.error && !q.filtered && (!q.type || q.type === "private") && Number(q.amountOut) > 0 && (markup === 0 || q.markupSupported !== false));
   if (!usable.length) {
     const lim = quotes.find(q => q && (q.min || q.max)) || {};
     if (lim.min && Number(sol) < lim.min) throw new StealthError(`Private routes start at ${lim.min} SOL.`);

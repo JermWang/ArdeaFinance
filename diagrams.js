@@ -5,23 +5,22 @@ import { schematic, ledger, curveChart, fit } from "./art.js";
 const n = (id, x, y, label, sub, o = {}) => ({ id, x, y, label, sub, ...o });
 
 // Main wallet → one-time deposit at exchange A (SOL → XMR) → Monero → exchange B (XMR → SOL) → stealth wallet →
-// Jupiter. The fee goes from the main wallet to the treasury in the same transaction, and nowhere else.
+// Jupiter. Ardea's fee is Houdini partner markup inside the route, so the funding is one plain transfer.
 export function stealthRoute(svg, narrow = false) {
   const at = narrow
     ? { main: [0, 0], fee: [0, 110], dep: [0, 220], xmr: [0, 330], exb: [0, 440], stealth: [0, 550], jup: [0, 660] }
     : { main: [0, 0], fee: [0, 110], dep: [220, 0], xmr: [440, 0], exb: [660, 0], stealth: [660, 110], jup: [440, 110] };
   schematic(svg, {
     nodes: [
-      n("main", ...at.main, "Your wallet", "signs once", { glyph: "key" }),
-      n("fee", ...at.fee, "Treasury", "0.5% fee", { glyph: "fuel" }),
-      n("dep", ...at.dep, "Exchange A", "SOL → XMR", { glyph: "file" }),
+      n("main", ...at.main, "Your wallet", "one plain transfer", { glyph: "key" }),
+      n("dep", ...at.dep, "Exchange A", "SOL → XMR · fee in route", { glyph: "file" }),
       n("xmr", ...at.xmr, "Monero", "ring sigs · RingCT", { glyph: "lock", tone: "core" }),
       n("exb", ...at.exb, "Exchange B", "XMR → SOL", { glyph: "file" }),
       n("stealth", ...at.stealth, "Clean wallet", "armed · fires instantly", { glyph: "stealth", tone: "brass" }),
       n("jup", ...at.jup, "Jupiter", "swap", { glyph: "route" })
     ],
-    links: [{ from: "main", to: "dep" }, { from: "dep", to: "xmr" }, { from: "xmr", to: "exb" }, { from: "exb", to: "stealth" }, { from: "stealth", to: "jup" }, { from: "main", to: "fee" }],
-    sequence: [[0, 5], [1], [2], [3], [4]],
+    links: [{ from: "main", to: "dep" }, { from: "dep", to: "xmr" }, { from: "xmr", to: "exb" }, { from: "exb", to: "stealth" }, { from: "stealth", to: "jup" }],
+    sequence: [[0], [1], [2], [3], [4]],
     tags: [{ link: 0, text: "SOL" }, { link: 1, text: "XMR", accent: true }, { link: 3, text: "B PAYS" }]
   });
   return fit(svg);

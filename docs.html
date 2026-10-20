@@ -284,7 +284,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#C24A00,#933800 55%
         <ul class="list">
           <li><b>Buys:</b> <span data-cfg="fee">0.5%</span> of the SOL you spend, transferred before the swap.</li>
           <li><b>Sells:</b> <span data-cfg="fee">0.5%</span> of the <i>minimum</i> SOL the route guarantees, transferred after the swap, so a fill better than the minimum is all yours.</li>
-          <li><b>Private buys:</b> <span data-cfg="fee">0.5%</span> of the amount, sent to the treasury in the same transaction that funds the Monero route. The treasury never sends anything to a stealth wallet, so the fee doesn't connect your wallet to it.</li>
+          <li><b>Private buys and arming:</b> <span data-cfg="fee">0.5%</span>, taken inside the Monero route as Houdini partner markup (0.25% on each of its two legs) and paid to Ardea's Houdini partner account. Your funding is one plain transfer to a one-time address, with no transfer to Ardea in it, so nothing on-chain marks it as an Ardea route.</li>
           <li><b>Not charged:</b> stealth exits, deposits to and withdrawals from your instant wallet, and limit orders (Jupiter fills those).</li>
         </ul>
         <p>Network costs are separate and go to Solana validators: the base fee, the priority fee from your preset, and a Jito tip if set. Jupiter's routing is free.</p>
@@ -297,7 +297,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#C24A00,#933800 55%
         <ol class="steps">
           <li><span>Choose a total and a number of wallets (one to five, up to <b data-cfg="stealthMax">5 SOL</b> each in beta). The total is split into uneven, non-round sizes.</span></li>
           <li><span>For each wallet the terminal derives the next fresh stealth wallet, checks the chain that it has never been used, opens a Houdini private-send order forced through Monero, and checks the order exactly as a private buy does. Anything off and it refuses.</span></li>
-          <li><span>You approve every funding transfer in one wallet prompt: each to its order's one-time deposit address, plus the <span data-cfg="fee">0.5%</span> fee to the treasury. The terminal sends them 3–15 seconds apart, at random.</span></li>
+          <li><span>You approve every funding transfer in one wallet prompt: each a plain transfer to its order's one-time deposit address, nothing else. The <span data-cfg="fee">0.5%</span> fee is taken inside the routes. The terminal sends them 3–15 seconds apart, at random.</span></li>
           <li><span>Each route crosses Monero in 10–40 minutes, in the background, and resumes after a reload. When a wallet's SOL lands it's marked armed.</span></li>
           <li><span><b>Firing</b> uses the oldest armed wallet: it swaps its whole balance (keeping 0.01 SOL for fees and token-account rent) through Jupiter, signed in your tab, with no fee. Each armed wallet fires once.</span></li>
           <li><span><b>Disarming</b> sends a wallet's SOL, or what's left after selling, back to your wallet through the same Monero route.</span></li>
@@ -314,14 +314,14 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#C24A00,#933800 55%
         <h2>Monero pays your stealth wallet. <em>You never do.</em></h2>
         <p>Trackers link wallets by following SOL: whoever funds a wallet is assumed to own it. Private mode breaks that link by never sending SOL from your wallet to the stealth wallet. Instead your SOL crosses <b>Monero</b>, whose ring signatures, stealth addresses and RingCT hide sender, receiver and amount on its own chain. <b>Houdini Swap's</b> private send runs the route: one exchange swaps your SOL to XMR, the XMR moves on Monero, and an unrelated exchange swaps it back to SOL and pays the stealth wallet from its own hot wallet. You never hold XMR or need a Monero wallet.</p>
         <figure class="fig">
-          <div class="art"><svg data-diagram="stealthRoute" role="img" aria-label="Main wallet sends SOL to a one-time deposit address at exchange A and the fee to the treasury; exchange A swaps it to XMR; the XMR crosses Monero; exchange B swaps it back and pays a fresh stealth wallet, which swaps on Jupiter"></svg></div>
+          <div class="art"><svg data-diagram="stealthRoute" role="img" aria-label="Main wallet sends SOL to a one-time deposit address at exchange A, Ardea's fee taken inside the route; exchange A swaps it to XMR; the XMR crosses Monero; exchange B swaps it back and pays a fresh stealth wallet, which swaps on Jupiter"></svg></div>
           <figcaption><b>A private buy.</b> Your main wallet's transaction ends at an exchange's one-time deposit address. The stealth wallet's SOL arrives from a different exchange's wallet, after the Monero hop.</figcaption>
         </figure>
         <ol class="steps">
           <li><span>The terminal derives the next stealth wallet from your signature and checks the chain that it has never been used, so a cleared browser or a new device never reuses one.</span></li>
           <li><span>It asks Houdini for a private-send quote with Monero forced as the bridge (<code>useXmr=true</code>), takes the best private route, and opens the order with the stealth wallet as receiver and your wallet for refunds. If no Monero route is available, nothing is sent; there is no other path.</span></li>
           <li><span>It checks the order before you sign: it must pay exactly the stealth wallet, swap SOL to SOL on Solana, be a private (anonymous) route, keep the amount, use a deposit address that isn't one of yours, need no memo, and not expire too soon. Otherwise it refuses.</span></li>
-          <li><span>You approve one transaction: the amount to the order's one-time deposit address, plus the <span data-cfg="fee">0.5%</span> fee to the treasury. The terminal shows the SOL that will arrive and the route time first.</span></li>
+          <li><span>You approve one transaction: a plain transfer of the amount to the order's one-time deposit address, nothing else. The <span data-cfg="fee">0.5%</span> fee is taken inside the route. The terminal shows the SOL that will arrive and the route time first.</span></li>
           <li><span>The route runs in the background, usually 10–40 minutes (exchange confirmations plus Monero's confirmation and lock time). The terminal stays usable, follows the order's status, and picks it back up if you reload.</span></li>
           <li><span>When the SOL lands, Strong mode (the default) waits a random 30 seconds to 3 minutes, then the stealth wallet buys on Jupiter, keeping 0.01 SOL for network fees and token-account rent. Fast mode buys on arrival.</span></li>
         </ol>

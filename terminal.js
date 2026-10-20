@@ -1045,7 +1045,7 @@ function updateGo() {
   const pr = preset();
   text($("fine"), armed ? `Armed wallet #${armed.index} fires its whole balance through Jupiter, signed in this tab. It was funded through Monero earlier, so the buy is instant and its timing and amount don't line up with your deposit. No fee now: it was paid at arming.`
     : stealthOn()
-    ? `Private mode: your wallet signs one transaction, the amount to a one-time Monero route address plus the ${feeBps() / 100}%${S.fee.tier ? ` (holder tier ${S.fee.tier})` : ""} fee to the treasury. The SOL crosses Monero through two unrelated exchanges (10–40 min, their fees included in the quote) and lands in a fresh stealth wallet, which buys. Houdini sees both ends, and a close observer can still try to match amounts and timing.`
+    ? `Private mode: your wallet signs one plain transfer to a one-time Monero route address. Ardea's ${feeBps() / 100}%${S.fee.tier ? ` (holder tier ${S.fee.tier})` : ""} fee is taken inside the route, so nothing in your transaction points at Ardea. The SOL crosses Monero through two unrelated exchanges (10–40 min, their fees included in the quote) and lands in a fresh stealth wallet, which buys. Houdini sees both ends, and a close observer can still try to match amounts and timing.`
     : `${feeBps() / 100}% fee in SOL${S.fee.tier ? ` (holder tier ${S.fee.tier})` : ""} · P${settings.preset + 1}: ${pr.slippageBps / 100}% slippage, ${pr.priority} priority up to ${pr.maxSol} SOL${pr.tipSol ? ` · Jito tip ${pr.tipSol} SOL${pr.mev ? " (MEV-protected)" : ""}` : ""} · ${inst ? "signed instantly by your instant wallet" : "you approve every trade in your wallet"}`);
 }
 function scheduleQuote() {
@@ -1071,7 +1071,7 @@ function renderQuote(qt, fee) {
   const rows = [["You get ≈", `${fromRaw(qt.outAmount, outDec, 4)} ${outSym}`], ["Minimum", `${fromRaw(qt.otherAmountThreshold, outDec, 4)} ${outSym}`], ["Price impact", `${(Number(qt.priceImpactPct || 0) * 100).toFixed(2)}%`], ["Route", route || "—"], [`Fee ${feeBps() / 100}%${S.fee.tier ? ` · holder tier ${S.fee.tier}` : ""}`, `${fromRaw(fee, 9, 6)} SOL`]];
   const armedQ = stealthOn() && armReady();
   if (armedQ) rows.splice(0, rows.length, ["Fires", `armed wallet #${armedQ.index}, its whole balance`], ["Spend", `${fromRaw((armBalances[armedQ.address] ?? 0n) - STEALTH_GAS_RESERVE, 9, 4)} SOL`], ["Funded", "through Monero, earlier"], ["Fee", "none now; paid at arming"]);
-  else if (stealthOn()) rows.push(["Private route", "SOL → XMR → SOL via Houdini → fresh wallet"], ["Route time", "10–40 min; or arm a wallet ahead to buy instantly"], ["Route fees", "two exchange hops; the exact SOL out is shown before you sign"]);
+  else if (stealthOn()) rows.push(["Private route", "SOL → XMR → SOL via Houdini → fresh wallet"], ["Route time", "10–40 min; or arm a wallet ahead to buy instantly"], ["Route fees", "two exchange hops plus Ardea's fee, all inside the route; the exact SOL out is shown before you sign"]);
   const box = $("quote"); box.textContent = "";
   for (const [k, v] of rows) { const r = make("div", "row"); r.append(make("span", "k", k), make("span", "", v)); box.append(r); }
   box.hidden = false;
@@ -1335,9 +1335,9 @@ async function waitForSol(pk, min, ms = 90000) {
     await new Promise(r => setTimeout(r, 2500));
   }
 }
-// Private buy. The main wallet signs one transaction: the amount to a one-time Monero route address, plus the platform
-// fee to the treasury. The route takes 10–40 minutes, so the rest runs in the background and the terminal stays
-// usable: when the SOL lands in the fresh stealth wallet, it waits a random beat (Strong) and buys. The record is saved
+// Private buy. The main wallet signs one plain transfer to a one-time Monero route address and nothing else: Ardea's
+// fee is Houdini partner markup inside the route. The route takes 10–40 minutes, so the rest runs in the background and
+// the terminal stays usable: when the SOL lands in the fresh stealth wallet, it waits a random beat (Strong) and buys. The record is saved
 // at every step, so Portfolio resumes or retries it after a reload.
 async function stealthBuy() {
   const raw = amountRaw(), mint = S.tokenMint, sym = symbolOf(mint), main = S.wallet.pk, go = $("go");
@@ -1348,16 +1348,16 @@ async function stealthBuy() {
     const seed = await walletSeed();
     text(go, "Finding a fresh stealth wallet…");
     const { index, stealth } = await nextUnusedStealth(web3, seed, { isUsed: usedOnChain, start: stealthRecords().reduce((m, g) => Math.max(m, g.index + 1), 0) });
-    const gpk = stealth.publicKey.toBase58(), fee = feeOf(raw, feeBps()), amount = raw - fee;
+    const gpk = stealth.publicKey.toBase58(), amount = raw;
     gsteps(0); text(go, "Getting a Monero route…"); setTradeStatus("Asking Houdini for a SOL → XMR → SOL route to a fresh stealth wallet…");
-    const route = await routeQuote({ hd, token: await routeToken(), amount, from: main, to: gpk });
+    const route = await routeQuote({ hd, token: await routeToken(), amount, from: main, to: gpk, feeBps: feeBps() });
     const eta = route.etaMin ? `about ${route.etaMin} min` : "10–40 min";
     rec = { index, address: gpk, mint, symbol: sym, sol: Number(raw) / 1e9, state: "funding", routeId: route.id, depositAddress: route.depositAddress, amountOut: String(route.amountOut), createdAt: Date.now() };
     saveStealth(rec);
     text(go, "Approve in wallet…");
-    setTradeStatus(`Approve one transaction: ${fromRaw(amount, 9, 4)} SOL to a one-time Monero route address and the ${feeBps() / 100}% fee (${fromRaw(fee, 9, 4)} SOL) to the treasury. Stealth wallet #${index} receives ≈${fromRaw(route.amountOut, 9, 4)} SOL in ${eta}, then buys ${sym}.`);
+    setTradeStatus(`Approve one transaction: ${fromRaw(amount, 9, 4)} SOL to a one-time Monero route address, nothing else. Ardea's ${feeBps() / 100}% fee is taken inside the route. Stealth wallet #${index} receives ≈${fromRaw(route.amountOut, 9, 4)} SOL in ${eta}, then buys ${sym}.`);
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
-    const tx = fundingTx(web3, { from: main, depositAddress: route.depositAddress, amount, fee, treasury: TREASURY, blockhash });
+    const tx = fundingTx(web3, { from: main, depositAddress: route.depositAddress, amount, blockhash });
     await preflight(connection, tx);
     const sig = await signSend(tx, { local: null }, lastValidBlockHeight);
     rec = { ...rec, state: "routing", fundingSig: sig };
@@ -1438,20 +1438,18 @@ async function armWallets(totalRaw, count, say) {
   const picks = [];
   let start = stealthRecords().reduce((m, g) => Math.max(m, g.index + 1), 0);
   for (let i = 0; i < count; i++) { const p = await nextUnusedStealth(web3, seed, { isUsed: usedOnChain, start }); picks.push(p); start = p.index + 1; }
-  const token = await routeToken(), routes = [], fees = [];
+  const token = await routeToken(), routes = [];
   for (let i = 0; i < count; i++) {
     say(`Opening Monero route ${i + 1} of ${count}…`);
-    const fee = feeOf(sizes[i], feeBps());
-    fees.push(fee);
-    routes.push(await routeQuote({ hd, token, amount: sizes[i] - fee, from: main, to: picks[i].stealth.publicKey.toBase58() }));
+    routes.push(await routeQuote({ hd, token, amount: sizes[i], feeBps: feeBps(), from: main, to: picks[i].stealth.publicKey.toBase58() }));
     if (i < count - 1) await sleep(1300); // the gateway opens at most one order per second
   }
   const recs = picks.map((p, i) => ({ index: p.index, address: p.stealth.publicKey.toBase58(), armed: true, state: "funding", routeId: routes[i].id, depositAddress: routes[i].depositAddress, amountOut: String(routes[i].amountOut), sol: Number(sizes[i]) / 1e9, createdAt: Date.now() }));
   recs.forEach(saveStealth);
-  const out = routes.reduce((n, r) => n + r.amountOut, 0n), feeTotal = fees.reduce((a, b) => a + b, 0n);
-  say(`Approve ${count === 1 ? "one transaction" : `${count} transactions in one prompt`}: ${fromRaw(totalRaw - feeTotal, 9, 4)} SOL into Monero routes plus the ${feeBps() / 100}% fee (${fromRaw(feeTotal, 9, 4)} SOL). About ${fromRaw(out, 9, 4)} SOL arrives across ${count} clean wallet${count > 1 ? "s" : ""} in 10–40 minutes.`);
+  const out = routes.reduce((n, r) => n + r.amountOut, 0n);
+  say(`Approve ${count === 1 ? "one transaction" : `${count} transactions in one prompt`}: ${fromRaw(totalRaw, 9, 4)} SOL into Monero routes, plain transfers to one-time addresses. Ardea's ${feeBps() / 100}% fee is taken inside the routes. About ${fromRaw(out, 9, 4)} SOL arrives across ${count} clean wallet${count > 1 ? "s" : ""} in 10–40 minutes.`);
   const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
-  const txs = routes.map((r, i) => fundingTx(web3, { from: main, depositAddress: r.depositAddress, amount: sizes[i] - fees[i], fee: fees[i], treasury: TREASURY, blockhash }));
+  const txs = routes.map((r, i) => fundingTx(web3, { from: main, depositAddress: r.depositAddress, amount: sizes[i], blockhash }));
   for (const tx of txs) await preflight(connection, tx);
   const p = S.wallet.p, signed = p.signAllTransactions ? await p.signAllTransactions(txs) : [];
   if (!p.signAllTransactions) for (const tx of txs) signed.push(await p.signTransaction(tx));

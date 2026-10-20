@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import web3 from "@solana/web3.js";
-import { feeOf, deriveStealth, nextUnusedStealth, scanStealths, seedFingerprint, houdini, routeQuote, routeLabel, fundingTx, exitTx, exitAmount, waitForRoute, solTokenId, lamportsToSol, solToLamports, STEALTH_MESSAGE } from "../stealth.js";
+import { legMarkup, feeOf, deriveStealth, nextUnusedStealth, scanStealths, seedFingerprint, houdini, routeQuote, routeLabel, fundingTx, exitTx, exitAmount, waitForRoute, solTokenId, lamportsToSol, solToLamports, STEALTH_MESSAGE } from "../stealth.js";
 import { createHoudini, SOL_ID } from "./houdinimock.mjs";
 import { createRequire } from "node:module";
 const { ed25519 } = createRequire(import.meta.url)("@noble/curves/ed25519");
@@ -147,4 +147,18 @@ test("stealth scan finds used stealths past gaps and always covers known indexes
 test("the platform fee is the basis-point share, rounded down", () => {
   assert.equal(feeOf(1_000_000_000n, 50), 5_000_000n);
   assert.equal(feeOf(199n, 50), 0n);
+});
+
+test("the fee rides inside the route as Houdini markup, split across both legs; exits and transfers pay none", async () => {
+  assert.equal(legMarkup(50), 0.25);
+  assert.equal(legMarkup(40), 0.2);
+  assert.equal(legMarkup(0), 0);
+  const m = createHoudini(), hd = houdini({ base: "https://p.test/houdini", fetch: m.fetch, timezone: "UTC" });
+  const to = (await deriveStealth(web3, sig, 5)).publicKey.toBase58(), from = main.publicKey.toBase58();
+  await routeQuote({ hd, token: SOL_ID, amount: 500_000_000n, from, to, feeBps: 50 });
+  await routeQuote({ hd, token: SOL_ID, amount: 500_000_000n, from: to, to: from });
+  const qs = [...m.quotes.values()];
+  assert.equal(qs[0].markup, "0.25");
+  assert.equal(qs[qs.length - 1].markup, "0");
+  assert.ok(qs.every(q => q.rotate === "true" && q.useXmr === "true"));
 });

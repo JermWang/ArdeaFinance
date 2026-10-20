@@ -345,7 +345,7 @@ h1 em,h2 em,footer .big em{background:linear-gradient(135deg,#FFB27A 0%,#FF8A3D 
         <h3>How arming works</h3>
         <ol>
           <li><b>Arm.</b> Pick a total and how many wallets. For each, the terminal opens a SOL → XMR → SOL route with Houdini Swap, forced through Monero, and checks the order: right wallet, right amount, a private route, or it refuses.</li>
-          <li><b>Approve once.</b> One wallet prompt covers every funding transfer plus Ardea's <span data-cfg="fee">0.5%</span> fee to the treasury. They go out at random intervals. You see what will arrive before you sign.</li>
+          <li><b>Approve once.</b> One wallet prompt covers every funding transfer: plain transfers to one-time addresses, nothing else. Ardea's <span data-cfg="fee">0.5%</span> fee is taken inside the route. They go out at random intervals. You see what will arrive before you sign.</li>
           <li><b>It crosses Monero.</b> One exchange swaps the SOL to XMR, the XMR moves on Monero, and an unrelated exchange pays each wallet from its own funds, in 10–40 minutes, in the background. If no Monero route is available, nothing is sent.</li>
           <li><b>Fire.</b> Any buy fires the next armed wallet through Jupiter, instantly. Sell from it whenever; disarming returns its SOL to you through Monero.</li>
         </ol>
