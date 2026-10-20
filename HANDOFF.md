@@ -13,6 +13,9 @@ Done and live:
 - Gateway: `/houdini/*` with the partner key and compliance headers. Railway variables are set: `RPC_URL`,
   `RPC_WS_URL`, `JUP_API_KEY`, `X_BEARER`, `JITO_URL` (copied from Privatus), `HOUDINI_API_KEY`,
   `HOUDINI_API_SECRET` (copied from Wraith), `ALLOWED_ORIGINS`.
+- Public repo: https://github.com/JermWang/ardea (history scanned for secrets, CI runs the tests on every push),
+  linked from the nav, footer, terminal and docs.
+- Holder fee tiers (`tiers.js`): 0.1% / 0.5% / 1% of supply → 0.4% / 0.3% / 0.25% fee, live once `TOKEN_CA` is set.
 - Brand: heron mark (Codex concept, traced to a vector in `logo.js`), Monero orange `#FF6600` on navy `#0B0F1A`,
   Cormorant Garamond / Manrope / IBM Plex Mono, favicons, all copy rewritten for the Monero route with the limits
   stated, Proof page with a live Houdini quote (verified on production: 9 private routes, 0.5 → 0.4838 SOL, 13–41 min).
@@ -28,7 +31,10 @@ the contract row says "Announced at launch", X links stay hidden):
 4. **Houdini Pro tier**: the free tier allows 10 orders and 50 quotes a day across all users. Request Pro before launch.
 5. **Proof run** (after 1): one real private buy and exit through the terminal, at least ~0.3 SOL (Houdini's minimum
    is about 0.11–0.29 SOL per route right now). Add the funding, delivery, buy and exit signatures to `PROOF_TXS`.
-6. **Public repo**: OK to publish this code (scan history for secrets first) → `SOURCE_REPO`.
+6. **Daily proof route**: make a new wallet used only for proof, fund it with about 0.35 SOL, and set its base58 secret
+   key on Railway as `PROOF_WALLET_SECRET` (one save). The server then routes 0.3 SOL through Monero between it and a
+   second wallet derived from it, daily at 14:00 UTC (`proof.mjs`), and the docs' Proof table fills in from the chain.
+   Each run costs roughly 0.01 SOL. Optional: `PROOF_AMOUNT_SOL`, `PROOF_UTC_HOUR`.
 7. **Token**: at launch set `TOKEN_CA` on Railway (and in `config.js`), identical everywhere.
 8. Run larpcheck.app on the site before announcing (see `../LAUNCH_PROOF.md`).
 
