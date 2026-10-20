@@ -1,8 +1,8 @@
 // Terminal settings. Public values only: nothing here can move funds.
 
 // Where trading fees go. Only the public key belongs in this repo.
-// This is also proof wallet A (proof.mjs), so its key is on the server: sweep collected fees to cold storage regularly.
-export const TREASURY = "3WfKw8HJENLS42DEdVHvh7LoXMSC6Uuay4BcF9akzYjy";
+// Receive-only: no key for it is needed anywhere in Ardea, so keep it in cold storage.
+export const TREASURY = "555KC8Zw5rnbFn582YYksKTFdjhzAmxvbyHRosRgfDja";
 
 // Fee on every terminal trade, in basis points (50 = 0.5%). Charged in SOL:
 // on buys from the SOL you spend, on sells from the minimum SOL you receive.

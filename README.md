@@ -96,8 +96,8 @@ buy uses. Each completed route is matched to Houdini's own record and to the Sol
    (`useXmr=true`, covered by tests). Houdini support confirmed the first route was waiting for 20 Monero network
    confirmations at the second exchange, which is why it took 81 minutes.
 
-The proof job is [`proof.mjs`](proof.mjs); the page is [`proofpage.mjs`](proofpage.mjs). Proof wallet A also
-collects the fee on regular (non-private) trades.
+The proof job is [`proof.mjs`](proof.mjs); the page is [`proofpage.mjs`](proofpage.mjs). The proof wallets are only
+proof wallets: fees go to a separate, receive-only treasury.
 
 ## What it doesn't hide
 

@@ -25,7 +25,7 @@ Done and live:
 
 Waiting on the owner (the site is safe to show meanwhile: trades say "Trading opens at launch" until the treasury is set,
 the contract row says "Announced at launch", X links stay hidden):
-1. **Treasury**: done. It is proof wallet A (`3WfKw8…zYjy`), whose key is on the server for the proof route: sweep fees to cold storage regularly.
+1. **Treasury**: done. `555KC8…gfDja`, receive-only: no key for it is on the server or needed anywhere. Proof wallets are separate.
 2. **Domain**: add it to the Railway service and point DNS → then update `OWN_HOSTS` in `config.js`, the og/twitter
    URLs in the three HTML files, and `ALLOWED_ORIGINS` on Railway (one save).
 3. **X account** → `X_URL` in `config.js`.
