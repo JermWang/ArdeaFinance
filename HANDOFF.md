@@ -1,7 +1,6 @@
 # Ardea handoff
 
-Ardea is the Privatus terminal with a new name, look and privacy route: Private mode now funds every buy through
-Monero (Houdini Swap private send, `useXmr=true`) instead of NEAR Intents. See `README.md` for how it works.
+Ardea's Private mode funds every buy through Monero (Houdini Swap private send, `useXmr=true`). See `README.md` for how it works.
 
 Live: https://ardeafinance.xyz (also www., and ardea-production.up.railway.app) (Railway project **ardea**, service **ardea**). Built 2026-10-20.
 
@@ -13,7 +12,7 @@ Done and live:
 - Engine: Houdini Monero route for private buys, exits and instant-wallet deposits/withdrawals; order checks; no
   fallback path; background route completion with resume after reload. 71 tests pass (`npm test`).
 - Gateway: `/houdini/*` with the partner key and compliance headers. Railway variables are set: `RPC_URL`,
-  `RPC_WS_URL`, `JUP_API_KEY` (copied from Privatus; `X_BEARER` and `JITO_URL` are empty there too), `HOUDINI_API_KEY`,
+  `RPC_WS_URL`, `JUP_API_KEY` (`X_BEARER` and `JITO_URL` are empty), `HOUDINI_API_KEY`,
   `HOUDINI_API_SECRET` (copied from Wraith), `ALLOWED_ORIGINS`.
 - Public repo: https://github.com/JermWang/ardea (history scanned for secrets, CI runs the tests on every push),
   linked from the nav, footer, terminal and docs.
@@ -47,5 +46,5 @@ the contract row says "Announced at launch", X links stay hidden):
 - The fee on a private buy is a visible transfer to the treasury in the funding transaction (Houdini has no in-route
   fee like NEAR's appFees). The treasury never sends to stealth wallets, and the copy says exactly this.
 - Every saved Railway variable redeploys the service. Batch variable changes into one save; never change them mid-launch.
-- The Privatus demo recorder was removed: it mocked NEAR delivery timing, and a Monero route takes 10–40 minutes, so a
+- There is no demo recorder: a Monero route takes 10–40 minutes, so a
   demo should be a real recording (or clearly marked as sped up).

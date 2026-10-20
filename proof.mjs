@@ -42,12 +42,45 @@ export function msUntil(hour, now = Date.now()) {
   return d.getTime() - now;
 }
 
+// Proof history from Houdini's own records: the partner account's recent private orders that pay to or refund to a
+// proof wallet. Each carries Houdini's deposit hash (the funding transfer on Solana) and payout hash (the delivery),
+// so every proof transfer is matched to its Monero route by Houdini's data, and the history survives restarts.
+// Only orders touching the two proof wallets are kept; nothing about anyone else's orders is published.
+export function proofRoutesFrom(orders, wallets) {
+  const [A, B] = wallets, mine = o => wallets.includes(o?.receiverAddress) || wallets.includes(o?.refundAddress);
+  return (orders || []).filter(o => o && o.houdiniId && o.anonymous !== false && mine(o)).map(o => ({
+    routeId: o.houdiniId, startedAt: o.created, endedAt: o.orderFinishedReceived || null,
+    from: o.refundAddress === A ? "a" : o.refundAddress === B ? "b" : null, to: o.receiverAddress === A ? "a" : o.receiverAddress === B ? "b" : null,
+    amountSol: o.inAmount != null ? String(o.inAmount) : null, amountOutSol: o.outAmount != null ? String(o.outAmount) : null,
+    status: o.status, delivered: o.status === 4, fundingSig: o.inHash || null, deliverySig: o.status === 4 ? (o.transactionHash || null) : null,
+    refundSig: o.refundHash || null, viaMonero: true
+  })).sort((x, y) => String(y.startedAt).localeCompare(String(x.startedAt)));
+}
+export async function houdiniProofRoutes({ env, wallets, fetchFn = fetch }) {
+  if (!env.HOUDINI_API_KEY || !env.HOUDINI_API_SECRET) return [];
+  const headers = { authorization: `${env.HOUDINI_API_KEY}:${env.HOUDINI_API_SECRET}`, "x-user-ip": "0.0.0.0", "x-user-agent": "ardea-proof", "x-user-timezone": "UTC" };
+  const base = "https://api-partner.houdiniswap.com/v2/orders";
+  const list = await (await fetchFn(`${base}?pageSize=100&anonymous=true&sortBy=created&sortOrder=desc`, { headers })).json();
+  const rows = [];
+  for (const o of (list.orders || []).filter(o => wallets.includes(o.receiverAddress) || wallets.includes(o.refundAddress))) {
+    try { rows.push(await (await fetchFn(`${base}/${encodeURIComponent(o.houdiniId)}`, { headers })).json()); } catch (_) { rows.push(o); }
+  }
+  return proofRoutesFrom(rows, wallets);
+}
+
 export function startProof({ env = process.env, gateway, log = console.log } = {}) {
   const state = { enabled: !!env.PROOF_WALLET_SECRET, a: null, b: null, amountSol: Number(env.PROOF_AMOUNT_SOL) || 0.3, utcHour: Number.isInteger(+env.PROOF_UTC_HOUR) ? +env.PROOF_UTC_HOUR : 14, everyHours: Number(env.PROOF_INTERVAL_HOURS) > 0 ? Number(env.PROOF_INTERVAL_HOURS) : 0, running: false, last: null, next: null, history: [] };
   if (!state.enabled) return state;
   (async () => {
     const { a, b } = await proofWallets(env.PROOF_WALLET_SECRET);
     state.a = a.publicKey.toBase58(); state.b = b.publicKey.toBase58();
+    const sync = async () => {
+      try {
+        const routes = await houdiniProofRoutes({ env, wallets: [state.a, state.b] });
+        if (routes.length) { state.routes = routes; }
+      } catch (e) { log(`proof: history sync failed (${e.message})`); }
+    };
+    sync(); setInterval(sync, 10 * 60_000);
     const keys = { a, b }, connection = new web3.Connection(env.RPC_URL || "https://api.mainnet-beta.solana.com", "confirmed");
     // Houdini through the gateway in-process, so the key and compliance headers are added exactly as for users
     const hd = houdini({ base: "http://gateway.internal/houdini", fetch: gateway, timezone: "UTC" });
@@ -88,4 +121,4 @@ export function startProof({ env = process.env, gateway, log = console.log } = {
 // What /proof.json shows: the two addresses and the schedule. Never the key.
 // Proof routes run between Ardea's own public wallets, so their route ids are safe to publish: anyone can track them.
 const runView = r => r && { startedAt: r.startedAt, endedAt: r.endedAt, from: r.from, to: r.to, amountSol: r.amountSol, amountOutSol: r.amountOutSol, routeId: r.routeId, fundingSig: r.fundingSig, delivered: !!r.delivered, error: r.error };
-export const publicState = s => ({ enabled: s.enabled, wallets: s.a ? [s.a, s.b] : [], amountSol: s.amountSol, utcHour: s.utcHour, everyHours: s.everyHours || 0, running: s.running, next: s.next, last: runView(s.last), history: (s.history || []).map(runView) });
+export const publicState = s => ({ enabled: s.enabled, wallets: s.a ? [s.a, s.b] : [], routes: s.routes || [], amountSol: s.amountSol, utcHour: s.utcHour, everyHours: s.everyHours || 0, running: s.running, next: s.next, last: runView(s.last), history: (s.history || []).map(runView) });

@@ -112,6 +112,27 @@ import { X_URL } from "./config.js";
         const a = document.createElement("a"); a.href = `https://solscan.io/tx/${r.sig}`; a.target = "_blank"; a.rel = "noopener"; a.textContent = `${r.sig.slice(0, 8)}…`; tr.insertCell().append(a);
       }
       const wrap = document.createElement("div"); wrap.className = "tbl"; wrap.append(t);
+      // Each proof transfer matched to its Monero route by Houdini's own record (deposit hash = funding, payout hash = delivery)
+      const routes = st.routes || [];
+      if (routes.length) {
+        const sol = sig => { const a = document.createElement("a"); a.href = `https://solscan.io/tx/${sig}`; a.target = "_blank"; a.rel = "noopener"; a.textContent = `${sig.slice(0, 8)}…`; return a; };
+        const rt = document.createElement("table"), rb = rt.createTBody();
+        rt.createTHead().innerHTML = "<tr><th>Route (Houdini id)</th><th>Direction</th><th>SOL in → out</th><th>Took</th><th>Funding tx</th><th>Delivery tx</th></tr>";
+        for (const r of routes.slice(0, 12)) {
+          const tr = rb.insertRow(), id = document.createElement("a");
+          id.href = `./track.html#${encodeURIComponent(r.routeId)}`; id.textContent = r.routeId; tr.insertCell().append(id);
+          tr.insertCell().textContent = `${r.from === "a" ? "Proof A" : r.from === "b" ? "Proof B" : "?"} → ${r.to === "a" ? "Proof A" : r.to === "b" ? "Proof B" : "?"}`;
+          tr.insertCell().textContent = `${r.amountSol ?? "—"} → ${r.amountOutSol ?? "—"}`;
+          const mins = r.startedAt && r.endedAt ? Math.round((Date.parse(r.endedAt) - Date.parse(r.startedAt)) / 60000) : null;
+          tr.insertCell().textContent = r.delivered ? (mins != null ? `${mins} min` : "done") : "crossing now";
+          const f = tr.insertCell(); if (r.fundingSig) f.append(sol(r.fundingSig)); else f.textContent = "—";
+          const d = tr.insertCell(); if (r.deliverySig) d.append(sol(r.deliverySig)); else d.textContent = r.delivered ? "—" : "pending";
+        }
+        const note = document.createElement("p");
+        note.innerHTML = "Every row is Houdini's own record for that route: its <b>deposit hash</b> is the funding transfer and its <b>payout hash</b> is the delivery, both on Solana. Check any route yourself: <code>GET /houdini/v2/orders/&lt;route id&gt;</code> on this site forwards Houdini's record unchanged, and the route tracker shows its full progress.";
+        const rw = document.createElement("div"); rw.className = "tbl"; rw.append(rt);
+        live.append(note, rw);
+      }
       live.append(head, rows.length ? wrap : Object.assign(document.createElement("p"), { textContent: "No transactions yet: the first route runs at the next scheduled hour." }));
     } catch (e) { say(`Couldn't read the proof wallets right now (${e.message}).`); }
   })();

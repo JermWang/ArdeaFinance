@@ -11,18 +11,22 @@ const hd = houdini({ base: `${(PROXY_URL || "").replace(/\/$/, "")}/houdini` });
 const out = document.getElementById("out"), input = document.getElementById("rid");
 const make = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
 const sol = n => `${lamportsToSol(solToLamports(n))} SOL`;
-let timer = 0, showTx = false, current = "";
+let timer = 0, showTx = false, current = "", proofWallets = [];
+// Ardea's own proof wallets are public, so their routes show transaction links straight away.
+fetch(`${(PROXY_URL || "").replace(/\/$/, "")}/proof.json`).then(r => r.json()).then(st => { proofWallets = st.wallets || []; }).catch(() => {});
 
 // Accepts a bare id or any link that ends in #<id>.
 const idFrom = v => { const s = String(v || "").trim(), h = s.includes("#") ? s.slice(s.lastIndexOf("#") + 1) : s; return isRouteId(h) ? h : ""; };
 
 function render(o, id) {
   out.textContent = "";
-  const h = headline(o), at = stepIndex(o);
+  const h = headline(o), at = stepIndex(o), proof = proofWallets.includes(o.receiverAddress) && proofWallets.includes(o.refundAddress);
+  if (proof) showTx = true;
   const st = make("div", "status"); st.dataset.tone = h.tone; st.append(make("i"), make("span", "", h.text)); out.append(st);
   const meta = make("div", "meta");
   const m = (k, v) => { const d = make("span"); d.append(`${k} `, make("b", "", v)); meta.append(d); };
   m("Route", id);
+  if (proof) m("Type", "Ardea proof route (both wallets are Ardea's own)");
   if (o.inAmount != null) m("In", sol(o.inAmount));
   if (o.outAmount != null) m(o.status === 4 ? "Delivered" : "Arrives ≈", sol(o.outAmount));
   const min = elapsedMin(o); if (min != null) m(o.status === 4 ? "Took" : "Running", `${min} min`);

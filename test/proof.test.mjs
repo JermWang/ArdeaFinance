@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import web3 from "@solana/web3.js";
-import { base58Decode, proofWallets, nextLeg, msUntil, RESERVE, publicState } from "../proof.mjs";
+import { base58Decode, proofWallets, nextLeg, msUntil, RESERVE, publicState, proofRoutesFrom } from "../proof.mjs";
 import { base58Encode } from "../trace.js";
 
 test("base58 decodes a secret key back to its bytes", () => {
@@ -31,6 +31,20 @@ test("runs land on the fixed UTC hour, never immediately after a restart", () =>
 
 test("the public state never includes a key", () => {
   const s = publicState({ enabled: true, a: "A", b: "B", amountSol: 0.3, utcHour: 14, running: false, next: null, last: null, secret: "x" });
-  assert.deepEqual(Object.keys(s).sort(), ["amountSol", "enabled", "everyHours", "history", "last", "next", "running", "utcHour", "wallets"]);
+  assert.deepEqual(Object.keys(s).sort(), ["amountSol", "enabled", "everyHours", "history", "last", "next", "routes", "running", "utcHour", "wallets"]);
   assert.ok(!JSON.stringify(s).includes("secret"));
+});
+
+test("proof history keeps only orders touching the proof wallets and matches their Solana hashes", () => {
+  const W = ["AAA", "BBB"];
+  const orders = [
+    { houdiniId: "r1", anonymous: true, refundAddress: "AAA", receiverAddress: "BBB", status: 4, inAmount: 0.3, outAmount: 0.2975, inHash: "fund1", transactionHash: "paid1", created: "2026-10-20T14:32:00Z", orderFinishedReceived: "2026-10-20T15:53:00Z" },
+    { houdiniId: "r2", anonymous: true, refundAddress: "BBB", receiverAddress: "AAA", status: 3, inAmount: 0.2875, outAmount: 0.27, inHash: "fund2", transactionHash: null, created: "2026-10-20T15:58:00Z" },
+    { houdiniId: "user", anonymous: true, refundAddress: "someone", receiverAddress: "stealth", status: 4, inHash: "x", transactionHash: "y" }
+  ];
+  const r = proofRoutesFrom(orders, W);
+  assert.deepEqual(r.map(x => x.routeId), ["r2", "r1"]);
+  assert.equal(r[1].fundingSig, "fund1"); assert.equal(r[1].deliverySig, "paid1"); assert.equal(r[1].from, "a"); assert.equal(r[1].to, "b");
+  assert.equal(r[0].deliverySig, null); assert.equal(r[0].delivered, false);
+  assert.ok(!JSON.stringify(r).includes("someone"));
 });
