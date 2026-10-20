@@ -31,7 +31,7 @@ test("runs land on the fixed UTC hour, never immediately after a restart", () =>
 
 test("the public state never includes a key", () => {
   const s = publicState({ enabled: true, a: "A", b: "B", amountSol: 0.3, utcHour: 14, running: false, next: null, last: null, secret: "x" });
-  assert.deepEqual(Object.keys(s).sort(), ["amountSol", "armed", "enabled", "everyHours", "history", "last", "mode", "next", "routes", "running", "step", "utcHour", "wallets"]);
+  assert.deepEqual(Object.keys(s).sort(), ["amountSol", "armed", "enabled", "everyHours", "history", "last", "minSol", "mode", "next", "routes", "running", "step", "utcHour", "waiting", "wallets"]);
   assert.ok(!JSON.stringify(s).includes("secret"));
 });
 

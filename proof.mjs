@@ -9,7 +9,7 @@
 // Monero, then disarms it back through Monero to the other proof wallet: the Arm a wallet flow, no token trades).
 // Uses the team's own funds only; no user funds are ever touched.
 import web3 from "@solana/web3.js";
-import { houdini, SOL_QUERY, solTokenId, routeQuote, fundingTx, waitForRoute, solToLamports, lamportsToSol, nextUnusedStealth, scanStealths, exitTx, exitAmount } from "./stealth.js";
+import { houdini, SOL_QUERY, solTokenId, routeQuote, fundingTx, waitForRoute, solToLamports, lamportsToSol, nextUnusedStealth, scanStealths, deriveStealth, exitTx, exitAmount } from "./stealth.js";
 
 const TOKEN_PROGRAM = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
 
@@ -89,7 +89,7 @@ export function startProof({ env = process.env, gateway, log = console.log } = {
     enabled: !!env.PROOF_WALLET_SECRET, a: null, b: null, amountSol: Number(env.PROOF_AMOUNT_SOL) || 0.3,
     utcHour: Number.isInteger(+env.PROOF_UTC_HOUR) ? +env.PROOF_UTC_HOUR : 14,
     everyHours: Number(env.PROOF_INTERVAL_HOURS) > 0 ? Number(env.PROOF_INTERVAL_HOURS) : 0,
-    mode: env.PROOF_MODE === "arm" ? "arm" : "route", running: false, step: null, last: null, next: null, history: [], armed: [], routes: []
+    mode: env.PROOF_MODE === "arm" ? "arm" : "route", minSol: Number(env.PROOF_MIN_SOL) || 0.2, waiting: null, running: false, step: null, last: null, next: null, history: [], armed: [], routes: []
   };
   if (!state.enabled) return state;
   (async () => {
@@ -147,14 +147,46 @@ export function startProof({ env = process.env, gateway, log = console.log } = {
     };
     const tokenAccounts = async pk => (await connection.getParsedTokenAccountsByOwner(pk, { programId: new web3.PublicKey(TOKEN_PROGRAM) })).value.map(x => ({ address: x.pubkey.toBase58(), programId: TOKEN_PROGRAM, lamports: x.account.lamports, mint: x.account.data.parsed.info.mint, raw: BigInt(x.account.data.parsed.info.tokenAmount.amount) }));
 
+    // Disarm: an armed proof wallet sends its SOL back through Monero to a proof wallet.
+    const disarm = async (index, armed, to, rec) => {
+      const armedAddr = armed.publicKey.toBase58();
+      state.step = "disarming: crossing Monero";
+      const close = (await tokenAccounts(armed.publicKey)).filter(t => t.raw === 0n);
+      const amount = exitAmount(await connection.getBalance(armed.publicKey), close);
+      const r2 = await routeQuote({ hd, token: await token(), amount, from: armedAddr, to: to.publicKey.toBase58() });
+      rec.exitRouteId = r2.id; state.last = rec;
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
+      rec.exitSig = await connection.sendTransaction(exitTx(web3, { stealth: armed, depositAddress: r2.depositAddress, amount, closeAccounts: close, blockhash }), { maxRetries: 3 });
+      await connection.confirmTransaction({ signature: rec.exitSig, blockhash, lastValidBlockHeight }, "confirmed");
+      log(`proof: armed wallet #${index} disarming via ${r2.id}`);
+      await waitForRoute(hd, r2.id, { interval: 30_000, timeoutMs: 3 * 60 * 60 * 1000 });
+      rec.delivered = true; rec.amountOutSol = lamportsToSol(r2.amountOut);
+      log(`proof: armed wallet #${index} disarmed, ≈${rec.amountOutSol} SOL back`);
+    };
+
     const run = async () => {
       if (state.running) return;
       state.running = true;
       const rec = { mode: state.mode, startedAt: new Date().toISOString() };
+      let record = true;
       try {
         const [balA, balB] = await Promise.all([connection.getBalance(a.publicKey), connection.getBalance(b.publicKey)]);
+        const min = solToLamports(state.minSol);
+        if (state.mode === "arm") {
+          // Finish what a restart cut short: an armed proof wallet still holding SOL is disarmed before a new one is armed.
+          for (const x of [...state.armed].sort((p, q) => q.index - p.index)) {
+            if (BigInt(await connection.getBalance(new web3.PublicKey(x.address))) < min) continue;
+            const to = BigInt(balA) <= BigInt(balB) ? "a" : "b", armed = await deriveStealth(web3, a.secretKey, x.index);
+            Object.assign(rec, { resumed: true, from: `armed #${x.index}`, to, armedIndex: x.index, armedAddress: x.address, routeId: state.routes.find(r => r.toAddress === x.address)?.routeId });
+            state.waiting = null;
+            await disarm(x.index, armed, keys[to], rec);
+            return;
+          }
+        }
         const leg = nextLeg(balA, balB, solToLamports(state.amountSol));
-        if (!leg) throw new Error("proof wallets are empty");
+        // Below Houdini's minimum route size nothing is opened: no order, no transfer, nothing to record.
+        if (!leg || leg.amount < min) { record = false; state.waiting = `proof wallets hold less than the ${state.minSol} SOL minimum route; waiting for a top-up`; log(`proof: ${state.waiting}`); return; }
+        state.waiting = null;
         const from = keys[leg.from], to = keys[leg.to];
         Object.assign(rec, { from: leg.from, to: leg.to, amountSol: lamportsToSol(leg.amount) });
         if (state.mode !== "arm") {
@@ -178,20 +210,13 @@ export function startProof({ env = process.env, gateway, log = console.log } = {
         // armed: the wallet now holds SOL paid by an exchange after the Monero hop, with no link to the proof wallet
         state.step = "armed";
         await new Promise(r => setTimeout(r, 120_000));
-        state.step = "disarming: crossing Monero";
-        const close = (await tokenAccounts(armed.publicKey)).filter(t => t.raw === 0n);
-        const amount = exitAmount(await connection.getBalance(armed.publicKey), close);
-        const r2 = await routeQuote({ hd, token: await token(), amount, from: armedAddr, to: to.publicKey.toBase58() });
-        rec.exitRouteId = r2.id;
-        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
-        rec.exitSig = await connection.sendTransaction(exitTx(web3, { stealth: armed, depositAddress: r2.depositAddress, amount, closeAccounts: close, blockhash }), { maxRetries: 3 });
-        await connection.confirmTransaction({ signature: rec.exitSig, blockhash, lastValidBlockHeight }, "confirmed");
-        log(`proof: armed wallet #${index} disarming via ${r2.id}`);
-        await waitForRoute(hd, r2.id, { interval: 30_000, timeoutMs: 3 * 60 * 60 * 1000 });
-        rec.delivered = true; rec.amountOutSol = lamportsToSol(r2.amountOut);
-        log(`proof: arm cycle done, ≈${rec.amountOutSol} SOL back to ${leg.to}`);
+        await disarm(index, armed, to, rec);
       } catch (e) { rec.error = String(e.message || e).slice(0, 200); log(`proof: ${rec.error}`); }
-      finally { rec.endedAt = new Date().toISOString(); state.last = rec; state.step = null; state.running = false; state.history = [rec, ...state.history].slice(0, 20); sync(); }
+      finally {
+        state.step = null; state.running = false;
+        if (record) { rec.endedAt = new Date().toISOString(); state.last = rec; state.history = [rec, ...state.history].slice(0, 20); }
+        sync();
+      }
     };
     // Daily at utcHour, or with PROOF_INTERVAL_HOURS every N hours, counted from when the last run finished.
     const schedule = () => { const ms = state.everyHours ? state.everyHours * 3600_000 : msUntil(state.utcHour); state.next = new Date(Date.now() + ms).toISOString(); setTimeout(() => { run().finally(schedule); }, ms); };
@@ -208,6 +233,6 @@ export function startProof({ env = process.env, gateway, log = console.log } = {
 const runView = r => r && Object.fromEntries(Object.entries(r).filter(([k]) => !/secret|key/i.test(k)));
 export const publicState = s => ({
   enabled: s.enabled, mode: s.mode || "route", wallets: s.a ? [s.a, s.b] : [], armed: s.armed || [], routes: s.routes || [],
-  amountSol: s.amountSol, utcHour: s.utcHour, everyHours: s.everyHours || 0, running: s.running, step: s.step || null, next: s.next,
+  amountSol: s.amountSol, utcHour: s.utcHour, everyHours: s.everyHours || 0, running: s.running, step: s.step || null, waiting: s.waiting || null, minSol: s.minSol, next: s.next,
   last: runView(s.last), history: (s.history || []).map(runView)
 });
