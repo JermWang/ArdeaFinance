@@ -51,7 +51,7 @@ export const PROOF_TXS = [
 export const SOURCE_REPO = "https://github.com/JermWang/ArdeaFinance";
 
 // The project's X account, e.g. "https://x.com/ardea". Empty hides every X link on the site until it exists.
-export const X_URL = "";
+export const X_URL = "https://x.com/Ardeafinance";
 
 // Holder fee tiers: holding the token (main wallet plus instant wallet) lowers the fee on every trade and private buy.
 // pct is the share of total supply held, in %; bps the fee at that level. Live as soon as TOKEN_CA is set.

@@ -46,7 +46,7 @@ table{width:100%;border-collapse:collapse;font:.82rem ui-monospace,Consolas,mono
 th{color:var(--mute);font-weight:500}small{color:var(--mute)}.wrap{overflow-x:auto}
 ol li,ul li{margin:.4em 0}.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:1px solid var(--line);border-radius:99px;font:.8rem ui-monospace,Consolas,monospace;color:var(--ink)}.chip i{font-style:normal;color:var(--mute);margin:0 4px}.brand-logo{vertical-align:-3px}code{font:.85em ui-monospace,Consolas,monospace;color:#FF8A3D}p,li{color:#D0D0D0}
 </style></head><body>
-<header><b>Ardea</b><nav><a href="/">Home</a><a href="/app.html">Terminal</a><a href="/track.html">Route tracker</a><a href="/docs.html#proof">Docs</a><a href="${REPO}">GitHub</a></nav></header>
+<header><b>Ardea</b><nav><a href="/">Home</a><a href="/app.html">Terminal</a><a href="/track.html">Route tracker</a><a href="/docs.html#proof">Docs</a><a href="${REPO}">GitHub</a><a href="https://x.com/Ardeafinance">X</a></nav></header>
 <main>
 <p class="k">Proof · generated ${when(now.toISOString())}</p>
 <h1>Real Monero routes, checkable without trusting us.</h1>

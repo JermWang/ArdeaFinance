@@ -17,6 +17,7 @@
   <a href="https://github.com/JermWang/ArdeaFinance/actions/workflows/test.yml"><img src="https://github.com/JermWang/ArdeaFinance/actions/workflows/test.yml/badge.svg" alt="tests"></a>
   <a href="https://ardeafinance.xyz/proof"><img src="https://img.shields.io/badge/proof-live%20Monero%20routes-FF6600?style=flat" alt="proof"></a>
   <a href="https://ardeafinance.xyz"><img src="https://img.shields.io/badge/site-ardeafinance.xyz-141414?style=flat" alt="site"></a>
+  <a href="https://x.com/Ardeafinance"><img src="https://img.shields.io/badge/X-@Ardeafinance-141414?style=flat&logo=x" alt="X @Ardeafinance"></a>
   <img src="https://img.shields.io/badge/Solana-mainnet-4C4C4C?style=flat" alt="Solana mainnet">
   <img src="https://img.shields.io/badge/route-SOL%20%E2%86%92%20XMR%20%E2%86%92%20SOL-4C4C4C?style=flat" alt="SOL to XMR to SOL">
 </p>
@@ -26,7 +27,8 @@
   <a href="https://ardeafinance.xyz/app.html">Arm a wallet</a> ·
   <a href="https://ardeafinance.xyz/proof"><b>Proof</b></a> ·
   <a href="https://ardeafinance.xyz/track.html">Route tracker</a> ·
-  <a href="https://ardeafinance.xyz/docs.html">Docs</a>
+  <a href="https://ardeafinance.xyz/docs.html">Docs</a> ·
+  <a href="https://x.com/Ardeafinance">X @Ardeafinance</a>
 </p>
 
 ---
