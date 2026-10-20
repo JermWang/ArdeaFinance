@@ -48,7 +48,7 @@ export const PROOF_TXS = [
   { step: "Proof route 1 · delivery", note: "81 minutes later proof wallet B receives 0.2975 SOL from an exchange wallet (5ndLnE…HEPs), not from proof wallet A.", sig: "4mD881oW7k7KX6SpRS3ZQKM2kN4JLPC3qYwMgeUrG7ABpFGcSRovgYNj9roCR7QNksgP4zMoJdv2FjdxVdUd7NU" }
 ];
 // The public source repository, linked from the docs' Proof section once it exists ("" hides the link).
-export const SOURCE_REPO = "https://github.com/JermWang/ardea";
+export const SOURCE_REPO = "https://github.com/JermWang/ArdeaFinance";
 
 // The project's X account, e.g. "https://x.com/ardea". Empty hides every X link on the site until it exists.
 export const X_URL = "";

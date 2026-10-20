@@ -8,7 +8,7 @@ const tx = sig => sig ? `<a href="https://solscan.io/tx/${esc(sig)}">${esc(short
 const acct = a => a ? `<a href="https://solscan.io/account/${esc(a)}">${esc(short(a))}</a>` : "—";
 const mins = r => r.startedAt && r.endedAt ? Math.round((Date.parse(r.endedAt) - Date.parse(r.startedAt)) / 60000) : null;
 const when = t => t ? esc(String(t).replace("T", " ").slice(0, 16)) + " UTC" : "—";
-const REPO = "https://github.com/JermWang/ardea";
+const REPO = "https://github.com/JermWang/ArdeaFinance";
 
 export function renderProofPage(st, { now = new Date() } = {}) {
   const routes = st?.routes || [], done = routes.filter(r => r.delivered), [A, B] = st?.wallets || [];

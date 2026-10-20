@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/JermWang/ardea/actions/workflows/test.yml"><img src="https://github.com/JermWang/ardea/actions/workflows/test.yml/badge.svg" alt="tests"></a>
+  <a href="https://github.com/JermWang/ArdeaFinance/actions/workflows/test.yml"><img src="https://github.com/JermWang/ArdeaFinance/actions/workflows/test.yml/badge.svg" alt="tests"></a>
   <a href="https://ardeafinance.xyz/proof"><img src="https://img.shields.io/badge/proof-live%20Monero%20routes-FF6600?style=flat" alt="proof"></a>
   <a href="https://ardeafinance.xyz"><img src="https://img.shields.io/badge/site-ardeafinance.xyz-141414?style=flat" alt="site"></a>
   <img src="https://img.shields.io/badge/Solana-mainnet-4C4C4C?style=flat" alt="Solana mainnet">

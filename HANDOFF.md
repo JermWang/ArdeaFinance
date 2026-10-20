@@ -14,7 +14,7 @@ Done and live:
 - Gateway: `/houdini/*` with the partner key and compliance headers. Railway variables are set: `RPC_URL`,
   `RPC_WS_URL`, `JUP_API_KEY` (`X_BEARER` and `JITO_URL` are empty), `HOUDINI_API_KEY`,
   `HOUDINI_API_SECRET` (copied from Wraith), `ALLOWED_ORIGINS`.
-- Public repo: https://github.com/JermWang/ardea (history scanned for secrets, CI runs the tests on every push),
+- Public repo: https://github.com/JermWang/ArdeaFinance (history scanned for secrets, CI runs the tests on every push),
   linked from the nav, footer, terminal and docs.
 - Holder fee tiers (`tiers.js`): 0.1% / 0.5% / 1% of supply → 0.4% / 0.3% / 0.25% fee, live once `TOKEN_CA` is set.
 - Brand: heron mark (Codex concept, traced to a vector in `logo.js`), Monero orange `#FF6600` on navy `#0B0F1A`,
