@@ -109,13 +109,16 @@ export function solTokenId(res) {
 
 // Quote a private SOL → XMR → SOL send and open the order. Monero is always forced as the bridge: if no Monero route
 // is available, this stops rather than use any other path. Throws rather than return anything we didn't ask for.
-// Which quote to take: the fastest among those paying within `slack` (1%) of the best payout. Routes differ by tens
+// Which quote to take: the fastest among those paying within `slack` (2%) of the best payout. Routes differ by tens
 // of minutes for a fraction of a percent, and waiting is the main cost of a Monero route.
-export function fastestFair(quotes, slack = .01) {
+export function fastestFair(quotes, slack = .02) {
   const best = Math.max(...quotes.map(q => Number(q.amountOut)));
   const fair = quotes.filter(q => Number(q.amountOut) >= best * (1 - slack));
   return fair.sort((a, b) => (Number(a.duration) || 1e9) - (Number(b.duration) || 1e9) || Number(b.amountOut) - Number(a.amountOut))[0];
 }
+
+// How much slower (minutes) a route carrying Ardea's fee may be than the fastest route before the fee is waived.
+export const FEE_SPEED_MIN = 10;
 
 // The per-leg markup (in %) that takes `bps` of the routed amount in total: a private route charges it on both legs.
 export const legMarkup = bps => Math.round(Number(bps) / 2) / 100;
@@ -125,22 +128,26 @@ export async function routeQuote({ hd, token, amount, from, to, feeBps = 0, now 
   const sol = lamportsToSol(amount);
   const pick = (qs, mk) => qs.filter(q => q && q.quoteId && !q.error && !q.filtered && (!q.type || q.type === "private") && Number(q.amountOut) > 0 && (mk === 0 || q.markupSupported !== false));
   let markup = legMarkup(feeBps), feeWaived = false;
-  let { quotes = [] } = (await hd.quote({ token, amount: sol, useXmr: true, markup })) || {};
-  let usable = pick(quotes, markup);
-  // Few providers accept partner markup. If none can carry the fee right now, take a normal Monero route and waive
-  // Ardea's fee for this one route, rather than block the user or add a fee transfer that would mark their funding.
-  if (!usable.length && markup > 0) {
-    ({ quotes = [] } = (await hd.quote({ token, amount: sol, useXmr: true, markup: 0 })) || {});
-    usable = pick(quotes, 0);
-    if (usable.length) { markup = 0; feeWaived = true; }
-  }
+  // Ask for routes that carry Ardea's fee and for all routes at once. Few providers accept partner markup, and the
+  // one that does is often slower: if it would take more than FEE_SPEED_MIN longer than the fastest fair route, or
+  // none can carry the fee, take the fast route and waive the fee for it. Never block, never add a fee transfer.
+  const [withFee, free] = await Promise.all([
+    markup > 0 ? hd.quote({ token, amount: sol, useXmr: true, markup }) : null,
+    hd.quote({ token, amount: sol, useXmr: true, markup: 0 })
+  ]);
+  const feeUsable = markup > 0 ? pick(withFee?.quotes || [], markup) : [], freeUsable = pick(free?.quotes || [], 0);
+  const feePick = feeUsable.length ? fastestFair(feeUsable) : null, freePick = freeUsable.length ? fastestFair(freeUsable) : null;
+  const mins = q => Number(q?.duration) || 999;
+  let quotes = [...(withFee?.quotes || []), ...(free?.quotes || [])], usable = [], chosen = null;
+  if (feePick && (!freePick || mins(feePick) <= mins(freePick) + FEE_SPEED_MIN)) { chosen = feePick; usable = feeUsable; }
+  else if (freePick) { chosen = freePick; usable = freeUsable; if (markup > 0) feeWaived = true; markup = 0; }
   if (!usable.length) {
     const lim = quotes.find(q => q && (q.min || q.max)) || {};
     if (lim.min && Number(sol) < lim.min) throw new StealthError(`Private routes start at ${lim.min} SOL.`);
     if (lim.max && Number(sol) > lim.max) throw new StealthError(`Private routes top out at ${lim.max} SOL right now.`);
     throw new StealthError("No Monero route is available for this amount right now, so nothing was sent. Try again shortly or a different amount.");
   }
-  const quote = fastestFair(usable);
+  const quote = chosen;
   const order = await hd.create({ quoteId: quote.quoteId, addressTo: to, refundAddress: from });
   checkOrder(order, { amount, from, to, now });
   return {
